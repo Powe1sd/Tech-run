@@ -12410,17 +12410,56 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
       if(row.visits_json != null) bundle.techVisitDaysV1 = typeof row.visits_json === 'string' ? row.visits_json : JSON.stringify(row.visits_json);
       if(row.games_played != null) bundle.techTotalGamesPlayed = String(row.games_played);
       if(row.high_score != null) bundle.techRunRecordV4 = String(row.high_score);
-      // Preferir el más reciente: local vs cloud
+      // Sincronización convergente: conservar registros únicos de ambos dispositivos,
+      // quitar duplicados y mantener los valores agregados más altos para no rebajar récords.
       try{
-        const localStatsRaw = localStorage.getItem(scopedKey('techGlobalStatsV2'));
-        let localUpdated = 0, cloudUpdated = 0;
-        if(localStatsRaw){ try{ localUpdated = Number(JSON.parse(localStatsRaw).updated)||0; }catch(e){} }
-        cloudUpdated = row.updated_at ? Date.parse(row.updated_at) || 0 : 0;
-        if(cloudUpdated >= localUpdated){
-          writeBundle(bundle, localStorage, scopeId());
-        }
+        const local = readBundle();
+        const parse = (v, fallback) => { try { const x=typeof v==='string'?JSON.parse(v):v; return x==null?fallback:x; } catch(e){ return fallback; } };
+        const uniqueRecords = (a,b,cap) => {
+          const out=[], seen=new Set();
+          [...(Array.isArray(a)?a:[]), ...(Array.isArray(b)?b:[])].forEach(x=>{
+            if(!x || typeof x!=='object') return;
+            const id=String(x.id||'');
+            const ts=Number(x.ts||x.start)||0, end=Number(x.end)||0, score=Number(x.score)||0, duration=Number(x.duration)||0;
+            const contentSignature=[ts,end,score,duration,String(x.mode||''),String(x.missionId||'')].join('|');
+            if((id && seen.has('id:'+id)) || ((ts||end||score||duration) && seen.has('sig:'+contentSignature))) return;
+            if(id) seen.add('id:'+id);
+            if(ts||end||score||duration) seen.add('sig:'+contentSignature);
+            out.push(x);
+          });
+          out.sort((a,b)=>(Number(b.ts)||0)-(Number(a.ts)||0));
+          return out.slice(0,cap||5000);
+        };
+        const localStats=parse(local.techGlobalStatsV2,{}), cloudStats=parse(bundle.techGlobalStatsV2,{});
+        const mergedStats=Object.assign({},cloudStats,localStats);
+        ['games','wins','losses','abandoned','enemies','shots','totalSeconds','storyWins','storyAttempts','highScore','updated'].forEach(k=>{
+          mergedStats[k]=Math.max(Number(localStats[k])||0,Number(cloudStats[k])||0);
+        });
+        mergedStats.missionStats=Object.assign({},cloudStats.missionStats||{});
+        Object.keys(localStats.missionStats||{}).forEach(k=>{
+          const c=mergedStats.missionStats[k]||{}, l=localStats.missionStats[k]||{};
+          const m=Object.assign({},c,l);
+          ['attempts','wins','losses','bestScore','totalSeconds','lastAt'].forEach(n=>m[n]=Math.max(Number(c[n])||0,Number(l[n])||0));
+          mergedStats.missionStats[k]=m;
+        });
+        const notices=uniqueRecords(localStats.noticeLog,cloudStats.noticeLog,30);
+        mergedStats.noticeLog=notices;
+        bundle.techGlobalStatsV2=JSON.stringify(mergedStats);
+        bundle.techMatchArchiveV1=JSON.stringify(uniqueRecords(parse(local.techMatchArchiveV1,[]),parse(bundle.techMatchArchiveV1,[]),5000));
+        bundle.techMatchHistoryV1=JSON.stringify(uniqueRecords(parse(local.techMatchHistoryV1,[]),parse(bundle.techMatchHistoryV1,[]),5000));
+        bundle.techSessionsV1=JSON.stringify(uniqueRecords(parse(local.techSessionsV1,[]),parse(bundle.techSessionsV1,[]),500));
+        const visits=[...new Set([...(parse(local.techVisitDaysV1,[])),...(parse(bundle.techVisitDaysV1,[]))].map(String))].sort().slice(-500);
+        bundle.techVisitDaysV1=JSON.stringify(visits);
+        bundle.techTotalGamesPlayed=String(Math.max(Number(local.techTotalGamesPlayed)||0,Number(bundle.techTotalGamesPlayed)||0));
+        bundle.techRunRecordV4=String(Math.max(Number(local.techRunRecordV4)||0,Number(bundle.techRunRecordV4)||0,Number(mergedStats.highScore)||0));
+        const cloudArchive=parse(row.archive_json,[]), mergedArchive=parse(bundle.techMatchArchiveV1,[]);
+        const localUpdated=Number(localStats.updated)||0, cloudUpdated=row.updated_at?Date.parse(row.updated_at)||0:0;
+        const localArchive=parse(local.techMatchArchiveV1,[]);
+        if(localArchive.length>cloudArchive.length || localUpdated>cloudUpdated || mergedArchive.length>cloudArchive.length) dirty=true;
+        writeBundle(bundle,localStorage,scopeId());
       }catch(e){
-        writeBundle(bundle, localStorage, scopeId());
+        console.warn('[TECH stats] merge',e);
+        writeBundle(bundle,localStorage,scopeId());
       }
       return row;
     }catch(e){
@@ -12565,6 +12604,25 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(boot, 300); });
   else setTimeout(boot, 300);
+
+  // Actualización entre dispositivos: consulta la nube periódicamente y al volver a la pestaña.
+  // No se depende de localStorage para compartir datos entre equipos.
+  let cloudRefreshBusy=false;
+  async function refreshAccountFromCloud(){
+    if(isGuest() || cloudRefreshBusy || document.visibilityState==='hidden') return;
+    cloudRefreshBusy=true;
+    try{
+      const before=JSON.stringify(readBundle());
+      await pullFromCloud();
+      const after=JSON.stringify(readBundle());
+      if(before!==after) refreshUI();
+      if(dirty) await pushToCloud(true);
+    }catch(e){ console.warn('[TECH stats] live refresh',e); }
+    finally{ cloudRefreshBusy=false; }
+  }
+  setInterval(refreshAccountFromCloud,7000);
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')refreshAccountFromCloud();});
+  window.addEventListener('online',refreshAccountFromCloud);
 
   // SQL de referencia (ejecutar una vez en Supabase SQL Editor):
   // create table if not exists public.estadisticas_tech_run (
