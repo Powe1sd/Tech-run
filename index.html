@@ -2212,6 +2212,16 @@ html, body {
 .tech-stat-tools::-webkit-scrollbar-track{background:#142238;border-radius:8px}
 .tech-stat-tools::-webkit-scrollbar-thumb{background:#FFCD00;border-radius:8px;border:1px solid #fff}
 </style>
+
+<style id="tech-stat-view-switch-styles">
+.tech-stat-view-switch{position:sticky;top:0;z-index:5;padding:8px 0;background:rgba(4,10,25,.96);border-bottom:1px solid rgba(93,229,255,.2)}
+.tech-stat-view-switch .tech-stat-action[aria-pressed="true"]{background:linear-gradient(135deg,#b88600,#ffcd00);color:#151515;border-color:#fff0a0}
+#techStatisticsPanel.stats-mode-data .tech-stat-graph-view{display:none!important}
+#techStatisticsPanel.stats-mode-chart .tech-stat-data-view{display:none!important}
+#techStatisticsPanel.stats-mode-chart .tech-stat-section:not(.tech-stat-graph-view):not(.tech-stat-filters){display:none!important}
+#techStatisticsPanel.stats-mode-chart .tech-stat-graph-view{display:block!important}
+#techStatisticsPanel.stats-mode-chart .tech-stat-breakdown.tech-stat-graph-view{display:grid!important}
+</style>
 </head>
 <body>
 
@@ -11033,6 +11043,26 @@ function downloadCSV(rows,name){const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+Stri
     }
   }
 
+
+  function exportAllStatsDataPDF(){
+    try{
+      const panel=document.getElementById('techStatisticsPanel');
+      const cards=Array.from(panel.querySelectorAll('.tech-stat-cards .tech-stat-card')).map(card=>{
+        const label=(card.querySelector('span')||{}).textContent||'Dato';
+        const value=(card.querySelector('strong')||{}).textContent||'—';
+        const detail=(card.querySelector('small')||{}).textContent||'';
+        return label+': '+value+(detail?' ('+detail+')':'');
+      });
+      const archive=readArchive().slice().sort((a,b)=>safeNum(b.ts)-safeNum(a.ts));
+      const c=document.createElement('canvas');c.width=1200;c.height=Math.max(500,Math.min(3000,180+cards.length*42));
+      const g=c.getContext('2d');g.fillStyle='#071427';g.fillRect(0,0,c.width,c.height);g.fillStyle='#ffffff';g.font='bold 28px sans-serif';g.fillText('TECH RUN - Datos estadísticos completos',45,48);
+      g.font='16px sans-serif';g.fillStyle='#b9d5ef';g.fillText('Generado: '+new Date().toLocaleString('es-CO')+' | Partidas del historial: '+archive.length,45,80);
+      let y=125;cards.forEach((line)=>{g.fillStyle='#62efff';g.fillText('• '+line.slice(0,130),48,y);y+=34;});
+      const pdf=_canvasToPDF(c,{title:'TECH RUN - Datos estadisticos completos',subtitle:new Date().toLocaleString('es-CO')+' | '+archive.length+' partidas',lines:['Incluye métricas estadísticas visibles y el total del historial. Para descargar cada partida con todos sus campos, usa el archivo CSV completo.']});
+      const url=URL.createObjectURL(new Blob([pdf],{type:'application/pdf'}));const a=document.createElement('a');a.href=url;a.download='TECH-datos-estadisticos-'+new Date().toISOString().slice(0,10)+'.pdf';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
+    }catch(err){console.error('[TECH datos PDF]',err);alert('No se pudo generar el PDF de datos: '+(err&&err.message?err.message:err));}
+  }
+
   function noticesHTML(){const s=readStats(),notes=(s.noticeLog||[]).slice(0,5);const c=campaign(),p=progressObject(),next=c.find(ch=>!(p[ch.id]&&p[ch.id].done));const pending=next?`<div class="tech-stat-notice"><b>🎯 Próximo objetivo</b><span>${esc(next.title||next.id)}</span><small>${esc(next.subtitle||next.briefing||'Completa la siguiente misión disponible.')}</small></div>`:'<div class="tech-stat-notice success"><b>🏁 Campaña completada</b><span>Has completado todas las misiones registradas.</span></div>';const items=notes.length?notes.map(n=>`<div class="tech-stat-notice ${esc(n.type||'info')}"><b>${n.type==='record'?'🏆 Nuevo récord':n.type==='mission'?'🚀 Misión registrada':'ℹ️ Aviso'}</b><span>${esc(n.text)}</span><small>${n.ts?new Date(n.ts).toLocaleString('es-CO'):''}</small></div>`).join(''):'<p class="tech-stat-muted">Los avisos aparecerán aquí al lograr un récord o completar una misión.</p>';return pending+items}
   function missionAnalysis(){const c=campaign(),p=progressObject(),s=readStats(),ms=s.missionStats||{};if(!c.length)return '<p class="tech-stat-muted">No se pudo leer la campaña del juego.</p>';return `<div class="tech-stat-mission-list">${c.map((ch,i)=>{const x=ms[ch.id]||{},done=!!(p[ch.id]&&p[ch.id].done);const attempts=safeNum(x.attempts),wins=safeNum(x.wins),rate=attempts?Math.round(wins/attempts*100):0;return `<div class="tech-stat-mission"><span class="tech-stat-mission-n">${String(i+1).padStart(2,'0')}</span><div class="tech-stat-mission-info"><b>${esc(ch.title||ch.id)}</b><small>${esc(ch.subtitle||ch.type||'Misión')} · ${done?'Completada':'Pendiente'} · Intentos registrados: ${attempts}</small><div class="tech-stat-track"><div class="tech-stat-fill" style="width:${rate}%;background:${done?'#69f0ae':'#168dff'}"></div></div></div><strong>${done?'✓':attempts?rate+'%':'—'}</strong></div>`}).join('')}</div>`}
   function render(){const panel=document.getElementById('techStatisticsPanel');if(!panel)return;const all=readArchive().slice().sort((a,b)=>safeNum(b.ts)-safeNum(a.ts));const filtered=currentFilters(all);const h=selectedMatches(all);const s=readStats();const legacyCount=all.filter(m=>m.legacy).length;
@@ -11082,7 +11112,8 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
 
     panel.innerHTML=`<div class="tech-stat-head"><div><h2>📊 Centro de estadísticas PRO</h2></div><button id="closeStatistics" class="tech-stat-close" aria-label="Cerrar estadísticas">✕</button></div>
       <section class="tech-stat-section tech-stat-filters"><h3>🔎 Filtros y comparación</h3><div class="tech-stat-filtergrid"><label>Comparar<select id="statRange"><option value="5" ${range==='5'?'selected':''}>Últimas 5</option><option value="10" ${range==='10'?'selected':''}>Últimas 10</option><option value="20" ${range==='20'?'selected':''}>Últimas 20</option><option value="all" ${range==='all'?'selected':''}>Todas las filtradas</option></select></label><label>Modo<select id="statMode"><option value="all" ${filterMode==='all'?'selected':''}>Todos los modos</option><option value="classic" ${filterMode==='classic'?'selected':''}>Clásico</option><option value="infinite" ${filterMode==='infinite'?'selected':''}>Infinito</option><option value="online" ${filterMode==='online'?'selected':''}>Online</option><option value="story" ${filterMode==='story'?'selected':''}>Historia</option></select></label><label>Desde<input id="statFrom" type="date" value="${esc(filterFrom)}"></label><label>Hasta<input id="statTo" type="date" value="${esc(filterTo)}"></label></div><div class="tech-stat-tools"><button class="tech-stat-action" id="applyStatFilters">Aplicar filtros</button><button class="tech-stat-action" id="clearStatFilters">Limpiar filtros</button><span class="tech-stat-pill">${filtered.length} partidas coinciden</span><span class="tech-stat-pill">${h.length} en comparación</span></div></section>
-      <div class="tech-stat-cards">
+      <div class="tech-stat-tools tech-stat-view-switch" role="group" aria-label="Vista de estadísticas"><button type="button" class="tech-stat-action" id="showStatsCharts" aria-pressed="false">📈 Gráfica</button><button type="button" class="tech-stat-action" id="showStatsData" aria-pressed="true">📊 Datos estadísticos</button><button type="button" class="tech-stat-action" id="downloadAllStatsData">📄 Descargar datos estadísticos (PDF)</button><button type="button" class="tech-stat-action" id="downloadAllStatsCSV">⬇ Descargar historial completo (CSV)</button></div>
+      <div class="tech-stat-cards tech-stat-data-view">
        <div class="tech-stat-card"><span>Partidas jugadas</span><strong>${totalGamesPlayed.toLocaleString('es-CO')}</strong><small>Contador desde este navegador · +1 al terminar cada partida</small></div>
        <div class="tech-stat-card"><span>Récord personal</span><strong>${recordText}</strong><small>Mejor puntuación guardada</small></div>
        <div class="tech-stat-card"><span>Promedio seleccionado</span><strong>${avg.toLocaleString('es-CO')}</strong><small>Sobre ${h.length} partidas comparadas</small></div>
@@ -11146,8 +11177,8 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
         <span class="tech-stat-pill">Incluye gráfica de evolución + resumen de métricas</span>
       </div>
     </section>
-      <section class="tech-stat-section"><h3>📈 Evolución de puntuación: subidas y bajadas</h3>${buildChart(h)}<h3 style="margin-top:18px">📊 Comparación visual de puntuaciones</h3>${buildScoreBars(h)}</section>
-      <section class="tech-stat-section"><h3>🧰 Builds y loadouts</h3>
+      <section class="tech-stat-section tech-stat-graph-view"><h3>📈 Evolución de puntuación: subidas y bajadas</h3>${buildChart(h)}<h3 style="margin-top:18px">📊 Comparación visual de puntuaciones</h3>${buildScoreBars(h)}</section>
+      <section class="tech-stat-section tech-stat-graph-view"><h3>🧰 Builds y loadouts</h3>
       <div class="tech-stat-cards" style="margin-bottom:12px">
         <div class="tech-stat-card"><span>Build más usada</span><strong style="font-size:13px">${esc(bs.topBuild)}</strong><small>Nave + arma más frecuente</small></div>
         <div class="tech-stat-card"><span>Arma con más kills</span><strong style="font-size:13px">${esc(bs.topWeapon)}</strong><small>Según eliminaciones registradas</small></div>
@@ -11159,7 +11190,7 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
       ${bs.weaponsHtml}
       <p class="tech-stat-muted">Build = nave (y fase Goku si aplica) + arma equipada. El tiempo medio es la duración promedio de partida por cada combinación.</p>
     </section>
-      <div class="tech-stat-breakdown"><section class="tech-stat-section"><h3>🎮 Partidas por modo</h3>${breakdown(filtered,'mode','Modo')}</section><section class="tech-stat-section"><h3>⚙️ Partidas por dificultad</h3>${breakdown(filtered,'diff','Dificultad')}</section><section class="tech-stat-section"><h3>🌌 Mundos visitados</h3>${breakdown(filtered,'world','Mundo')}</section><section class="tech-stat-section"><h3>📊 Tendencia y rendimiento</h3>${bar('Variación de las dos últimas puntuaciones',Math.max(0,lastTwo[0]||0),Math.max(1,lastTwo[0]||0,lastTwo[1]||0),delta>0?'#69f0ae':delta<0?'#ff7b86':'#62efff',h.length>1?(delta>0?'↗ +':delta<0?'↘ ':'→ ')+Math.abs(delta).toLocaleString('es-CO')+' pts':'Datos insuficientes')}${bar('Promedio vs récord personal',avg,Math.max(1,best),'#62efff',avg.toLocaleString('es-CO')+' pts')}<p class="tech-stat-muted">${h.length>1?(delta>0?'La última puntuación subió.':delta<0?'La última puntuación bajó.':'Las dos últimas puntuaciones están iguales.'):'Juega más partidas para comparar tendencias.'}</p><p class="tech-stat-muted">Precisión real: no disponible aún porque el motor no expone un evento centralizado de impactos; no se inventa un porcentaje.</p></section></div>
+      <div class="tech-stat-breakdown tech-stat-graph-view"><section class="tech-stat-section"><h3>🎮 Partidas por modo</h3>${breakdown(filtered,'mode','Modo')}</section><section class="tech-stat-section"><h3>⚙️ Partidas por dificultad</h3>${breakdown(filtered,'diff','Dificultad')}</section><section class="tech-stat-section"><h3>🌌 Mundos visitados</h3>${breakdown(filtered,'world','Mundo')}</section><section class="tech-stat-section"><h3>📊 Tendencia y rendimiento</h3>${bar('Variación de las dos últimas puntuaciones',Math.max(0,lastTwo[0]||0),Math.max(1,lastTwo[0]||0,lastTwo[1]||0),delta>0?'#69f0ae':delta<0?'#ff7b86':'#62efff',h.length>1?(delta>0?'↗ +':delta<0?'↘ ':'→ ')+Math.abs(delta).toLocaleString('es-CO')+' pts':'Datos insuficientes')}${bar('Promedio vs récord personal',avg,Math.max(1,best),'#62efff',avg.toLocaleString('es-CO')+' pts')}<p class="tech-stat-muted">${h.length>1?(delta>0?'La última puntuación subió.':delta<0?'La última puntuación bajó.':'Las dos últimas puntuaciones están iguales.'):'Juega más partidas para comparar tendencias.'}</p><p class="tech-stat-muted">Precisión real: no disponible aún porque el motor no expone un evento centralizado de impactos; no se inventa un porcentaje.</p></section></div>
       <section class="tech-stat-section tech-stat-collapsible">
         <button type="button" class="tech-stat-toggle" id="toggleCampaignStats" aria-expanded="false">
           <span>🛰️ Progreso del modo historia</span>
@@ -11215,6 +11246,10 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
       try{toast('🗑 Estadísticas borradas','success')}catch(e){}
       try{if(window.techNotify)window.techNotify('Estadísticas reiniciadas a 0.','success','Estadísticas');}catch(e){}
     };const pdfBtn=document.getElementById('exportStatsPDF');if(pdfBtn)pdfBtn.onclick=exportStatsPDF;const pdfBtn2=document.getElementById('exportStatsPDF2');if(pdfBtn2)pdfBtn2.onclick=exportStatsPDF;
+    const chartsBtn=document.getElementById('showStatsCharts'),dataBtn=document.getElementById('showStatsData'),downloadDataBtn=document.getElementById('downloadAllStatsData'),downloadCSVBtn=document.getElementById('downloadAllStatsCSV');
+    function setStatsView(mode){panel.classList.toggle('stats-mode-chart',mode==='chart');panel.classList.toggle('stats-mode-data',mode==='data');if(chartsBtn)chartsBtn.setAttribute('aria-pressed',String(mode==='chart'));if(dataBtn)dataBtn.setAttribute('aria-pressed',String(mode==='data'));}
+    if(chartsBtn)chartsBtn.onclick=()=>setStatsView('chart');if(dataBtn)dataBtn.onclick=()=>setStatsView('data');if(downloadDataBtn)downloadDataBtn.onclick=exportAllStatsDataPDF;if(downloadCSVBtn)downloadCSVBtn.onclick=exportCSV;
+    setStatsView('data');
     function wireToggle(btnId,bodyId){
       const tog=document.getElementById(btnId), body=document.getElementById(bodyId);
       if(!tog||!body)return;
