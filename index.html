@@ -2356,7 +2356,7 @@ function refreshHudToggleIcons(){
     syncHudFlagsFromWindow();
     const bm=document.getElementById("btnToggleMap");
     if(bm){
-      bm.textContent=showMinimap?"MAP":"MAP";
+      bm.textContent=showMinimap?"MAPA":"MAPA";
       bm.title=showMinimap?"Ocultar radar/mapa":"Mostrar radar/mapa";
       bm.style.opacity=showMinimap?"1":"0.45";
       bm.style.background=showMinimap?"rgba(0,80,140,.85)":"rgba(40,40,40,.75)";
@@ -4515,7 +4515,7 @@ const btnRestartLive=mk("btnRestartLive","🔄","Reiniciar","position:absolute;t
 btnRestartLive.onclick=()=>{if(confirm("¿Reiniciar partida?"))startGame()};
 
 const btnCfg=mk("btnConfig","⚙","Config","position:absolute;top:8px;left:8px;z-index:30;width:32px;height:32px;border:none;border-radius:8px;background:rgba(255,255,255,.15);color:#FFCD00;font-size:15px;cursor:pointer");
-const btnToggleMap=mk("btnToggleMap","MAP","Ocultar radar/mapa","position:absolute;top:44px;left:8px;z-index:120;width:36px;height:28px;border:none;border-radius:8px;background:rgba(0,80,140,.85);color:#fff;font-size:10px;font-weight:800;cursor:pointer;display:none;line-height:1;font-family:Orbitron,sans-serif;pointer-events:auto");
+const btnToggleMap=mk("btnToggleMap","MAPA","Ocultar radar/mapa","position:absolute;top:44px;left:8px;z-index:120;width:44px;height:28px;border:none;border-radius:8px;background:rgba(0,80,140,.85);color:#fff;font-size:10px;font-weight:800;cursor:pointer;display:none;line-height:1;font-family:Orbitron,sans-serif;pointer-events:auto");
 btnToggleMap.onclick=function(e){try{e.preventDefault();e.stopPropagation()}catch(_){}
   setShowMinimap(!window.showMinimap);};
 const btnToggleRank=mk("btnToggleRank","TOP","Ocultar ranking online","position:absolute;top:76px;left:8px;z-index:120;width:36px;height:28px;border:none;border-radius:8px;background:rgba(120,80,0,.85);color:#FFCD00;font-size:10px;font-weight:800;cursor:pointer;display:none;line-height:1;font-family:Orbitron,sans-serif;pointer-events:auto");
