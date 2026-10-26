@@ -11126,7 +11126,7 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
     const exp=document.getElementById('exportStatsCSV');if(exp)exp.onclick=exportCSV;const exp2=document.getElementById('exportStatsCSV2');if(exp2)exp2.onclick=exportCSV;const expM=document.getElementById('exportMissionCSV');if(expM)expM.onclick=exportMissionsCSV;const refresh=document.getElementById('refreshStats');if(refresh)refresh.onclick=render;
     const clearBtn=document.getElementById('clearAllStats');
     if(clearBtn)clearBtn.onclick=function(){
-      if(!confirm('¿Borrar todas las estadísticas y empezar desde 0?\n\nSe eliminarán partidas, récords del panel, sesiones y avisos. No se borra el progreso del modo historia ni monedas/mejoras.'))return;
+      if(!confirm('¿Borrar todas las estadísticas?'))return;
       try{clearAllStats();}catch(e){console.error(e);alert('No se pudieron borrar las estadísticas.');return;}
       try{if(typeof clearMatchHistory==='function')clearMatchHistory();}catch(e){}
       try{if(typeof renderStart==='function')renderStart();}catch(e){}
