@@ -1460,6 +1460,13 @@ input,select,textarea{
   border-color:#fff !important;
   box-shadow:0 0 18px rgba(255,205,0,.35) !important;
 }
+
+/* Acciones finales del menú: en el flujo del scroll, no fijas */
+#startBottomActions{
+  position:static !important;
+  flex-shrink:0;
+}
+#startBottomActions .game-btn{position:static !important}
 #openStatistics{
   background:linear-gradient(135deg,#0f2a4a 0%, #0a6d8a 100%) !important;
   border:1px solid rgba(93,229,255,.55) !important;
@@ -2205,9 +2212,6 @@ html, body {
 <small>Elige dificultad y nave · Desliza para ver más</small><br>
 <button class="game-btn" id="openTechAccount" style="margin-top:8px;background:linear-gradient(135deg,#35205e,#6b39a8);border-color:#c9a4ff;color:#fff">Crear cuenta / Iniciar sesión</button>
 <button class="game-btn" id="startGame" style="margin-top:10px">🚀 Iniciar</button>
-<button class="game-btn game-btn-blue" id="openStoryMode" style="margin-top:10px">📖 Modo historia</button>
-<button class="game-btn" id="openStatistics" style="margin-top:10px;background:linear-gradient(135deg,#142b52,#087c9d);border-color:#5de5ff;color:#fff">📊 Estadísticas</button>
-<button class="game-btn" id="openOnlineRanking" style="margin-top:10px;background:linear-gradient(135deg,#0a3d2e,#0d7a5f);border-color:#5dffb0;color:#fff">🌐 Ranking online</button>
 </div>
 <div class="game-panel" id="gameOverPanel">
 <h2>💥 Game over</h2>
@@ -5006,6 +5010,22 @@ if(startPanel&&!document.getElementById("startExtras")){
   /* Mover puntosjuego al final */
   const cred=document.getElementById("startCredits");
   if(cred) startPanel.appendChild(cred);
+
+  /* Estadísticas / Historia / Ranking al final del menú (scroll normal, no fijos) */
+  let footer=document.getElementById("startBottomActions");
+  if(!footer){
+    footer=document.createElement("div");
+    footer.id="startBottomActions";
+    footer.style.cssText="margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);display:flex;flex-direction:column;gap:8px";
+    footer.innerHTML=`
+      <button type="button" class="game-btn game-btn-blue" id="openStoryMode" style="margin:0;width:100%">📖 Modo historia</button>
+      <button type="button" class="game-btn" id="openStatistics" style="margin:0;width:100%;background:linear-gradient(135deg,#142b52,#087c9d);border-color:#5de5ff;color:#fff">📊 Estadísticas</button>
+      <button type="button" class="game-btn" id="openOnlineRanking" style="margin:0;width:100%;background:linear-gradient(135deg,#0a3d2e,#0d7a5f);border-color:#5dffb0;color:#fff">🌐 Ranking online</button>
+    `;
+  }
+  /* Siempre al final del panel de inicio */
+  startPanel.appendChild(footer);
+  try{if(typeof applyUILanguage==='function')applyUILanguage()}catch(e){}
 }
 
 const h=document.querySelector(".game-help");if(h)h.innerHTML="🖱️ Mouse · ⌨️ Flechas · Espacio · 🎮 Mando · ⚙ · <b>P</b> pausa · Goku: <b>1-9</b> fases · <b>K</b> ataque KI · Nave <b>Br7</b>";
@@ -10463,6 +10483,20 @@ function runAdded(node){if(!node||node.nodeType!==1)return;run(node);}
   function dayKey(ts){const d=new Date(Number(ts)||Date.now());return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   function readVisits(){const a=readJSON(VISITS_KEY,[]);return Array.isArray(a)?a:[]}
   function readSessions(){const a=readJSON(SESSIONS_KEY,[]);return Array.isArray(a)?a.slice(0,500):[]}
+  function clearAllStats(){
+    try{
+      writeJSON(STORE,{games:0,wins:0,losses:0,abandoned:0,enemies:0,shots:0,totalSeconds:0,storyWins:0,storyAttempts:0,highScore:0,updated:Date.now(),missionStats:{},noticeLog:[]});
+      writeJSON(ARCHIVE,[]);
+      writeJSON(SESSIONS_KEY,[]);
+      writeJSON(VISITS_KEY,[]);
+      try{localStorage.removeItem(LEGACY);localStorage.removeItem('techMatchHistory');localStorage.setItem(LEGACY,'[]');}catch(e){}
+      try{localStorage.setItem('techTotalGamesPlayed','0');window.__techLastGamesPlayed=0;}catch(e){}
+      try{if(typeof record!=='undefined'){record=0;}if(typeof window.record!=='undefined'){window.record=0;}}catch(e){}
+      try{localStorage.setItem('techRecord','0');localStorage.setItem('techHighScore','0');}catch(e){}
+      run={start:0,shots:0,kills:0,meteors:0,ships:0,weaponKills:0,recorded:false,mode:'classic',diff:'normal',missionId:'',missionTitle:''};
+      return true;
+    }catch(e){console.error('[TECH stats] clearAllStats',e);return false;}
+  }
   function trackVisitDay(ts){
     try{
       const day=dayKey(ts||Date.now());
@@ -11078,20 +11112,28 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
           <div class="tech-stat-tools"><button class="tech-stat-action" id="refreshStats">↻ Actualizar datos</button><button class="tech-stat-action" id="exportStatsCSV">⬇ Exportar historial completo CSV</button><button class="tech-stat-action" id="exportStatsPDF2">📄 Descargar gráfica PDF</button></div>
         </div>
       </section>
-      <section class="tech-stat-section tech-stat-collapsible">
-        <button type="button" class="tech-stat-toggle" id="toggleMatchHistory" aria-expanded="false">
-          <span>🕹️ Historial de partidas (${compareCount})</span>
-          <span class="tech-stat-chevron">▼</span>
-        </button>
-        <div class="tech-stat-collapse-body" id="matchHistoryBody" hidden>
-          ${h.length?h.slice().sort((a,b)=>safeNum(b.ts)-safeNum(a.ts)).slice(0,range==='all'?100:Math.max(10,Number(range)||10)).map((m,i)=>`<div class="tech-stat-match"><span>#${i+1} · ${esc(m.mode||'Clásico')} · ${esc(m.diff||'Normal')} · ${esc(m.ship||'Nave')}${m.missionTitle?' · '+esc(m.missionTitle):''}</span><b>${safeNum(m.score).toLocaleString('es-CO')} pts</b><small>${fmtTime(m.duration)} · Oleada ${safeNum(m.wave)} · Mundo ${esc(m.world||'—')} · Eliminaciones ${safeNum(m.kills)} · Disparos ${safeNum(m.shots)} · Meteoritos ${safeNum(m.meteors)} · ${m.ts?esc(new Date(m.ts).toLocaleString('es-CO')):'Fecha no disponible'}${m.legacy?' · Registro antiguo':''}</small></div>`).join(''):'<p class="tech-stat-muted">No hay partidas registradas con estos filtros. Inicia y termina una partida para generar datos.</p>'}
+      <section class="tech-stat-section" style="margin-top:14px;border-color:rgba(255,100,120,.35);background:rgba(40,10,18,.55)">
+        <h3 style="margin:0 0 8px;color:#ffb4c0;font-size:13px">🗑 Reiniciar datos</h3>
+        <p class="tech-stat-muted" style="margin:0 0 10px">Borra partidas, récords del panel, sesiones y avisos. Empieza las estadísticas desde 0. No afecta modo historia, monedas ni mejoras.</p>
+        <div class="tech-stat-tools">
+          <button type="button" class="tech-stat-action" id="clearAllStats" style="width:100%;border-color:rgba(255,100,120,.6);background:linear-gradient(135deg,#4a1520,#8a1f30);color:#fff;font-weight:800;padding:12px 14px">🗑 Borrar estadísticas</button>
         </div>
       </section>
 `;
     const close=document.getElementById('closeStatistics');if(close)close.onclick=closePanel;
     const apply=document.getElementById('applyStatFilters');if(apply)apply.onclick=()=>{range=document.getElementById('statRange').value;filterMode=document.getElementById('statMode').value;filterFrom=document.getElementById('statFrom').value;filterTo=document.getElementById('statTo').value;render()};
     const clear=document.getElementById('clearStatFilters');if(clear)clear.onclick=()=>{range='10';filterMode='all';filterFrom='';filterTo='';render()};
-    const exp=document.getElementById('exportStatsCSV');if(exp)exp.onclick=exportCSV;const exp2=document.getElementById('exportStatsCSV2');if(exp2)exp2.onclick=exportCSV;const expM=document.getElementById('exportMissionCSV');if(expM)expM.onclick=exportMissionsCSV;const refresh=document.getElementById('refreshStats');if(refresh)refresh.onclick=render;const pdfBtn=document.getElementById('exportStatsPDF');if(pdfBtn)pdfBtn.onclick=exportStatsPDF;const pdfBtn2=document.getElementById('exportStatsPDF2');if(pdfBtn2)pdfBtn2.onclick=exportStatsPDF;
+    const exp=document.getElementById('exportStatsCSV');if(exp)exp.onclick=exportCSV;const exp2=document.getElementById('exportStatsCSV2');if(exp2)exp2.onclick=exportCSV;const expM=document.getElementById('exportMissionCSV');if(expM)expM.onclick=exportMissionsCSV;const refresh=document.getElementById('refreshStats');if(refresh)refresh.onclick=render;
+    const clearBtn=document.getElementById('clearAllStats');
+    if(clearBtn)clearBtn.onclick=function(){
+      if(!confirm('¿Borrar todas las estadísticas y empezar desde 0?\n\nSe eliminarán partidas, récords del panel, sesiones y avisos. No se borra el progreso del modo historia ni monedas/mejoras.'))return;
+      try{clearAllStats();}catch(e){console.error(e);alert('No se pudieron borrar las estadísticas.');return;}
+      try{if(typeof clearMatchHistory==='function')clearMatchHistory();}catch(e){}
+      try{if(typeof renderStart==='function')renderStart();}catch(e){}
+      render();
+      try{toast('🗑 Estadísticas borradas','success')}catch(e){}
+      try{if(window.techNotify)window.techNotify('Estadísticas reiniciadas a 0.','success','Estadísticas');}catch(e){}
+    };const pdfBtn=document.getElementById('exportStatsPDF');if(pdfBtn)pdfBtn.onclick=exportStatsPDF;const pdfBtn2=document.getElementById('exportStatsPDF2');if(pdfBtn2)pdfBtn2.onclick=exportStatsPDF;
     function wireToggle(btnId,bodyId){
       const tog=document.getElementById(btnId), body=document.getElementById(bodyId);
       if(!tog||!body)return;
@@ -11103,7 +11145,6 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
     }
     wireToggle('toggleCampaignStats','campaignStatsBody');
     wireToggle('toggleMissionAnalysis','missionAnalysisBody');
-    wireToggle('toggleMatchHistory','matchHistoryBody');
     wireToggle('toggleRecords','recordsBody');
     try{window.__techStatsRender=render;panel.dataset.lang=String(window.__techLangCurrent||localStorage.getItem('techLang')||'es')}catch(e){}
     try{if(typeof window.__techRunI18n==='function')window.__techRunI18n(panel)}catch(e){}
