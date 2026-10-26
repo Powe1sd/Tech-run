@@ -2193,6 +2193,25 @@ html, body {
   }
 }
 </style>
+<style id="tech-stats-horizontal-scroll">
+/* Barra de herramientas de estadísticas: desplazamiento horizontal con scrollbar visible */
+.tech-stat-tools{
+  display:flex;
+  flex-wrap:nowrap!important;
+  gap:8px;
+  max-width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:4px 2px 10px;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:thin;
+  scrollbar-color:#FFCD00 #142238;
+}
+.tech-stat-tools > *{flex:0 0 auto;white-space:nowrap}
+.tech-stat-tools::-webkit-scrollbar{height:8px}
+.tech-stat-tools::-webkit-scrollbar-track{background:#142238;border-radius:8px}
+.tech-stat-tools::-webkit-scrollbar-thumb{background:#FFCD00;border-radius:8px;border:1px solid #fff}
+</style>
 </head>
 <body>
 
@@ -10537,11 +10556,19 @@ function runAdded(node){if(!node||node.nodeType!==1)return;run(node);}
   function readSessions(){const a=readJSON(SESSIONS_KEY(),[]);return Array.isArray(a)?a.slice(0,500):[]}
   function clearAllStats(){
     try{
-      writeJSON(STORE(),{games:0,wins:0,losses:0,abandoned:0,enemies:0,shots:0,totalSeconds:0,storyWins:0,storyAttempts:0,highScore:0,updated:Date.now(),missionStats:{},noticeLog:[]});
-      writeJSON(ARCHIVE(),[]);
+      const previous=readStats();
+      writeJSON(STORE(),{
+        games:0,wins:0,losses:0,abandoned:0,enemies:0,shots:0,totalSeconds:0,
+        storyWins:safeNum(previous.storyWins),storyAttempts:safeNum(previous.storyAttempts),
+        highScore:0,updated:Date.now(),missionStats:previous.missionStats||{},noticeLog:[]
+      });
+      // Se reinician las partidas de estadísticas, las sesiones y los avisos.
+      // El progreso de campaña, monedas, mejoras y estadísticas de misiones se conserva.
+      writeArchive([]);
       writeJSON(SESSIONS_KEY(),[]);
       writeJSON(VISITS_KEY(),[]);
-      try{try{storageForScope().removeItem(LEGACY());storageForScope().removeItem(k('techMatchHistory'));storageForScope().setItem(LEGACY(),'[]');}catch(e){}}catch(e){}
+      try{storageForScope().removeItem(FIRST_KEY());}catch(e){}
+      try{const st=storageForScope();st.removeItem(LEGACY());st.removeItem(k('techMatchHistory'));st.setItem(LEGACY(),'[]');}catch(e){}
       try{const st=storageForScope();st.setItem(k('techTotalGamesPlayed'),'0');st.setItem(k('techRunRecordV4'),'0');window.__techLastGamesPlayed=0;}catch(e){}
       try{if(typeof record!=='undefined'){record=0;}if(typeof window.record!=='undefined'){window.record=0;}}catch(e){}
       try{storageForScope().setItem(k('techRecord'),'0');storageForScope().setItem(k('techHighScore'),'0');}catch(e){}
@@ -10708,8 +10735,10 @@ s.shots=safeNum(s.shots)+safeNum(normalized.shots);s.enemies=safeNum(s.enemies)+
         const lastBump=Number(window.__techGamesBumpAt||0);
         // Si pushMatchHistory ya sumó hace <3s, no duplicar
         if(Date.now()-lastBump>3000){
-          const prev=Number(localStorage.getItem('techTotalGamesPlayed')||0)||0;
-          localStorage.setItem('techTotalGamesPlayed',String(prev+1));
+          const scopedStore=storageForScope();
+          const counterKey=k('techTotalGamesPlayed');
+          const prev=Number(scopedStore.getItem(counterKey)||0)||0;
+          scopedStore.setItem(counterKey,String(prev+1));
           window.__techGamesBumpAt=Date.now();
         }
       }catch(e){}
@@ -11009,14 +11038,14 @@ function downloadCSV(rows,name){const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+Stri
   function render(){const panel=document.getElementById('techStatisticsPanel');if(!panel)return;const all=readArchive().slice().sort((a,b)=>safeNum(b.ts)-safeNum(a.ts));const filtered=currentFilters(all);const h=selectedMatches(all);const s=readStats();const legacyCount=all.filter(m=>m.legacy).length;
     let totalGamesPlayed=0;
     try{
-      totalGamesPlayed=Number(localStorage.getItem('techTotalGamesPlayed')||0)||0;
+      totalGamesPlayed=Number(storageForScope().getItem(k('techTotalGamesPlayed'))||0)||0;
       // Si el contador aún no existe pero hay historial, inicializar sin inflar de más
       if(totalGamesPlayed===0){
         const leg=getLegacyHistory();
         if(Array.isArray(leg)&&leg.length) totalGamesPlayed=leg.length;
         if(all.length>totalGamesPlayed) totalGamesPlayed=all.length;
         if(safeNum(s.games)>totalGamesPlayed) totalGamesPlayed=safeNum(s.games);
-        if(totalGamesPlayed>0) localStorage.setItem('techTotalGamesPlayed',String(totalGamesPlayed));
+        if(totalGamesPlayed>0) storageForScope().setItem(k('techTotalGamesPlayed'),String(totalGamesPlayed));
       }
       if(safeNum(s.games)!==totalGamesPlayed){s.games=totalGamesPlayed;saveStats(s)}
     }catch(e){totalGamesPlayed=Math.max(all.length,safeNum(s.games))}
@@ -11167,7 +11196,6 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
       </section>
       <section class="tech-stat-section" style="margin-top:14px;border-color:rgba(255,100,120,.35);background:rgba(40,10,18,.55)">
         <h3 style="margin:0 0 8px;color:#ffb4c0;font-size:13px">🗑 Reiniciar datos</h3>
-        <p class="tech-stat-muted" style="margin:0 0 10px">Borra partidas, récords del panel, sesiones y avisos. Empieza las estadísticas desde 0. No afecta modo historia, monedas ni mejoras.</p>
         <div class="tech-stat-tools">
           <button type="button" class="tech-stat-action" id="clearAllStats" style="width:100%;border-color:rgba(255,100,120,.6);background:linear-gradient(135deg,#4a1520,#8a1f30);color:#fff;font-weight:800;padding:12px 14px">🗑 Borrar estadísticas</button>
         </div>
@@ -12432,16 +12460,14 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
   window.techOnAuthAccountChange = async function(info){
     const sc = scopeId();
     if(info && info.loggedIn){
-      // Al entrar: migrar datos de invitado de esta sesión si la cuenta está vacía
-      migrateGuestIntoAccount(sc);
+      // Mantener invitado y cuenta totalmente separados: nunca migrar datos de invitado.
       await pullFromCloud();
       dirty = true;
       await pushToCloud(true);
     } else {
       // Al salir: guardar cuenta en la nube y mostrar ámbito invitado limpio
       try{ await pushToCloud(true); }catch(e){}
-      // No borrar datos de cuenta en localStorage; solo cambiar de ámbito
-      clearGuestData();
+      // No borrar datos de cuenta ni los datos separados de invitado; solo cambiar de ámbito.
     }
     lastScope = sc;
     refreshUI();
