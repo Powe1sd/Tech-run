@@ -2320,9 +2320,11 @@ const finalScoreElement=document.getElementById("finalScore");
 function updateLivesUI(){if(livesElement)livesElement.textContent=lives}
 
 function lsGet(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}}
+
+function techGetRecord(){try{const store=(typeof window.techStatsStorage==='function'?window.techStatsStorage():(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn()?localStorage:sessionStorage));const key=(typeof window.techStatsScopedKey==='function'?window.techStatsScopedKey('techRunRecordV4'):'techRunRecordV4::guest');const v=store.getItem(key);if(v!=null)return Number(v)||0}catch(e){}try{return Number(localStorage.getItem('techRunRecordV4'))||0}catch(e){return 0}}
 function lsSet(k,v){try{localStorage.setItem(k,String(v));return true}catch(e){return false}}
 
-let record=Number(lsGet("techRunRecordV4",0))||0;
+let record=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;
 if(recordElement)recordElement.textContent=record;
 
 let gameRunning=false,gamePaused=false,animationFrame=null;
@@ -4864,7 +4866,7 @@ if(startPanel&&!document.getElementById("startExtras")){
     </div>
     <h3>Bonos por récord</h3>
     <p style="font-size:10px;line-height:1.45;color:#bbb">
-      🎯 Récord: <b style="color:#FFCD00">${Number(lsGet("techRunRecordV4",0))||0}</b>
+      🎯 Récord: <b style="color:#FFCD00">${Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0}</b>
       · 30+ balas · 60+ vida · 100+ ágil
     </p>
     <button type="button" class="game-btn" id="btnManualStart" style="width:100%;margin-top:6px;padding:8px">📖 Manual de usuario</button>
@@ -5996,13 +5998,36 @@ function createParticle(){if(isMobile()||particles.length>5||Math.random()>.75)r
 
 
 /* ===== Historial de partidas (últimas 20) ===== */
-const MATCH_HISTORY_KEY = "techMatchHistoryV1";
+function __techMatchHistoryKey(){
+  try{
+    if(typeof window.techStatsScopedKey==='function') return window.techStatsScopedKey('techMatchHistoryV1');
+  }catch(e){}
+  return 'techMatchHistoryV1::guest';
+}
+function __techStatsStore(){
+  try{
+    if(typeof window.techStatsStorage==='function') return window.techStatsStorage();
+  }catch(e){}
+  try{
+    if(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn()) return window.localStorage;
+  }catch(e){}
+  return window.sessionStorage||window.localStorage;
+}
+function __techGamesPlayedKey(){
+  try{
+    if(typeof window.techStatsScopedKey==='function') return window.techStatsScopedKey('techTotalGamesPlayed');
+  }catch(e){}
+  return 'techTotalGamesPlayed::guest';
+}
+const MATCH_HISTORY_KEY = "techMatchHistoryV1"; // base; usar __techMatchHistoryKey()
 function getMatchHistory(){
   try{
-    let raw = window.localStorage.getItem(MATCH_HISTORY_KEY);
-    // Recuperar historial anterior si existe y la clave actual está vacía.
+    const store=__techStatsStore();
+    const key=__techMatchHistoryKey();
+    let raw = store.getItem(key);
     if(!raw){
-      raw = window.localStorage.getItem("techMatchHistory");
+      // Solo migrar legado global al ámbito actual si no hay datos propios.
+      raw = window.localStorage.getItem("techMatchHistoryV1") || window.localStorage.getItem("techMatchHistory");
       if(!raw) raw = "[]";
     }
     const arr = JSON.parse(raw);
@@ -6011,23 +6036,25 @@ function getMatchHistory(){
 }
 function pushMatchHistory(entry){
   try{
+    const store=__techStatsStore();
+    const key=__techMatchHistoryKey();
     const history = getMatchHistory();
     history.unshift({...entry, ts:Number(entry && entry.ts) || Date.now()});
     const limited = history.slice(0,20);
     const serialized = JSON.stringify(limited);
-    // Escritura directa y comprobación: no ocultar fallos de almacenamiento.
-    window.localStorage.setItem(MATCH_HISTORY_KEY, serialized);
-    const saved = JSON.parse(window.localStorage.getItem(MATCH_HISTORY_KEY) || "[]");
+    store.setItem(key, serialized);
+    const saved = JSON.parse(store.getItem(key) || "[]");
     if(!Array.isArray(saved) || saved.length !== limited.length) throw new Error("No se pudo verificar el historial");
-    // Contador fiable de partidas jugadas: +1 por cada partida guardada
     try{
-      const prev=Number(window.localStorage.getItem("techTotalGamesPlayed")||0)||0;
+      const gkey=__techGamesPlayedKey();
+      const prev=Number(store.getItem(gkey)||0)||0;
       const next=prev+1;
-      window.localStorage.setItem("techTotalGamesPlayed",String(next));
+      store.setItem(gkey,String(next));
       window.__techLastGamesPlayed=next;
       window.__techGamesBumpAt=Date.now();
     }catch(_e){}
     try{if(typeof window.__techOnMatchSaved==='function')window.__techOnMatchSaved(entry);}catch(_e){}
+    try{if(typeof window.techStatsMarkDirty==='function')window.techStatsMarkDirty()}catch(_e){}
     return true;
   }catch(e){
     console.error("No se pudo guardar el historial de partidas en localStorage:", e);
@@ -6036,8 +6063,9 @@ function pushMatchHistory(entry){
 }
 function clearMatchHistory(){
   try{
-    window.localStorage.setItem(MATCH_HISTORY_KEY, "[]");
-    window.localStorage.removeItem("techMatchHistory");
+    const store=__techStatsStore();
+    store.setItem(__techMatchHistoryKey(), "[]");
+    store.removeItem("techMatchHistory");
   }catch(e){ console.error("No se pudo borrar el historial:", e); }
 }
 function formatMatchDate(ts){
@@ -6080,7 +6108,7 @@ function formatMatchHistoryHtml(limit){
 }
 function saveCurrentMatchToHistory(){
   const dur=runStartTime?Math.max(1,Math.round((performance.now()-runStartTime)/1000)):0;
-  const prev=Number(lsGet("techRunRecordV4",0))||0;
+  const prev=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;
   const isRecord=(score>0&&score>=prev);
   // Telemetría de combate si el panel de estadísticas la está midiendo
   let shots=0,kills=0,meteors=0,shipsK=0;
@@ -6113,7 +6141,9 @@ function saveCurrentMatchToHistory(){
     result:"finished"
   });
 }
-function saveRecord(){const saved=Number(lsGet("techRunRecordV4",0))||0;if(score>saved){record=score;lsSet("techRunRecordV4",record)}else{record=saved}if(recordElement)recordElement.textContent=record}
+function __scopedRecordKey(){try{if(typeof window.techStatsScopedKey==='function')return window.techStatsScopedKey('techRunRecordV4')}catch(e){}return 'techRunRecordV4::guest'}
+function __scopedRecordStore(){try{if(typeof window.techStatsStorage==='function')return window.techStatsStorage()}catch(e){}try{if(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn())return localStorage}catch(e){}return sessionStorage||localStorage}
+function saveRecord(){const store=__scopedRecordStore();const key=__scopedRecordKey();const saved=Number(store.getItem(key)||lsGet("techRunRecordV4",0))||0;if(score>saved){record=score;try{store.setItem(key,String(record))}catch(e){}try{if(typeof window.techStatsMarkDirty==='function')window.techStatsMarkDirty()}catch(e){}}else{record=saved}if(recordElement)recordElement.textContent=record}
 function addScore(pts){score+=pts;if(scoreElement)scoreElement.textContent=score;saveRecord();checkScenario()}
 
 function destroyEnemy(o,i){
@@ -8973,11 +9003,11 @@ obstacles=[];particles=[];bullets=[];enemyBullets=[];pickups=[];explosions=[];tr
 score=0;meteorsDestroyed=0;shipsDestroyed=0;ki=0;kiReady=false;kamehameha=0;dashCd=0;dashInvuln=0;dashTrail=[];shieldCd=0;activeShield=0;chargeShot=0;worldTeleportCd=0;droneCd=0;bounceShot=0;bounceShotCd=0;freezeCd=0;phaseShift=0;railgun=0;lootVacuum=0;orbitalMines=[];decoys=[];chainFX=[];ammo=100;shield=0;rapidFire=0;tripleShot=0;slowMo=0;laser=0;pierce=0;invisible=0;magnet=0;missilePower=0;allyPower=0;storm=0;overdrive=0;nova=0;reflect=0;burst=0;repair=0;freezeEnemies=0;barrier=0;bazooka=0;specialCharges=3;powersCollected=0;lives=1;level=1;waveCount=0;waveNumber=1;scenario=selectedWorld||1;scenarioTransition=0;scenarioMsg="";gamePaused=false;lastEnemySpawn=0;
 keys.up=keys.down=keys.left=keys.right=false;
 if(scoreElement)scoreElement.textContent="0";
-record=Number(lsGet("techRunRecordV4",0))||0;if(recordElement)recordElement.textContent=record;
+record=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;if(recordElement)recordElement.textContent=record;
 updateLivesUI();
 player.x=canvas.width/2;player.y=canvas.height/2;mouse.x=player.x;mouse.y=player.y;gameRunning=true;
 combo=0;comboTimer=0;comboMult=1;feverMode=0;feverAnnounced=false;supplyCrates=[];lastSupplyDrop=performance.now();damageFlash=0;introTimer=36;screenShake=0;hitSparks=[];
-const rec=Number(lsGet("techRunRecordV4",0))||0;
+const rec=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;
 ammo=100+(rec>=30?20:0)+Math.min(50,(upgAmmo||0)*12);lives=1+(rec>=60?1:0)+Math.min(2,upgLives||0);updateLivesUI();
 if(rec>=100)upgSpeed=Math.max(upgSpeed,2);
 
@@ -10455,44 +10485,67 @@ function runAdded(node){if(!node||node.nodeType!==1)return;run(node);}
 <script id="tech-statistics-dashboard">
 (function(){
   'use strict';
-  const STORE='techGlobalStatsV2';
-  const ARCHIVE='techMatchArchiveV1';
-  const LEGACY='techMatchHistoryV1';
+  const STORE_BASE='techGlobalStatsV2';
+  const ARCHIVE_BASE='techMatchArchiveV1';
+  const LEGACY_BASE='techMatchHistoryV1';
   const MAX_ARCHIVE=5000;
   let range='10',filterMode='all',filterFrom='',filterTo='';
   let panelOpen=false;
   let run={start:0,shots:0,kills:0,meteors:0,ships:0,weaponKills:0,recorded:false,mode:'classic',diff:'normal',missionId:'',missionTitle:''};
 
+  function accountScope(){
+    try{
+      if(typeof window.techStatsAccountScope==='function') return window.techStatsAccountScope();
+      if(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn()){
+        const id=(window.techAuthUserId&&window.techAuthUserId())||(window.techAuthUsername&&window.techAuthUsername())||'';
+        if(id) return 'u:'+String(id).toLowerCase().replace(/[^a-z0-9_:-]/g,'').slice(0,64);
+      }
+    }catch(e){}
+    return 'guest';
+  }
+  function isGuestScope(){return accountScope()==='guest'}
+  function storageForScope(){
+    try{
+      if(typeof window.techStatsStorage==='function') return window.techStatsStorage();
+    }catch(e){}
+    return isGuestScope()?sessionStorage:localStorage;
+  }
+  function k(base){return base+'::'+accountScope()}
+  function STORE(){return k(STORE_BASE)}
+  function ARCHIVE(){return k(ARCHIVE_BASE)}
+  function LEGACY(){return k(LEGACY_BASE)}
+  function VISITS_KEY(){return k('techVisitDaysV1')}
+  function SESSIONS_KEY(){return k('techSessionsV1')}
+  function FIRST_KEY(){return k('techFirstVisitV1')}
 
-
-  function readJSON(key,fallback){try{const v=localStorage.getItem(key);return v===null?fallback:JSON.parse(v)}catch(e){return fallback}}
-  function writeJSON(key,value){try{localStorage.setItem(key,JSON.stringify(value));return true}catch(e){console.warn('[TECH estadísticas] No se pudo guardar '+key,e);return false}}
+  function readJSON(key,fallback){try{const v=storageForScope().getItem(key);return v===null?fallback:JSON.parse(v)}catch(e){return fallback}}
+  function writeJSON(key,value){try{storageForScope().setItem(key,JSON.stringify(value));try{if(typeof window.techStatsMarkDirty==='function')window.techStatsMarkDirty()}catch(_e){}return true}catch(e){console.warn('[TECH estadísticas] No se pudo guardar '+key,e);return false}}
   function safeNum(v){const n=Number(v);return Number.isFinite(n)?n:0}
   function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function fmtTime(sec){sec=Math.max(0,Math.floor(safeNum(sec)));const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return h?h+' h '+m+' min':m?m+' min '+s+' s':s+' s'}
-  function readStats(){return Object.assign({games:0,wins:0,losses:0,abandoned:0,enemies:0,shots:0,totalSeconds:0,storyWins:0,storyAttempts:0,highScore:0,updated:0,missionStats:{},noticeLog:[]},readJSON(STORE,{}))}
-  function saveStats(s){s.updated=Date.now();return writeJSON(STORE,s)}
-  function readArchive(){const a=readJSON(ARCHIVE,[]);return Array.isArray(a)?a:[]}
-  function writeArchive(a){return writeJSON(ARCHIVE,a.slice(0,MAX_ARCHIVE))}
-  function getLegacyHistory(){let a=readJSON(LEGACY,null);if(!Array.isArray(a))a=readJSON('techMatchHistory',[]);return Array.isArray(a)?a:[]}
+  function readStats(){return Object.assign({games:0,wins:0,losses:0,abandoned:0,enemies:0,shots:0,totalSeconds:0,storyWins:0,storyAttempts:0,highScore:0,updated:0,missionStats:{},noticeLog:[]},readJSON(STORE(),{}))}
+  function saveStats(s){s.updated=Date.now();return writeJSON(STORE(),s)}
+  function readArchive(){const a=readJSON(ARCHIVE(),[]);return Array.isArray(a)?a:[]}
+  function writeArchive(a){return writeJSON(ARCHIVE(),a.slice(0,MAX_ARCHIVE))}
+  function getLegacyHistory(){let a=readJSON(LEGACY(),null);if(!Array.isArray(a))a=readJSON(k('techMatchHistory'),[]);return Array.isArray(a)?a:[]}
 
   /* —— Sesiones, retención y enfriamiento (después de helpers) —— */
-  const VISITS_KEY='techVisitDaysV1';
-  const SESSIONS_KEY='techSessionsV1';
-  const FIRST_KEY='techFirstVisitV1';
+  // VISITS_KEY / SESSIONS_KEY / FIRST_KEY son funciones de alcance por cuenta
+
   function dayKey(ts){const d=new Date(Number(ts)||Date.now());return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-  function readVisits(){const a=readJSON(VISITS_KEY,[]);return Array.isArray(a)?a:[]}
-  function readSessions(){const a=readJSON(SESSIONS_KEY,[]);return Array.isArray(a)?a.slice(0,500):[]}
+  function readVisits(){const a=readJSON(VISITS_KEY(),[]);return Array.isArray(a)?a:[]}
+  function readSessions(){const a=readJSON(SESSIONS_KEY(),[]);return Array.isArray(a)?a.slice(0,500):[]}
   function clearAllStats(){
     try{
-      writeJSON(STORE,{games:0,wins:0,losses:0,abandoned:0,enemies:0,shots:0,totalSeconds:0,storyWins:0,storyAttempts:0,highScore:0,updated:Date.now(),missionStats:{},noticeLog:[]});
-      writeJSON(ARCHIVE,[]);
-      writeJSON(SESSIONS_KEY,[]);
-      writeJSON(VISITS_KEY,[]);
-      try{localStorage.removeItem(LEGACY);localStorage.removeItem('techMatchHistory');localStorage.setItem(LEGACY,'[]');}catch(e){}
-      try{localStorage.setItem('techTotalGamesPlayed','0');window.__techLastGamesPlayed=0;}catch(e){}
+      writeJSON(STORE(),{games:0,wins:0,losses:0,abandoned:0,enemies:0,shots:0,totalSeconds:0,storyWins:0,storyAttempts:0,highScore:0,updated:Date.now(),missionStats:{},noticeLog:[]});
+      writeJSON(ARCHIVE(),[]);
+      writeJSON(SESSIONS_KEY(),[]);
+      writeJSON(VISITS_KEY(),[]);
+      try{try{storageForScope().removeItem(LEGACY());storageForScope().removeItem(k('techMatchHistory'));storageForScope().setItem(LEGACY(),'[]');}catch(e){}}catch(e){}
+      try{const st=storageForScope();st.setItem(k('techTotalGamesPlayed'),'0');st.setItem(k('techRunRecordV4'),'0');window.__techLastGamesPlayed=0;}catch(e){}
       try{if(typeof record!=='undefined'){record=0;}if(typeof window.record!=='undefined'){window.record=0;}}catch(e){}
-      try{localStorage.setItem('techRecord','0');localStorage.setItem('techHighScore','0');}catch(e){}
+      try{storageForScope().setItem(k('techRecord'),'0');storageForScope().setItem(k('techHighScore'),'0');}catch(e){}
+      try{if(typeof window.techStatsMarkDirty==='function')window.techStatsMarkDirty()}catch(e){}
       run={start:0,shots:0,kills:0,meteors:0,ships:0,weaponKills:0,recorded:false,mode:'classic',diff:'normal',missionId:'',missionTitle:''};
       return true;
     }catch(e){console.error('[TECH stats] clearAllStats',e);return false;}
@@ -10501,8 +10554,8 @@ function runAdded(node){if(!node||node.nodeType!==1)return;run(node);}
     try{
       const day=dayKey(ts||Date.now());
       const days=readVisits();
-      if(!days.includes(day)){days.push(day);days.sort();writeJSON(VISITS_KEY,days.slice(-500))}
-      if(!localStorage.getItem(FIRST_KEY))localStorage.setItem(FIRST_KEY,String(ts||Date.now()));
+      if(!days.includes(day)){days.push(day);days.sort();writeJSON(VISITS_KEY(),days.slice(-500))}
+      if(!storageForScope().getItem(FIRST_KEY()))storageForScope().setItem(FIRST_KEY(),String(ts||Date.now()));
     }catch(e){}
   }
   function startSessionTrack(){
@@ -10521,7 +10574,7 @@ function runAdded(node){if(!node||node.nodeType!==1)return;run(node);}
         const sessions=readSessions();
         if(!sessions.length||Math.abs(safeNum(sessions[0].start)-start)>2000){
           sessions.unshift({start,end,duration:dur,day:dayKey(start)});
-          writeJSON(SESSIONS_KEY,sessions.slice(0,500));
+          writeJSON(SESSIONS_KEY(),sessions.slice(0,500));
         }
       }
       window.__techSessionActive=false;
@@ -11114,7 +11167,7 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
       </section>
       <section class="tech-stat-section" style="margin-top:14px;border-color:rgba(255,100,120,.35);background:rgba(40,10,18,.55)">
         <h3 style="margin:0 0 8px;color:#ffb4c0;font-size:13px">🗑 Reiniciar datos</h3>
-        <p class="tech-stat-muted" style="margin:0 0 10</p>
+        <p class="tech-stat-muted" style="margin:0 0 10px">Borra partidas, récords del panel, sesiones y avisos. Empieza las estadísticas desde 0. No afecta modo historia, monedas ni mejoras.</p>
         <div class="tech-stat-tools">
           <button type="button" class="tech-stat-action" id="clearAllStats" style="width:100%;border-color:rgba(255,100,120,.6);background:linear-gradient(135deg,#4a1520,#8a1f30);color:#fff;font-weight:800;padding:12px 14px">🗑 Borrar estadísticas</button>
         </div>
@@ -11195,7 +11248,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
           const sessions=readSessions();
           const st=full.ts-Math.max(1,full.duration||1)*1000;
           sessions.unshift({start:st,end:full.ts,duration:Math.max(1,full.duration||1),day:dayKey(full.ts)});
-          writeJSON(SESSIONS_KEY,sessions.slice(0,500));
+          writeJSON(SESSIONS_KEY(),sessions.slice(0,500));
         }catch(e){}
         if(panelOpen)render();
       }catch(e){console.warn('[TECH stats] onMatchSaved',e)}
@@ -12142,6 +12195,336 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
   <p id="techAuthStatus" role="status" aria-live="polite"></p>
  </div>
 </div>
+
+<script id="tech-stats-account-scope">
+(function(){
+  'use strict';
+  /**
+   * Estadísticas por cuenta:
+   * - Invitado: solo sessionStorage (se borra al cerrar la pestaña/ventana).
+   * - Cuenta registrada: localStorage por userId + sincronización en Supabase.
+   * Al cerrar sesión vuelven las estadísticas de invitado (vacías o de la sesión actual).
+   * Al iniciar sesión se cargan las de esa cuenta (local y BD).
+   */
+  const SUPABASE_URL = 'https://bkfpvwsahffrrkckjfre.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_89MkxFSiW8Et_qNZXzhXSA_6ouvoKgI';
+  const TABLE = 'estadisticas_tech_run';
+  const BASES = [
+    'techGlobalStatsV2',
+    'techMatchArchiveV1',
+    'techMatchHistoryV1',
+    'techSessionsV1',
+    'techVisitDaysV1',
+    'techFirstVisitV1',
+    'techTotalGamesPlayed',
+    'techRunRecordV4'
+  ];
+
+  let dirty = false;
+  let syncTimer = null;
+  let lastScope = null;
+
+  function scopeId(){
+    try{
+      if(window.techAuthIsLoggedIn && window.techAuthIsLoggedIn()){
+        const id = (window.techAuthUserId && window.techAuthUserId()) || (window.techAuthUsername && window.techAuthUsername()) || '';
+        if(id) return 'u:' + String(id).toLowerCase().replace(/[^a-z0-9_:-]/g,'').slice(0,64);
+      }
+    }catch(e){}
+    return 'guest';
+  }
+  function isGuest(){ return scopeId() === 'guest'; }
+  function store(){ return isGuest() ? sessionStorage : localStorage; }
+  function scopedKey(base){ return String(base) + '::' + scopeId(); }
+
+  window.techStatsAccountScope = scopeId;
+  window.techStatsStorage = store;
+  window.techStatsScopedKey = scopedKey;
+  window.techStatsMarkDirty = function(){
+    dirty = true;
+    if(isGuest()) return;
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function(){ pushToCloud(false); }, 2500);
+  };
+
+  function headers(token){
+    const t = token || (window.techAuthAccessToken || '');
+    return {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + (t || SUPABASE_KEY),
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Prefer': 'resolution=merge-duplicates,return=representation'
+    };
+  }
+
+  function readBundle(){
+    const s = store();
+    const out = {};
+    BASES.forEach(function(b){
+      try{
+        const v = s.getItem(scopedKey(b));
+        if(v != null) out[b] = v;
+      }catch(e){}
+    });
+    return out;
+  }
+
+  function writeBundle(bundle, targetStore, targetScope){
+    if(!bundle || typeof bundle !== 'object') return;
+    const s = targetStore || store();
+    const sc = targetScope || scopeId();
+    Object.keys(bundle).forEach(function(b){
+      try{
+        if(bundle[b] == null) s.removeItem(b + '::' + sc);
+        else s.setItem(b + '::' + sc, typeof bundle[b] === 'string' ? bundle[b] : JSON.stringify(bundle[b]));
+      }catch(e){}
+    });
+  }
+
+  function clearGuestData(){
+    try{
+      BASES.forEach(function(b){
+        sessionStorage.removeItem(b + '::guest');
+        // claves antiguas globales solo de invitado (no tocar cuentas)
+        try{ sessionStorage.removeItem(b); }catch(e){}
+      });
+      try{ sessionStorage.removeItem('techMatchHistory'); }catch(e){}
+    }catch(e){}
+    try{
+      if(typeof record !== 'undefined') record = 0;
+      if(typeof window.record !== 'undefined') window.record = 0;
+      window.__techLastGamesPlayed = 0;
+    }catch(e){}
+  }
+
+  function migrateGuestIntoAccount(userScope){
+    if(!userScope || userScope === 'guest') return false;
+    let moved = false;
+    try{
+      BASES.forEach(function(b){
+        const gKey = b + '::guest';
+        const uKey = b + '::' + userScope;
+        const gVal = sessionStorage.getItem(gKey);
+        if(gVal == null) return;
+        const existing = localStorage.getItem(uKey);
+        // Solo copiar si la cuenta aún no tiene ese dato
+        if(existing == null || existing === '' || existing === '[]' || existing === '{}'){
+          localStorage.setItem(uKey, gVal);
+          moved = true;
+        }
+      });
+      // Limpiar invitado tras migrar al registrarse / iniciar sesión
+      clearGuestData();
+    }catch(e){ console.warn('[TECH stats] migrate guest', e); }
+    return moved;
+  }
+
+  async function pullFromCloud(){
+    if(isGuest()) return null;
+    const uid = window.techAuthUserId && window.techAuthUserId();
+    if(!uid) return null;
+    try{
+      const url = SUPABASE_URL + '/rest/v1/' + TABLE
+        + '?select=user_id,username,stats_json,archive_json,history_json,sessions_json,visits_json,games_played,high_score,updated_at'
+        + '&user_id=eq.' + encodeURIComponent(uid)
+        + '&limit=1';
+      const res = await fetch(url, { method:'GET', headers: headers() });
+      const text = await res.text();
+      let rows = [];
+      try{ rows = text ? JSON.parse(text) : []; }catch(e){ rows = []; }
+      if(!res.ok){
+        console.warn('[TECH stats] pull', res.status, text);
+        return null;
+      }
+      if(!Array.isArray(rows) || !rows.length) return null;
+      const row = rows[0];
+      const bundle = {};
+      if(row.stats_json != null) bundle.techGlobalStatsV2 = typeof row.stats_json === 'string' ? row.stats_json : JSON.stringify(row.stats_json);
+      if(row.archive_json != null) bundle.techMatchArchiveV1 = typeof row.archive_json === 'string' ? row.archive_json : JSON.stringify(row.archive_json);
+      if(row.history_json != null) bundle.techMatchHistoryV1 = typeof row.history_json === 'string' ? row.history_json : JSON.stringify(row.history_json);
+      if(row.sessions_json != null) bundle.techSessionsV1 = typeof row.sessions_json === 'string' ? row.sessions_json : JSON.stringify(row.sessions_json);
+      if(row.visits_json != null) bundle.techVisitDaysV1 = typeof row.visits_json === 'string' ? row.visits_json : JSON.stringify(row.visits_json);
+      if(row.games_played != null) bundle.techTotalGamesPlayed = String(row.games_played);
+      if(row.high_score != null) bundle.techRunRecordV4 = String(row.high_score);
+      // Preferir el más reciente: local vs cloud
+      try{
+        const localStatsRaw = localStorage.getItem(scopedKey('techGlobalStatsV2'));
+        let localUpdated = 0, cloudUpdated = 0;
+        if(localStatsRaw){ try{ localUpdated = Number(JSON.parse(localStatsRaw).updated)||0; }catch(e){} }
+        cloudUpdated = row.updated_at ? Date.parse(row.updated_at) || 0 : 0;
+        if(cloudUpdated >= localUpdated){
+          writeBundle(bundle, localStorage, scopeId());
+        }
+      }catch(e){
+        writeBundle(bundle, localStorage, scopeId());
+      }
+      return row;
+    }catch(e){
+      console.warn('[TECH stats] pull network', e);
+      return null;
+    }
+  }
+
+  async function pushToCloud(force){
+    if(isGuest()) return null;
+    if(!dirty && !force) return null;
+    const uid = window.techAuthUserId && window.techAuthUserId();
+    const nick = window.techAuthUsername && window.techAuthUsername();
+    if(!uid) return null;
+    const bundle = readBundle();
+    let statsObj = {};
+    try{ statsObj = JSON.parse(bundle.techGlobalStatsV2 || '{}'); }catch(e){ statsObj = {}; }
+    let high = 0;
+    try{ high = Math.max(Number(statsObj.highScore)||0, Number(bundle.techRunRecordV4)||0); }catch(e){}
+    let games = 0;
+    try{ games = Number(bundle.techTotalGamesPlayed)||0; }catch(e){}
+    const body = {
+      user_id: uid,
+      username: String(nick || '').slice(0,32),
+      stats_json: bundle.techGlobalStatsV2 ? (function(){try{return JSON.parse(bundle.techGlobalStatsV2)}catch(e){return {}}}()) : {},
+      archive_json: bundle.techMatchArchiveV1 ? (function(){try{return JSON.parse(bundle.techMatchArchiveV1)}catch(e){return []}}()) : [],
+      history_json: bundle.techMatchHistoryV1 ? (function(){try{return JSON.parse(bundle.techMatchHistoryV1)}catch(e){return []}}()) : [],
+      sessions_json: bundle.techSessionsV1 ? (function(){try{return JSON.parse(bundle.techSessionsV1)}catch(e){return []}}()) : [],
+      visits_json: bundle.techVisitDaysV1 ? (function(){try{return JSON.parse(bundle.techVisitDaysV1)}catch(e){return []}}()) : [],
+      games_played: games,
+      high_score: high,
+      updated_at: new Date().toISOString()
+    };
+    try{
+      // UPSERT por user_id
+      const url = SUPABASE_URL + '/rest/v1/' + TABLE + '?on_conflict=user_id';
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: Object.assign({}, headers(), {'Prefer': 'resolution=merge-duplicates,return=minimal'}),
+        body: JSON.stringify(body)
+      });
+      if(!res.ok){
+        const t = await res.text();
+        console.warn('[TECH stats] push', res.status, t);
+        return null;
+      }
+      dirty = false;
+      return true;
+    }catch(e){
+      console.warn('[TECH stats] push network', e);
+      return null;
+    }
+  }
+
+  function refreshUI(){
+    try{
+      const recKey = scopedKey('techRunRecordV4');
+      const val = Number(store().getItem(recKey) || 0) || 0;
+      if(typeof record !== 'undefined') record = val;
+      if(typeof window.record !== 'undefined') window.record = val;
+      const re = document.getElementById('gameRecord');
+      if(re) re.textContent = String(val);
+    }catch(e){}
+    try{
+      if(typeof window.__techStatsRender === 'function') window.__techStatsRender();
+    }catch(e){}
+    try{
+      if(typeof renderStart === 'function') renderStart();
+    }catch(e){}
+  }
+
+  window.techOnAuthAccountChange = async function(info){
+    const sc = scopeId();
+    if(info && info.loggedIn){
+      // Al entrar: migrar datos de invitado de esta sesión si la cuenta está vacía
+      migrateGuestIntoAccount(sc);
+      await pullFromCloud();
+      dirty = true;
+      await pushToCloud(true);
+    } else {
+      // Al salir: guardar cuenta en la nube y mostrar ámbito invitado limpio
+      try{ await pushToCloud(true); }catch(e){}
+      // No borrar datos de cuenta en localStorage; solo cambiar de ámbito
+      clearGuestData();
+    }
+    lastScope = sc;
+    refreshUI();
+  };
+
+  // Al cerrar ventana: invitado a 0; cuenta sincroniza
+  function onLeave(){
+    try{
+      if(isGuest()) clearGuestData();
+      else {
+        // beacon sync best-effort
+        const uid = window.techAuthUserId && window.techAuthUserId();
+        if(!uid || !dirty) return;
+        const bundle = readBundle();
+        let statsObj = {};
+        try{ statsObj = JSON.parse(bundle.techGlobalStatsV2 || '{}'); }catch(e){}
+        const body = JSON.stringify({
+          user_id: uid,
+          username: String((window.techAuthUsername&&window.techAuthUsername())||'').slice(0,32),
+          stats_json: statsObj,
+          archive_json: (function(){try{return JSON.parse(bundle.techMatchArchiveV1||'[]')}catch(e){return []}})(),
+          history_json: (function(){try{return JSON.parse(bundle.techMatchHistoryV1||'[]')}catch(e){return []}})(),
+          sessions_json: (function(){try{return JSON.parse(bundle.techSessionsV1||'[]')}catch(e){return []}})(),
+          visits_json: (function(){try{return JSON.parse(bundle.techVisitDaysV1||'[]')}catch(e){return []}})(),
+          games_played: Number(bundle.techTotalGamesPlayed)||0,
+          high_score: Math.max(Number(statsObj.highScore)||0, Number(bundle.techRunRecordV4)||0),
+          updated_at: new Date().toISOString()
+        });
+        const url = SUPABASE_URL + '/rest/v1/' + TABLE + '?on_conflict=user_id';
+        if(navigator.sendBeacon){
+          try{
+            const blob = new Blob([body], {type:'application/json'});
+            // sendBeacon no permite headers custom; fallback fetch keepalive
+          }catch(e){}
+        }
+        try{
+          fetch(url, {
+            method:'POST',
+            headers: Object.assign({}, headers(), {'Prefer':'resolution=merge-duplicates,return=minimal'}),
+            body: body,
+            keepalive: true
+          });
+        }catch(e){}
+      }
+    }catch(e){}
+  }
+  window.addEventListener('pagehide', onLeave);
+  window.addEventListener('beforeunload', onLeave);
+
+  // Arranque: si hay sesión, tirar de la nube
+  async function boot(){
+    lastScope = scopeId();
+    if(!isGuest()){
+      await pullFromCloud();
+      refreshUI();
+    } else {
+      // Asegurar que no se mezclen claves globales antiguas en invitado
+      // (los datos de invitado viven solo en sessionStorage)
+    }
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(boot, 300); });
+  else setTimeout(boot, 300);
+
+  // SQL de referencia (ejecutar una vez en Supabase SQL Editor):
+  // create table if not exists public.estadisticas_tech_run (
+  //   user_id uuid primary key references auth.users(id) on delete cascade,
+  //   username text,
+  //   stats_json jsonb default '{}'::jsonb,
+  //   archive_json jsonb default '[]'::jsonb,
+  //   history_json jsonb default '[]'::jsonb,
+  //   sessions_json jsonb default '[]'::jsonb,
+  //   visits_json jsonb default '[]'::jsonb,
+  //   games_played int default 0,
+  //   high_score int default 0,
+  //   updated_at timestamptz default now()
+  // );
+  // alter table public.estadisticas_tech_run enable row level security;
+  // create policy "stats_select_own" on public.estadisticas_tech_run for select to authenticated using (auth.uid() = user_id);
+  // create policy "stats_insert_own" on public.estadisticas_tech_run for insert to authenticated with check (auth.uid() = user_id);
+  // create policy "stats_update_own" on public.estadisticas_tech_run for update to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+})();
+</script>
+
 <script id="tech-auth-supabase">
 (function(){
  'use strict';
@@ -12161,11 +12544,11 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
    if(!res.ok){let msg=data.msg||data.message||data.error_description||data.error||('Error HTTP '+res.status);if(res.status===400&&/already registered|user already exists/i.test(String(msg)))msg='Ese correo ya tiene una cuenta. Inicia sesión o recupera la contraseña.';throw new Error(msg);}
    return data;
  }
- function saveSession(s){session=s||null;if(session&&!session.expires_at&&session.expires_in)session.expires_at=Math.floor(Date.now()/1000)+Number(session.expires_in);user=session&&session.user||null;try{if(session)localStorage.setItem(SESSION_KEY,JSON.stringify(session));else localStorage.removeItem(SESSION_KEY);}catch(e){};updateAccountUI();}
+ function saveSession(s){const prevLogged=!!(session&&session.access_token&&user);session=s||null;if(session&&!session.expires_at&&session.expires_in)session.expires_at=Math.floor(Date.now()/1000)+Number(session.expires_in);user=session&&session.user||null;try{if(session)localStorage.setItem(SESSION_KEY,JSON.stringify(session));else localStorage.removeItem(SESSION_KEY);}catch(e){};updateAccountUI();try{window.techAuthAccessToken=session&&session.access_token||null;window.techAuthUserId=function(){return String((user&&user.id)||'').trim()};}catch(e){}try{const nowLogged=!!(session&&session.access_token&&user);if(typeof window.techOnAuthAccountChange==='function')window.techOnAuthAccountChange({loggedIn:nowLogged,wasLoggedIn:prevLogged,username:username(),userId:user&&user.id||null,migratedFromGuest:nowLogged&&!prevLogged});}catch(e){console.warn('[TECH Auth] account change',e)}}
  function username(){return String(user&&(user.user_metadata||{}).username||'').trim();}
  function isLogged(){return !!(session&&session.access_token&&user);}
  function owns(n){return isLogged()&&username().toLocaleLowerCase()===String(n||'').trim().toLocaleLowerCase();}
- window.techAuthIsLoggedIn=isLogged;window.techAuthUsername=username;window.techAuthOwnsUsername=owns;
+ window.techAuthIsLoggedIn=isLogged;window.techAuthUsername=username;window.techAuthOwnsUsername=owns;window.techAuthUserId=function(){return String((user&&user.id)||'').trim()};window.techAuthAccessToken=session&&session.access_token||null;
  function status(msg,good=false){const el=$('techAuthStatus');if(el){el.textContent=msg||'';el.style.color=good?'#83f0b0':'#ffc2a6';}if(msg&&window.techNotify&&(/ya existe|no se pudo|no coinciden|contraseña debe|inicia sesión|sesión cerrada/i.test(msg))){window.techNotify(msg,good?'success':'warning','Cuenta TECH RUN');}}
  function open(){modal.style.display='flex';setMode(isLogged()?'logged':'home');}
  function close(){modal.style.display='none';}
