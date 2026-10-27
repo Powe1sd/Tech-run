@@ -13243,19 +13243,50 @@ const PVP = {
   opponentConnected: false
 };
 
+function getAccessToken(){
+  try{
+    if(window.techAuthAccessToken) return String(window.techAuthAccessToken);
+  }catch(e){}
+  try{
+    const s=JSON.parse(localStorage.getItem('techRunAuthSessionV1')||'null');
+    if(s&&s.access_token) return String(s.access_token);
+  }catch(e){}
+  return '';
+}
 function authHeaders(json){
-  const token = (window.techAuthAccessToken) || ANON;
+  const token = getAccessToken() || ANON;
   const h = {
     'apikey': ANON,
     'Authorization': 'Bearer ' + token,
     'Accept': 'application/json'
   };
-  if(json){ h['Content-Type']='application/json'; h['Prefer']='return=representation'; }
+  if(json){
+    h['Content-Type']='application/json';
+    h['Prefer']='return=representation';
+  }
   return h;
 }
-function uid(){ try{return (window.techAuthUserId&&window.techAuthUserId())||''}catch(e){return ''} }
-function uname(){ try{return (window.techAuthUsername&&window.techAuthUsername())||'Jugador'}catch(e){return 'Jugador'} }
-function logged(){ try{return !!(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn())}catch(e){return false} }
+function uid(){
+  try{ const id=window.techAuthUserId&&window.techAuthUserId(); if(id) return String(id); }catch(e){}
+  try{
+    const s=JSON.parse(localStorage.getItem('techRunAuthSessionV1')||'null');
+    if(s&&s.user&&s.user.id) return String(s.user.id);
+  }catch(e){}
+  return '';
+}
+function uname(){
+  try{ const n=window.techAuthUsername&&window.techAuthUsername(); if(n) return String(n); }catch(e){}
+  try{
+    const s=JSON.parse(localStorage.getItem('techRunAuthSessionV1')||'null');
+    const n=s&&s.user&&s.user.user_metadata&&s.user.user_metadata.username;
+    if(n) return String(n);
+  }catch(e){}
+  return 'Jugador';
+}
+function logged(){
+  try{ if(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn()) return true; }catch(e){}
+  return !!(getAccessToken() && uid());
+}
 
 function genCode(){
   const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -13374,38 +13405,71 @@ async function joinRoom(){
   setErr('');
   const code=String(($('pvpCodeInput')&&$('pvpCodeInput').value)||'').trim().toUpperCase().replace(/\s+/g,'');
   if(code.length<4){setErr('Escribe un código válido.');return}
+  if(!getAccessToken()){setErr('No hay token de sesión. Cierra sesión, vuelve a entrar y reintenta.');return}
   const me=uid(); const nick=uname();
   if(!me){setErr('Sesión no válida. Inicia sesión primero.');return}
   try{
-    setStatus('Buscando sala…');
-    // Buscar por código sin filtrar demasiado el status (evita fallos de sintaxis in.)
+    setStatus('Buscando sala '+code+'…');
     const rows = await api(T_ROOMS,'GET',null,
-      '?select=*&code=eq.'+encodeURIComponent(code)+'&limit=3');
-    if(!Array.isArray(rows)||!rows.length){setErr('Sala no encontrada. ¿Código bien escrito?');return}
+      '?select=*&code=eq.'+encodeURIComponent(code)+'&limit=5');
+    if(!Array.isArray(rows)||!rows.length){
+      setErr('Sala no encontrada ('+code+'). El anfitrión debe tener la sala abierta y debes ejecutar el SQL nuevo de políticas RLS.');
+      return;
+    }
     const room = rows.find(function(x){ return x.status==='waiting'||x.status==='ready'; }) || rows[0];
     if(room.status==='playing'||room.status==='finished'||room.status==='closed'){
       setErr('Esa sala ya empezó o terminó. Crea una nueva.');
       return;
     }
-    if(String(room.host_id||'')===String(me)){setErr('Ya eres el anfitrión de esta sala. Usa otra cuenta o ventana privada para el rival.');return}
-    if(room.guest_id && String(room.guest_id)!==String(me)){
-      setErr('La sala ya tiene rival. Crea otra o pide un código nuevo.');
+    if(String(room.host_id||'')===String(me)){
+      setErr('Misma cuenta que el anfitrión. El rival debe usar OTRA cuenta (ventana de incógnito + registrarse/entrar).');
       return;
     }
-    await api(T_ROOMS+'?id=eq.'+room.id,'PATCH',{
-      guest_id: me,
-      guest_name: nick,
-      status: 'ready',
-      guest_ready: false
-    });
-    PVP.roomId=room.id; PVP.code=code; PVP.role='guest';
+    if(room.guest_id && String(room.guest_id)!==String(me)){
+      setErr('La sala ya tiene rival ('+(room.guest_name||'ocupada')+').');
+      return;
+    }
+    setStatus('Uniendo como invitado…');
+    let patched;
+    try{
+      patched = await api(T_ROOMS+'?id=eq.'+room.id,'PATCH',{
+        guest_id: me,
+        guest_name: nick,
+        status: 'ready',
+        guest_ready: false,
+        updated_at: new Date().toISOString()
+      });
+    }catch(patchErr){
+      // Reintento filtrando por código (por si id falla)
+      try{
+        patched = await api(T_ROOMS+'?code=eq.'+encodeURIComponent(code)+'&guest_id=is.null','PATCH',{
+          guest_id: me,
+          guest_name: nick,
+          status: 'ready',
+          guest_ready: false,
+          updated_at: new Date().toISOString()
+        });
+      }catch(e2){
+        throw new Error(patchErr.message+' | Reintento: '+e2.message+' → Ejecuta el SQL actualizado (política pvp_rooms_update).');
+      }
+    }
+    // Verificar que el guest_id quedó guardado
+    const check = await api(T_ROOMS,'GET',null,'?select=*&id=eq.'+room.id+'&limit=1');
+    const verified = Array.isArray(check)?check[0]:null;
+    if(!verified || String(verified.guest_id||'')!==String(me)){
+      setErr('El servidor no guardó al invitado (RLS). Abre Supabase → SQL y ejecuta TECH_RUN_PVP_SUPABASE.sql completo.');
+      console.warn('[PvP] join verify failed', verified, 'me', me, 'patched', patched);
+      return;
+    }
+    PVP.roomId=verified.id; PVP.code=code; PVP.role='guest';
     PVP.localReady=false;
     $('pvpCodeDisplay').textContent=code;
     $('pvpLobbyHome').style.display='none';
     $('pvpLobbyWait').style.display='block';
-    setStatus('Conectado a la sala de '+(room.host_name||'anfitrión')+'. Pulsa Listo. El anfitrión también debe pulsar Listo.');
-    updateReadyButton(room);
+    setStatus('✓ Unido a la sala de '+(verified.host_name||'anfitrión')+'. Pulsa Listo. El anfitrión también.');
+    updateReadyButton(verified);
     startPollingRoom();
+    if(window.techNotify) window.techNotify('Te uniste a la sala '+code,'success','1v1');
   }catch(err){
     console.error(err);
     setErr('Error al unirse: '+err.message);
@@ -13463,7 +13527,7 @@ async function pollRoom(){
     updateReadyButton(r);
 
     if(!hasGuest){
-      setStatus('Código '+ (PVP.code||r.code||'') +' · Esperando que un RIVAL se una (otra cuenta o ventana privada). Luego ambos pulsáis Listo.');
+      setStatus('Código '+ (PVP.code||r.code||'') +' · Sin rival aún. El otro jugador: 1) otra cuenta 2) modo 1v1 3) escribir código 4) Unirse. Si ya se unió y sigue así → ejecuta el SQL nuevo de RLS.');
     } else {
       const a = hostReady?'✓':'…';
       const b = guestReady?'✓':'…';
