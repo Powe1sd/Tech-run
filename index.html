@@ -9886,21 +9886,21 @@ function storyOnWaveComplete(){
       pause:'⏸ PAUSA',resume:'▶ Continuar',restart:'🔄 Reiniciar',saveGame:'💾 GUARDAR',goHome:'INICIO',
       fullConfig:'⚙ CONFIGURACIONES',fullConfigHint:'Abre la pantalla completa de configuraciones',
       stats:'📊 Estadísticas',statsPro:'📊 Centro de estadísticas PRO',
-      applyFilters:'Aplicar filtros',clearFilters:'Limpiar filtros',refreshData:'↻ Actualizar datos',
+      applyFilters:'Aplicar',clearFilters:'Restablecer',refreshData:'↻ Actualizar datos',
       exportCSV:'⬇ Exportar historial completo CSV',exportMissions:'⬇ Exportar análisis de misiones CSV',
       compare:'Comparar',modeFilter:'Modo',fromDate:'Desde',toDate:'Hasta',
-      last5:'Últimas 5',last10:'Últimas 10',last20:'Últimas 20',allFiltered:'Todas las filtradas',
-      allModes:'Todos los modos',filters:'🔎 Filtros y comparación',
+      last5:'Últimas 5',last10:'Últimas 10',last20:'Últimas 20',allFiltered:'Todas las partidas',
+      allModes:'Todos los modos',filters:'🔎 Vista y comparación',
       gamesPlayed:'Partidas jugadas',personalRecord:'Récord personal',avgSelected:'Promedio seleccionado',
       medianSelected:'Mediana seleccionada',enemiesKilled:'Enemigos eliminados',shotsLogged:'Disparos registrados',
       killsPerMin:'Eliminaciones/minuto',timePlayed:'Tiempo acumulado',avgDuration:'Duración promedio',
       longestMatch:'Partida más larga',winsReg:'Victorias registradas',lossesReg:'Derrotas registradas',
-      abandoned:'Abandonadas/finalizadas',bestFilter:'Mejor puntuación del filtro',worstFilter:'Peor puntuación del filtro',
+      abandoned:'Abandonadas/finalizadas',bestFilter:'Mejor puntuación',worstFilter:'Peor puntuación',
       gamePoints:'Puntos juego',achievements:'Logros desbloqueados',missionsDone:'Misiones completadas',
       bestWave:'Mejor oleada',avgWave:'Oleada promedio',meteorsKilled:'Meteoritos eliminados',
       enemyShips:'Naves enemigas',ptsMin:'Pts / minuto',effectiveness:'Efectividad estimada',
       shortestMatch:'Partida más corta',streakUp:'Racha de subidas',topShip:'Nave más usada',topWorld:'Mundo más jugado',
-      filteredMatches:'Partidas filtradas',retD1:'Retención Día 1',retD7:'Retención Día 7',retD30:'Retención Día 30',
+      filteredMatches:'Partidas en vista',retD1:'Retención Día 1',retD7:'Retención Día 7',retD30:'Retención Día 30',
       cooldown:'Tiempo de enfriamiento',sessionLen:'Duración de sesión',longestSession:'Sesión más larga',
       totalSessions:'Sesiones totales',activeDays:'Días activos',sessionsWeek:'Sesiones / semana',daysIdle:'Días sin jugar',
       scoreEvolution:'📈 Evolución de puntuación: subidas y bajadas',scoreBars:'📊 Comparación visual de puntuaciones',
@@ -9921,7 +9921,7 @@ function storyOnWaveComplete(){
       launching:'Br7 despega...',impacted:'Sistema impactado.',scoreLbl:'Puntuación:',
       pointsHUD:'Puntos',recordHUD:'Récord',livesHUD:'Vidas',
       need2days:'Se necesitan 2+ días activos',windowOpen:'Ventana aún en curso',
-      accordingFilters:'Según filtros activos',browserCounter:'Contador desde este navegador · +1 al terminar cada partida'
+      accordingFilters:'En este rango',browserCounter:'Contador desde este navegador · +1 al terminar cada partida'
     },
     en:{
       pause:'⏸ PAUSE',resume:'▶ Resume',restart:'🔄 Restart',saveGame:'💾 SAVE',goHome:'HOME',
@@ -10023,7 +10023,7 @@ function storyOnWaveComplete(){
       bestWave:'Melhor onda',avgWave:'Onda média',meteorsKilled:'Meteoros destruídos',
       enemyShips:'Naves inimigas',ptsMin:'Pts / minuto',effectiveness:'Eficácia estimada',
       shortestMatch:'Partida mais curta',streakUp:'Sequência de altas',topShip:'Nave mais usada',topWorld:'Mundo mais jogado',
-      filteredMatches:'Partidas filtradas',retD1:'Retenção Dia 1',retD7:'Retenção Dia 7',retD30:'Retenção Dia 30',
+      filteredMatches:'Partidas en vista',retD1:'Retenção Dia 1',retD7:'Retenção Dia 7',retD30:'Retenção Dia 30',
       cooldown:'Tempo de resfriamento',sessionLen:'Duração da sessão',longestSession:'Sessão mais longa',
       totalSessions:'Sessões totais',activeDays:'Dias ativos',sessionsWeek:'Sessões / semana',daysIdle:'Dias sem jogar',
       scoreEvolution:'📈 Evolução da pontuação',scoreBars:'📊 Comparação de pontuações',
@@ -10924,7 +10924,7 @@ s.shots=safeNum(s.shots)+safeNum(normalized.shots);s.enemies=safeNum(s.enemies)+
   function bar(label,value,max,color,display){const pct=max>0?Math.max(0,Math.min(100,safeNum(value)/max*100)):0;return `<div class="tech-stat-barrow"><div class="tech-stat-bartop"><span>${label}</span><b>${display==null?safeNum(value):display}</b></div><div class="tech-stat-track"><div class="tech-stat-fill" style="width:${pct}%;background:${color}"></div></div></div>`}
   function buildChart(matches){
     const chronological=matches.slice().sort((a,b)=>safeNum(a.ts)-safeNum(b.ts));
-    if(!chronological.length)return '<div class="tech-stat-empty">No hay partidas con esos filtros. Cambia el rango o juega una partida nueva.</div>';
+    if(!chronological.length)return '<div class="tech-stat-empty">No hay partidas en este rango. Cambia la vista o juega una partida nueva.</div>';
     const values=chronological.map(m=>safeNum(m.score)),max=Math.max(1,...values),min=Math.min(0,...values),w=760,h=230,padL=48,padR=18,padT=18,padB=32;
     const x=i=>chronological.length===1?(w-padL-padR)/2+padL:padL+i*(w-padL-padR)/(chronological.length-1);
     const y=v=>h-padB-(v-min)/(Math.max(1,max-min))*(h-padT-padB);
@@ -10934,7 +10934,7 @@ s.shots=safeNum(s.shots)+safeNum(normalized.shots);s.enemies=safeNum(s.enemies)+
     const dots=chronological.map((m,i)=>`<circle cx="${x(i)}" cy="${y(values[i])}" r="4" fill="#62efff" stroke="#061326" stroke-width="2"><title>${esc(m.missionTitle||('Partida '+(i+1)))} · ${values[i].toLocaleString('es-CO')} pts · ${m.ts?new Date(m.ts).toLocaleString('es-CO'):''}</title></circle>`).join('');
     const labelStep=Math.max(1,Math.ceil(chronological.length/10));const labels=chronological.map((m,i)=>i%labelStep===0||i===chronological.length-1?`<text x="${x(i)}" y="${h-8}" text-anchor="middle" fill="#8ea8c4" font-size="10">${i+1}</text>`:'').join('');
     const delta=values.length>1?values[values.length-1]-values[values.length-2]:0;const trendColor=delta>0?'#69f0ae':delta<0?'#ff8c8c':'#62efff';
-    return `<div class="tech-stat-linewrap"><svg class="tech-stat-line" viewBox="0 0 ${w} ${h}" role="img" aria-label="Evolución de puntuación, segmentos verdes son subidas y rojos bajadas">${grid}${segments}${dots}${labels}</svg></div><div class="tech-stat-legend"><span><i class="tech-stat-dot" style="background:#62efff"></i>Puntuación por partida</span><span><i class="tech-stat-dot" style="background:#69f0ae"></i>Subida</span><span><i class="tech-stat-dot" style="background:#ff7b86"></i>Bajada</span><span>Eje horizontal: orden cronológico · vertical: puntos</span></div><div class="tech-stat-trend"><span>Variación reciente: <b style="color:${trendColor}">${delta>0?'↗ +':delta<0?'↘ ':'→ '}${Math.abs(delta).toLocaleString('es-CO')} pts</b></span><span>${values.length>1?'Comparación entre las dos últimas partidas del rango.':'Se necesitan dos partidas para calcular la variación.'}</span></div><div class="tech-stat-chartcaption">Mostrando ${chronological.length} partidas filtradas; los datos antiguos importados pueden carecer de métricas de combate.</div>`;
+    return `<div class="tech-stat-linewrap"><svg class="tech-stat-line" viewBox="0 0 ${w} ${h}" role="img" aria-label="Evolución de puntuación, segmentos verdes son subidas y rojos bajadas">${grid}${segments}${dots}${labels}</svg></div><div class="tech-stat-legend"><span><i class="tech-stat-dot" style="background:#62efff"></i>Puntuación por partida</span><span><i class="tech-stat-dot" style="background:#69f0ae"></i>Subida</span><span><i class="tech-stat-dot" style="background:#ff7b86"></i>Bajada</span><span>Eje horizontal: orden cronológico · vertical: puntos</span></div><div class="tech-stat-trend"><span>Variación reciente: <b style="color:${trendColor}">${delta>0?'↗ +':delta<0?'↘ ':'→ '}${Math.abs(delta).toLocaleString('es-CO')} pts</b></span><span>${values.length>1?'Comparación entre las dos últimas partidas del rango.':'Se necesitan dos partidas para calcular la variación.'}</span></div><div class="tech-stat-chartcaption">Mostrando ${chronological.length} partidas; los datos antiguos pueden carecer de métricas de combate.</div>`;
   }
 
   function buildScoreBars(matches){
@@ -10942,7 +10942,7 @@ s.shots=safeNum(s.shots)+safeNum(normalized.shots);s.enemies=safeNum(s.enemies)+
     if(!chronological.length)return '<div class="tech-stat-empty">No hay datos para la gráfica de barras.</div>';
     const shown=chronological.slice(-20);
     const max=Math.max(1,...shown.map(m=>safeNum(m.score)));
-    return `<div class="tech-stat-chart" role="img" aria-label="Gráfica de barras de puntuación por partida">${shown.map((m,i)=>{const value=safeNum(m.score);const prev=i>0?safeNum(shown[i-1].score):value;const color=value>prev?'linear-gradient(180deg,#69f0ae,#148d67)':value<prev?'linear-gradient(180deg,#ff7b86,#a52d45)':'linear-gradient(180deg,#64f2ff,#1377ff)';const height=Math.max(3,value/max*100);return `<div class="tech-stat-chartcol" title="${esc(m.missionTitle||('Partida '+(i+1)))}: ${value.toLocaleString('es-CO')} puntos"><div class="tech-stat-chartvalue">${value.toLocaleString('es-CO')}</div><div class="tech-stat-chartbar" style="height:${height}%;background:${color}"></div><span>${i+1}</span></div>`}).join('')}</div><div class="tech-stat-chartcaption">Últimas ${shown.length} puntuaciones del rango filtrado. Verde: subida · rojo: bajada · azul: igual o primera partida.</div>`;
+    return `<div class="tech-stat-chart" role="img" aria-label="Gráfica de barras de puntuación por partida">${shown.map((m,i)=>{const value=safeNum(m.score);const prev=i>0?safeNum(shown[i-1].score):value;const color=value>prev?'linear-gradient(180deg,#69f0ae,#148d67)':value<prev?'linear-gradient(180deg,#ff7b86,#a52d45)':'linear-gradient(180deg,#64f2ff,#1377ff)';const height=Math.max(3,value/max*100);return `<div class="tech-stat-chartcol" title="${esc(m.missionTitle||('Partida '+(i+1)))}: ${value.toLocaleString('es-CO')} puntos"><div class="tech-stat-chartvalue">${value.toLocaleString('es-CO')}</div><div class="tech-stat-chartbar" style="height:${height}%;background:${color}"></div><span>${i+1}</span></div>`}).join('')}</div><div class="tech-stat-chartcaption">Últimas ${shown.length} puntuaciones del rango. Verde: subida · rojo: bajada · azul: igual o primera partida.</div>`;
   }
   function breakdown(matches,key,label){const counts={};matches.forEach(m=>{const n=String(m[key]||'No especificado');counts[n]=(counts[n]||0)+1});const entries=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,7);if(!entries.length)return '<p class="tech-stat-muted">Aún no hay datos registrados.</p>';const max=Math.max(1,...entries.map(x=>x[1]));return entries.map(([n,v])=>bar(esc(n),v,max,'linear-gradient(90deg,#167cff,#62efff)',`${v} (${Math.round(v/Math.max(1,matches.length)*100)}%)`)).join('')}
   function exportCSV(){const a=readArchive().slice().sort((x,y)=>safeNum(y.ts)-safeNum(x.ts));const cols=['Fecha','ID','Modo','Resultado','Dificultad','Puntuacion','Oleada','Mundo','Nave','Modelo','Duracion_segundos','Disparos_registrados','Enemigos_eliminados','Meteoritos_eliminados','Naves_enemigas_eliminadas','Monedas','Mision_ID','Mision','Objetivo','Registro_historico_antiguo'];const rows=[cols,...a.map(m=>[m.ts?new Date(m.ts).toISOString():'',m.id||'',m.mode||'',m.result||'',m.diff||'',safeNum(m.score),safeNum(m.wave),m.world||'',m.ship||'',m.model||'',safeNum(m.duration),safeNum(m.shots),safeNum(m.kills),safeNum(m.meteors),safeNum(m.ships),safeNum(m.coins),m.missionId||'',m.missionTitle||'',m.objective||'',m.legacy?'Sí':'No'])];downloadCSV(rows,'TECH-historial-completo.csv')}
@@ -11178,7 +11178,7 @@ function downloadCSV(rows,name){const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+Stri
       const canvas=drawStatsReportCanvas(h.length?h:pool, am);
       const pdf=_canvasToPDF(canvas,{
         title:'TECH RUN - Estadisticas',
-        subtitle:new Date().toLocaleString('es-CO')+' | Rango filtrado: '+(h.length||pool.length)+' partidas',
+        subtitle:new Date().toLocaleString('es-CO')+' | Rango: '+(h.length||pool.length)+' partidas',
         lines:[
           'Promedio '+am.avg+' | Desv. '+am.std+' | Consistencia '+am.consistency+'%',
           'Crecimiento '+am.growth+'% | Racha '+am.bestStreak+' | Eficiencia '+am.efficiency+'%',
@@ -11267,38 +11267,38 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
     const ret=retentionStats(all);
 
     panel.innerHTML=`<div class="tech-stat-head"><div><h2>📊 Centro de estadísticas PRO</h2></div><button id="closeStatistics" class="tech-stat-close" aria-label="Cerrar estadísticas">✕</button></div>
-      <section class="tech-stat-section tech-stat-filters"><h3>🔎 Filtros y comparación</h3><div class="tech-stat-filtergrid"><label>Comparar<select id="statRange"><option value="5" ${range==='5'?'selected':''}>Últimas 5</option><option value="10" ${range==='10'?'selected':''}>Últimas 10</option><option value="20" ${range==='20'?'selected':''}>Últimas 20</option><option value="all" ${range==='all'?'selected':''}>Todas las filtradas</option></select></label><label>Modo<select id="statMode"><option value="all" ${filterMode==='all'?'selected':''}>Todos los modos</option><option value="classic" ${filterMode==='classic'?'selected':''}>Clásico</option><option value="infinite" ${filterMode==='infinite'?'selected':''}>Infinito</option><option value="online" ${filterMode==='online'?'selected':''}>Online</option><option value="story" ${filterMode==='story'?'selected':''}>Historia</option></select></label><label>Desde<input id="statFrom" type="date" value="${esc(filterFrom)}"></label><label>Hasta<input id="statTo" type="date" value="${esc(filterTo)}"></label></div><div class="tech-stat-tools"><button class="tech-stat-action" id="applyStatFilters">Aplicar filtros</button><button class="tech-stat-action" id="clearStatFilters">Limpiar filtros</button><span class="tech-stat-pill">${filtered.length} partidas coinciden</span><span class="tech-stat-pill">${h.length} en comparación</span></div></section>
+      <section class="tech-stat-section tech-stat-filters"><h3>🔎 Vista y comparación</h3><div class="tech-stat-filtergrid"><label>Comparar<select id="statRange"><option value="5" ${range==='5'?'selected':''}>Últimas 5</option><option value="10" ${range==='10'?'selected':''}>Últimas 10</option><option value="20" ${range==='20'?'selected':''}>Últimas 20</option><option value="all" ${range==='all'?'selected':''}>Todas las partidas</option></select></label><label>Modo<select id="statMode"><option value="all" ${filterMode==='all'?'selected':''}>Todos los modos</option><option value="classic" ${filterMode==='classic'?'selected':''}>Clásico</option><option value="infinite" ${filterMode==='infinite'?'selected':''}>Infinito</option><option value="online" ${filterMode==='online'?'selected':''}>Online</option><option value="story" ${filterMode==='story'?'selected':''}>Historia</option></select></label><label>Desde<input id="statFrom" type="date" value="${esc(filterFrom)}"></label><label>Hasta<input id="statTo" type="date" value="${esc(filterTo)}"></label></div><div class="tech-stat-tools"><button class="tech-stat-action" id="applyStatFilters">Aplicar</button><button class="tech-stat-action" id="clearStatFilters">Restablecer</button><span class="tech-stat-pill">${filtered.length} partidas</span><span class="tech-stat-pill">${h.length} en comparación</span></div></section>
       <div class="tech-stat-tools tech-stat-view-switch" role="group" aria-label="Vista de estadísticas"><button type="button" class="tech-stat-action" id="showStatsCharts" aria-pressed="false">📈 Ir a gráficas</button><button type="button" class="tech-stat-action" id="showStatsData" aria-pressed="true">📊 Datos y gráficas</button><button type="button" class="tech-stat-action" id="downloadAllStatsData">📄 Descargar datos estadísticos (PDF)</button><button type="button" class="tech-stat-action" id="downloadAllStatsCSV">⬇ Descargar historial completo (CSV)</button></div>
       <div class="tech-stat-cards tech-stat-data-view">
        <div class="tech-stat-card"><span>Partidas jugadas</span><strong>${totalGamesPlayed.toLocaleString('es-CO')}</strong><small>Contador desde este navegador · +1 al terminar cada partida</small></div>
        <div class="tech-stat-card"><span>Récord personal</span><strong>${recordText}</strong><small>Mejor puntuación guardada</small></div>
        <div class="tech-stat-card"><span>Promedio seleccionado</span><strong>${avg.toLocaleString('es-CO')}</strong><small>Sobre ${h.length} partidas comparadas</small></div>
        <div class="tech-stat-card"><span>Mediana seleccionada</span><strong>${median.toLocaleString('es-CO')}</strong><small>Mitad de puntuaciones por encima y por debajo</small></div>
-       <div class="tech-stat-card"><span>Enemigos eliminados</span><strong>${totalKills.toLocaleString('es-CO')}</strong><small>Según filtros activos</small></div>
-       <div class="tech-stat-card"><span>Disparos registrados</span><strong>${totalShots.toLocaleString('es-CO')}</strong><small>Según filtros activos</small></div>
+       <div class="tech-stat-card"><span>Enemigos eliminados</span><strong>${totalKills.toLocaleString('es-CO')}</strong><small>En este rango</small></div>
+       <div class="tech-stat-card"><span>Disparos registrados</span><strong>${totalShots.toLocaleString('es-CO')}</strong><small>En este rango</small></div>
        <div class="tech-stat-card"><span>Eliminaciones/minuto</span><strong>${killsPerMinute}</strong><small>Según duración y eliminaciones registradas</small></div>
-       <div class="tech-stat-card"><span>Tiempo acumulado</span><strong>${fmtTime(totalTime)}</strong><small>Según filtros activos</small></div>
+       <div class="tech-stat-card"><span>Tiempo acumulado</span><strong>${fmtTime(totalTime)}</strong><small>En este rango</small></div>
        <div class="tech-stat-card"><span>Duración promedio</span><strong>${fmtTime(avgDuration)}</strong><small>Por registro de partida</small></div>
        <div class="tech-stat-card"><span>Partida más larga</span><strong>${fmtTime(longest)}</strong><small>Máxima duración archivada</small></div>
        <div class="tech-stat-card"><span>Victorias registradas</span><strong>${wins}</strong><small>Misiones completadas con éxito</small></div>
        <div class="tech-stat-card"><span>Derrotas registradas</span><strong>${losses}</strong><small>Misiones fallidas registradas</small></div>
        <div class="tech-stat-card"><span>Abandonadas/finalizadas</span><strong>${abandoned}</strong><small>Sesiones sin resultado de victoria/derrota</small></div>
-       <div class="tech-stat-card"><span>Mejor puntuación del filtro</span><strong>${(scores.length?Math.max(...scores):0).toLocaleString('es-CO')}</strong><small>En el rango comparado</small></div>
-       <div class="tech-stat-card"><span>Peor puntuación del filtro</span><strong>${worst.toLocaleString('es-CO')}</strong><small>En el rango comparado</small></div>
+       <div class="tech-stat-card"><span>Mejor puntuación</span><strong>${(scores.length?Math.max(...scores):0).toLocaleString('es-CO')}</strong><small>En el rango comparado</small></div>
+       <div class="tech-stat-card"><span>Peor puntuación</span><strong>${worst.toLocaleString('es-CO')}</strong><small>En el rango comparado</small></div>
        <div class="tech-stat-card"><span>Puntos juego</span><strong>${safeNum(currentCoins).toLocaleString('es-CO')}</strong><small>Puntos de juego guardados en el navegador</small></div>
        <div class="tech-stat-card"><span>Logros desbloqueados</span><strong>${achievementCount}</strong><small>Según el registro de logros del juego</small></div>
        <div class="tech-stat-card"><span>Misiones completadas</span><strong>${progressPct}%</strong><small>${Math.min(done,total)} de ${total} misiones marcadas</small></div>
-       <div class="tech-stat-card"><span>Mejor oleada</span><strong>${bestWave}</strong><small>Según filtros activos</small></div>
-       <div class="tech-stat-card"><span>Oleada promedio</span><strong>${avgWave}</strong><small>Sobre ${filteredCount} partidas filtradas</small></div>
+       <div class="tech-stat-card"><span>Mejor oleada</span><strong>${bestWave}</strong><small>En este rango</small></div>
+       <div class="tech-stat-card"><span>Oleada promedio</span><strong>${avgWave}</strong><small>Sobre ${filteredCount} partidas</small></div>
        <div class="tech-stat-card"><span>Meteoritos eliminados</span><strong>${totalMeteors.toLocaleString('es-CO')}</strong><small>Según telemetría registrada</small></div>
        <div class="tech-stat-card"><span>Naves enemigas</span><strong>${totalEnemyShips.toLocaleString('es-CO')}</strong><small>Eliminaciones de naves (no meteoritos)</small></div>
        <div class="tech-stat-card"><span>Pts / minuto</span><strong>${scorePerMin.toLocaleString('es-CO')}</strong><small>Rendimiento de puntuación</small></div>
        <div class="tech-stat-card"><span>Efectividad estimada</span><strong>${totalShots?accuracyEst+'%':'—'}</strong><small>Eliminaciones / disparos</small></div>
        <div class="tech-stat-card"><span>Partida más corta</span><strong>${shortestShow}</strong><small>Duración mínima con datos</small></div>
        <div class="tech-stat-card"><span>Racha de subidas</span><strong>${maxStreak}</strong><small>Subidas seguidas en el rango comparado</small></div>
-       <div class="tech-stat-card"><span>Nave más usada</span><strong style="font-size:14px">${topShipLabel}</strong><small>En partidas filtradas</small></div>
-       <div class="tech-stat-card"><span>Mundo más jugado</span><strong style="font-size:14px">${topWorldLabel}</strong><small>En partidas filtradas</small></div>
-       <div class="tech-stat-card"><span>Partidas filtradas</span><strong>${filteredCount}</strong><small>Coinciden con filtros actuales</small></div>
+       <div class="tech-stat-card"><span>Nave más usada</span><strong style="font-size:14px">${topShipLabel}</strong><small>En estas partidas</small></div>
+       <div class="tech-stat-card"><span>Mundo más jugado</span><strong style="font-size:14px">${topWorldLabel}</strong><small>En estas partidas</small></div>
+       <div class="tech-stat-card"><span>Partidas en vista</span><strong>${filteredCount}</strong><small>Según la vista actual</small></div>
        <div class="tech-stat-card"><span>Retención Día 1</span><strong>${ret.fmtRet(ret.d1)}</strong><small>${esc(ret.d1lab||"")}</small></div>
        <div class="tech-stat-card"><span>Retención Día 7</span><strong>${ret.fmtRet(ret.d7)}</strong><small>${esc(ret.d7lab||"")}</small></div>
        <div class="tech-stat-card"><span>Retención Día 30</span><strong>${ret.fmtRet(ret.d30)}</strong><small>${esc(ret.d30lab||"")}</small></div>
@@ -11333,7 +11333,7 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
         <span class="tech-stat-pill">Incluye gráfica de evolución + resumen de métricas</span>
       </div>
     </section>
-      <div id="techStatGraphsAnchor" class="tech-stat-graphs-heading tech-stat-graph-view">📈 Gráficas y evolución (mismos datos filtrados)</div>
+      <div id="techStatGraphsAnchor" class="tech-stat-graphs-heading tech-stat-graph-view">📈 Gráficas y evolución</div>
       <section class="tech-stat-section tech-stat-graph-view"><h3>📈 Evolución de puntuación: subidas y bajadas</h3>${buildChart(h)}<h3 style="margin-top:18px">📊 Comparación visual de puntuaciones</h3>${buildScoreBars(h)}</section>
       <section class="tech-stat-section tech-stat-graph-view"><h3>🧰 Builds y loadouts</h3>
       <div class="tech-stat-cards" style="margin-bottom:12px">
