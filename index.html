@@ -9321,10 +9321,9 @@ if(!extra){extra=document.createElement("div");extra.id="goExtra";gameOverPanel.
 const rank=getRanking().map((r,i)=>(i+1)+". "+r.score+" ("+r.diff+")").join("<br>")||"—";
 const _goScore=typeof score!=='undefined'?Number(score)||0:0;
 const _goShip=(typeof shipName!=='undefined'&&shipName)?String(shipName):'Nave';
+const _guestMode = (typeof window.techAuthIsLoggedIn === 'function') ? !window.techAuthIsLoggedIn() : true;
 extra.innerHTML='<p style="color:#FFD700;font-size:12px;margin-top:6px;margin-bottom:3px">⭐ Puntosjuego: '+coins+'</p>'
-  +'<p id="onlineRankStatus" style="color:#7fd;font-size:11px;margin:4px 0">🌐 Subiendo al ranking online…</p>'
-  +'<p style="color:#aaa;font-size:11px;margin-top:3px;margin-bottom:2px">TOP 5 local</p>'
-  +'<p style="color:#ddd;font-size:11px;margin-top:2px;margin-bottom:4px">'+rank+'</p>'
+  +(!_guestMode?'<p id="onlineRankStatus" style="color:#7fd;font-size:11px;margin:4px 0">🌐 Subiendo al ranking online…</p>':'')
   +'<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:5px;padding-bottom:10px">'
   +'<button class="game-btn" id="shareScoreBtn" style="margin:0;transform:translateY(-12px)">📤 COMPARTIR</button>'
   +'<button class="game-btn" id="btnInicio" style="margin:0;transform:translateY(-12px);background:#0038A8;color:#fff">INICIO</button>'
@@ -11914,6 +11913,12 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
   };
 
   window.techSubmitOnlineScore = async function(entry){
+    /* El modo invitado no publica al ranking online ni muestra avisos de nombres duplicados. */
+    if(typeof window.techAuthIsLoggedIn === 'function' && !window.techAuthIsLoggedIn()){
+      var guestStatus=document.getElementById('onlineRankStatus');
+      if(guestStatus) guestStatus.style.display='none';
+      return null;
+    }
     if(!hasKey()){
       console.warn('[Ranking] Sin key');
       var st0=document.getElementById('onlineRankStatus');
@@ -11925,7 +11930,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     var nick = String((entry && entry.ship) || '').trim().slice(0, 10);
     var st = document.getElementById('onlineRankStatus');
     if(sc < 30){
-      if(st){ st.textContent = '🌐 El ranking empieza en 30 puntos; esta partida no se publica.'; st.style.color='#fa8'; }
+      if(st){ st.textContent = ''; st.style.display='none'; }
       return null;
     }
     if(!nick){
