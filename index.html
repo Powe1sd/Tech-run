@@ -13,7 +13,7 @@ html{scroll-behavior:smooth}
 body{margin:0;background:#03050c;font-family:'Orbitron',sans-serif;color:#fff;overflow-x:hidden;min-height:100vh;-webkit-tap-highlight-color:transparent}
 body::before{content:"";position:fixed;width:100%;height:200%;background-image:radial-gradient(circle,rgba(255,255,255,.28) 1px,transparent 1px),radial-gradient(circle,rgba(0,56,168,.18) 1px,transparent 1px),radial-gradient(circle,rgba(255,205,0,.1) 1px,transparent 1px);background-size:50px 50px,72px 72px,96px 96px;animation:stars 100s linear infinite;z-index:-1}
 @keyframes stars{to{transform:translateY(-50%)}}
-.tech-game-section{width:100%;max-width:1200px;margin:25px auto 10px;padding:0 25px}
+.tech-game-section{width:100%;max-width:1200px;margin:8px auto 10px;padding:0 25px}
 .tech-game{position:relative;width:100%;height:420px;overflow:hidden;border-radius:20px;background:radial-gradient(ellipse at 50% 0%,#0a1228 0%,#000 70%);border:1px solid rgba(255,205,0,.28);box-shadow:0 0 0 1px rgba(0,56,168,.35),0 0 32px rgba(206,17,38,.12),0 12px 40px rgba(0,0,0,.55);touch-action:none}
 .tech-game::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:36px 36px;pointer-events:none;z-index:1;opacity:.35}
 .tech-game::after{content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;z-index:1;box-shadow:inset 0 0 40px rgba(0,56,168,.08),inset 0 1px 0 rgba(255,205,0,.08)}
@@ -62,7 +62,7 @@ body::before{content:"";position:fixed;width:100%;height:200%;background-image:r
 .mini-triangle{width:0;height:0;border-top:9px solid transparent;border-bottom:9px solid transparent;border-left:16px solid #CE1126;animation:colorCycle 3s infinite linear;will-change:border-left-color,filter}
 @keyframes colorCycle{0%{border-left-color:#CE1126;filter:drop-shadow(0 0 12px #CE1126)}25%{border-left-color:#FFCD00;filter:drop-shadow(0 0 12px #FFCD00)}50%{border-left-color:#0038A8;filter:drop-shadow(0 0 12px #0038A8)}75%{border-left-color:#00A0E9;filter:drop-shadow(0 0 12px #00A0E9)}100%{border-left-color:#CE1126;filter:drop-shadow(0 0 12px #CE1126)}}
 .floating-name{position:fixed;bottom:12px;right:14px;font-size:.8rem;color:#CE1126;z-index:50}
-@media(max-width:600px){.tech-game-section{padding:0 10px}.tech-game{height:min(78vh,520px);min-height:420px}.game-top{left:42px;right:140px;top:8px}.game-title{font-size:10px}.game-score{font-size:11px;text-align:left}.game-score span{font-size:12px}.game-help{font-size:9px}.game-panel{width:94%;max-width:94%;padding:14px 12px;max-height:95%}.game-panel h2{font-size:22px}.cyber-hero h1{font-size:1.7rem}}
+@media(max-width:600px){.tech-game-section{padding:0 10px;margin-top:4px}.tech-game{height:min(78vh,520px);min-height:420px}.game-top{left:42px;right:140px;top:8px}.game-title{font-size:10px}.game-score{font-size:11px;text-align:left}.game-score span{font-size:12px}.game-help{font-size:9px}.game-panel{width:94%;max-width:94%;padding:14px 12px;max-height:95%}.game-panel h2{font-size:22px}.cyber-hero h1{font-size:1.7rem}}
 
 
 .touch-pad{display:none;max-width:1200px;margin:10px auto 18px;padding:0 10px;user-select:none;-webkit-user-select:none}
@@ -7035,7 +7035,7 @@ function doDash(){
   const dist=88*((typeof getScale==="function")?getScale():1);
   const ox=player.x,oy=player.y;
   player.x=Math.max(player.size,Math.min(canvas.width-player.size,player.x+dx*dist));
-  player.y=Math.max(player.size,Math.min(canvas.height-player.size,player.y+dy*dist));
+  player.y=Math.max(player.size*1.8,Math.min(canvas.height-player.size*2.8,player.y+dy*dist));
   mouse.x=player.x;mouse.y=player.y;
   dashCd=90; /* 1.5s cooldown */
   dashInvuln=28; /* invulnerable breve */
@@ -9077,7 +9077,7 @@ if(!controlling){
 }
 if(stickActive)applyGravity(player,player.x,player.y,0.08);
 else applyGravity(player,player.x,player.y,0.35);
-const m=player.size;player.x=Math.max(m,Math.min(canvas.width-m,player.x));player.y=Math.max(m,Math.min(canvas.height-m,player.y));
+const m=player.size;player.x=Math.max(m,Math.min(canvas.width-m,player.x));player.y=Math.max(m*1.8,Math.min(canvas.height-m*2.8,player.y));
 
 // spawn meteors by level
 if(phase==="meteors"){
@@ -9281,7 +9281,7 @@ keys.up=keys.down=keys.left=keys.right=false;
 if(scoreElement)scoreElement.textContent="0";
 record=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;if(recordElement)recordElement.textContent=record;
 updateLivesUI();
-player.x=canvas.width/2;player.y=canvas.height/2;mouse.x=player.x;mouse.y=player.y;gameRunning=true;
+player.x=canvas.width/2;player.y=Math.min(canvas.height*0.52,canvas.height-player.size*2.8);mouse.x=player.x;mouse.y=player.y;gameRunning=true;
 combo=0;comboTimer=0;comboMult=1;feverMode=0;feverAnnounced=false;supplyCrates=[];lastSupplyDrop=performance.now();damageFlash=0;introTimer=36;screenShake=0;hitSparks=[];
 const rec=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;
 ammo=100+(rec>=30?20:0)+Math.min(50,(upgAmmo||0)*12);lives=1+(rec>=60?1:0)+Math.min(2,upgLives||0);updateLivesUI();
@@ -13262,4 +13262,33 @@ html,body{overflow-x:hidden}
 /* No permitir que el mapa/radar ni los paneles creen desbordamiento horizontal. */
 .tech-game, .tech-game-section{min-width:0;max-width:100%;}
 .tech-game canvas{max-width:100%;}
+/* Ajustes de pantalla: scroll de página visible en móviles y juego más arriba. */
+@media (max-width: 1100px), (pointer: coarse) {
+  html, body {
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    -ms-overflow-style: auto !important;
+    overscroll-behavior-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+  html::-webkit-scrollbar, body::-webkit-scrollbar {
+    display: block !important;
+    width: 4px !important;
+    height: 4px !important;
+  }
+  html::-webkit-scrollbar-thumb, body::-webkit-scrollbar-thumb {
+    background: rgba(206,17,38,.8) !important;
+    border-radius: 8px !important;
+  }
+  .tech-game-section { margin-top: 3px !important; }
+  #startPanel { top: 44% !important; max-height: 90% !important; }
+}
+@media (min-width: 1101px) and (pointer: fine) {
+  .tech-game-section { margin-top: 0 !important; }
+  #startPanel { top: 40% !important; max-height: 88% !important; }
+  #gameOverPanel, #pausePanel { max-height: 88% !important; }
+}
+/* Evita que el arte de la nave y su estela queden recortados por abajo. */
+#gameCanvas { display:block; }
 </style>
