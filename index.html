@@ -2401,6 +2401,7 @@ html,body{width:100%;min-width:320px}
     <p id="pvpLobbyStatus" style="font-size:12px;color:#a8b6c9;min-height:36px">Esperando rival…</p>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
       <button type="button" class="game-btn" id="pvpReadyBtn">Listo</button>
+      <button type="button" class="game-btn" id="pvpForceStartBtn" style="display:none;background:linear-gradient(135deg,#CE1126,#FFCD00);color:#111">Empezar duelo</button>
       <button type="button" class="game-btn game-btn-blue" id="pvpCopyCodeBtn">Copiar código</button>
     </div>
   </div>
@@ -13313,11 +13314,26 @@ async function api(path, method, body, qs){
   return data;
 }
 
+function truthy(v){ return v===true || v===1 || v==='true' || v==='t' || v==='1'; }
+
+function updateReadyButton(r){
+  const btn=$('pvpReadyBtn');
+  const startBtn=$('pvpForceStartBtn');
+  if(!btn) return;
+  const myReady = PVP.role==='host' ? truthy(r&&r.host_ready) : truthy(r&&r.guest_ready);
+  btn.textContent = myReady ? '✓ Listo' : 'Listo';
+  btn.disabled = !!myReady;
+  if(startBtn){
+    const hasGuest = !!(r && r.guest_id);
+    startBtn.style.display = (PVP.role==='host' && hasGuest) ? 'inline-block' : 'none';
+  }
+}
+
 async function createRoom(){
   setErr('');
   const code=genCode();
   const me=uid(); const nick=uname();
-  if(!me){setErr('Sesión no válida.');return}
+  if(!me){setErr('Sesión no válida. Inicia sesión primero.');return}
   try{
     setStatus('Creando sala…');
     const rooms = await api(T_ROOMS,'POST',{
@@ -13333,6 +13349,7 @@ async function createRoom(){
     const room = Array.isArray(rooms)?rooms[0]:rooms;
     if(!room||!room.id) throw new Error('No se pudo crear la sala (¿existe la tabla pvp_rooms?)');
     PVP.roomId=room.id; PVP.code=code; PVP.role='host';
+    PVP.localReady=false;
     try{
       await api(T_STATE,'POST',{
         room_id: room.id,
@@ -13340,14 +13357,12 @@ async function createRoom(){
         host_hp:100, guest_hp:100, host_shield:0, guest_shield:0,
         bullets:[], events:[], tick:0
       });
-    }catch(e){
-      console.warn('[PvP] state insert', e);
-      // puede fallar por RLS; se reintentará
-    }
+    }catch(e){ console.warn('[PvP] state insert', e); }
     $('pvpCodeDisplay').textContent=code;
     $('pvpLobbyHome').style.display='none';
     $('pvpLobbyWait').style.display='block';
-    setStatus('Comparte el código. Esperando rival…');
+    setStatus('Código '+code+' creado. Abre el juego en otro dispositivo/cuenta, elige 1v1 y únete con este código. Luego ambos pulsáis Listo.');
+    updateReadyButton({host_ready:false,guest_ready:false,guest_id:null});
     startPollingRoom();
   }catch(err){
     console.error(err);
@@ -13357,17 +13372,26 @@ async function createRoom(){
 
 async function joinRoom(){
   setErr('');
-  const code=String(($('pvpCodeInput')&&$('pvpCodeInput').value)||'').trim().toUpperCase();
+  const code=String(($('pvpCodeInput')&&$('pvpCodeInput').value)||'').trim().toUpperCase().replace(/\s+/g,'');
   if(code.length<4){setErr('Escribe un código válido.');return}
   const me=uid(); const nick=uname();
-  if(!me){setErr('Sesión no válida.');return}
+  if(!me){setErr('Sesión no válida. Inicia sesión primero.');return}
   try{
     setStatus('Buscando sala…');
+    // Buscar por código sin filtrar demasiado el status (evita fallos de sintaxis in.)
     const rows = await api(T_ROOMS,'GET',null,
-      '?select=*&code=eq.'+encodeURIComponent(code)+'&status=in.(waiting,ready)&limit=1');
-    if(!Array.isArray(rows)||!rows.length){setErr('Sala no encontrada o ya empezó.');return}
-    const room=rows[0];
-    if(room.host_id===me){setErr('Ya eres el anfitrión de esta sala.');return}
+      '?select=*&code=eq.'+encodeURIComponent(code)+'&limit=3');
+    if(!Array.isArray(rows)||!rows.length){setErr('Sala no encontrada. ¿Código bien escrito?');return}
+    const room = rows.find(function(x){ return x.status==='waiting'||x.status==='ready'; }) || rows[0];
+    if(room.status==='playing'||room.status==='finished'||room.status==='closed'){
+      setErr('Esa sala ya empezó o terminó. Crea una nueva.');
+      return;
+    }
+    if(String(room.host_id||'')===String(me)){setErr('Ya eres el anfitrión de esta sala. Usa otra cuenta o ventana privada para el rival.');return}
+    if(room.guest_id && String(room.guest_id)!==String(me)){
+      setErr('La sala ya tiene rival. Crea otra o pide un código nuevo.');
+      return;
+    }
     await api(T_ROOMS+'?id=eq.'+room.id,'PATCH',{
       guest_id: me,
       guest_name: nick,
@@ -13375,10 +13399,12 @@ async function joinRoom(){
       guest_ready: false
     });
     PVP.roomId=room.id; PVP.code=code; PVP.role='guest';
+    PVP.localReady=false;
     $('pvpCodeDisplay').textContent=code;
     $('pvpLobbyHome').style.display='none';
     $('pvpLobbyWait').style.display='block';
-    setStatus('Conectado. Pulsa Listo cuando quieras.');
+    setStatus('Conectado a la sala de '+(room.host_name||'anfitrión')+'. Pulsa Listo. El anfitrión también debe pulsar Listo.');
+    updateReadyButton(room);
     startPollingRoom();
   }catch(err){
     console.error(err);
@@ -13391,14 +13417,30 @@ async function toggleReady(){
   try{
     const field = PVP.role==='host'?'host_ready':'guest_ready';
     const body={}; body[field]=true;
+    // Si soy guest y aún no hay status ready, lo refuerzo
+    if(PVP.role==='guest') body.status='ready';
     await api(T_ROOMS+'?id=eq.'+PVP.roomId,'PATCH',body);
-    setStatus('Listo. Esperando al otro jugador…');
-  }catch(e){setErr(e.message)}
+    PVP.localReady=true;
+    setStatus('Marcado listo. Comprobando al otro jugador…');
+    // Comprobar al momento (no esperar al intervalo)
+    await pollRoom();
+  }catch(e){setErr(e.message||String(e))}
+}
+
+async function forceStart(){
+  if(!PVP.roomId||PVP.role!=='host')return;
+  try{
+    await api(T_ROOMS+'?id=eq.'+PVP.roomId,'PATCH',{
+      host_ready:true, guest_ready:true, status:'playing'
+    });
+    setStatus('Iniciando duelo…');
+    await pollRoom();
+  }catch(e){setErr(e.message||String(e))}
 }
 
 function startPollingRoom(){
   stopNet();
-  PVP.pollTimer=setInterval(pollRoom, 900);
+  PVP.pollTimer=setInterval(function(){ pollRoom(); }, 700);
   pollRoom();
 }
 
@@ -13408,22 +13450,40 @@ function stopNet(){
 }
 
 async function pollRoom(){
-  if(!PVP.roomId)return;
+  if(!PVP.roomId || PVP.active)return;
   try{
     const rows=await api(T_ROOMS,'GET',null,'?select=*&id=eq.'+PVP.roomId+'&limit=1');
     if(!Array.isArray(rows)||!rows.length)return;
     const r=rows[0];
+    const hostReady=truthy(r.host_ready);
+    const guestReady=truthy(r.guest_ready);
+    const hasGuest=!!r.guest_id;
     const other = PVP.role==='host' ? r.guest_name : r.host_name;
-    if(r.guest_id){
-      setStatus((other?('Rival: '+other+' · '):'')+'Host listo: '+(r.host_ready?'✓':'…')+' · Tú/Guest: '+(r.guest_ready?'✓':'…'));
+
+    updateReadyButton(r);
+
+    if(!hasGuest){
+      setStatus('Código '+ (PVP.code||r.code||'') +' · Esperando que un RIVAL se una (otra cuenta o ventana privada). Luego ambos pulsáis Listo.');
+    } else {
+      const a = hostReady?'✓':'…';
+      const b = guestReady?'✓':'…';
+      setStatus('Rival: '+(other||'conectado')+' · Anfitrión listo: '+a+' · Invitado listo: '+b+(hostReady&&guestReady?' · ¡Arrancando!':' · Falta que ambos pulséis Listo'));
     }
-    if(r.status==='playing' || (r.host_ready && r.guest_ready && r.guest_id)){
-      if(r.status!=='playing' && PVP.role==='host'){
-        try{await api(T_ROOMS+'?id=eq.'+PVP.roomId,'PATCH',{status:'playing'})}catch(e){}
+
+    const shouldStart = (r.status==='playing') || (hasGuest && hostReady && guestReady);
+    if(shouldStart){
+      if(r.status!=='playing'){
+        // Cualquiera puede intentar marcar playing; el host prioritario
+        try{
+          await api(T_ROOMS+'?id=eq.'+PVP.roomId,'PATCH',{status:'playing', host_ready:true, guest_ready:true});
+        }catch(e){ console.warn('[PvP] status playing', e); }
       }
       beginMatch(r);
     }
-  }catch(e){console.warn('[PvP] poll room',e)}
+  }catch(e){
+    console.warn('[PvP] poll room',e);
+    setErr('No se pudo leer la sala: '+(e.message||e)+'. ¿RLS/tablas OK?');
+  }
 }
 
 function beginMatch(room){
@@ -13727,6 +13787,7 @@ function wireUi(){
   const c=$('pvpCreateBtn'); if(c)c.onclick=createRoom;
   const j=$('pvpJoinBtn'); if(j)j.onclick=joinRoom;
   const r=$('pvpReadyBtn'); if(r)r.onclick=toggleReady;
+  const fs=$('pvpForceStartBtn'); if(fs)fs.onclick=forceStart;
   const b=$('pvpBackBtn'); if(b)b.onclick=function(){stopNet();closeLobbyToStart()};
   const cp=$('pvpCopyCodeBtn');
   if(cp)cp.onclick=function(){
