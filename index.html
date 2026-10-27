@@ -13,7 +13,7 @@ html{scroll-behavior:smooth}
 body{margin:0;background:#03050c;font-family:'Orbitron',sans-serif;color:#fff;overflow-x:hidden;min-height:100vh;-webkit-tap-highlight-color:transparent}
 body::before{content:"";position:fixed;width:100%;height:200%;background-image:radial-gradient(circle,rgba(255,255,255,.28) 1px,transparent 1px),radial-gradient(circle,rgba(0,56,168,.18) 1px,transparent 1px),radial-gradient(circle,rgba(255,205,0,.1) 1px,transparent 1px);background-size:50px 50px,72px 72px,96px 96px;animation:stars 100s linear infinite;z-index:-1}
 @keyframes stars{to{transform:translateY(-50%)}}
-.tech-game-section{width:100%;max-width:1200px;margin:8px auto 10px;padding:0 25px}
+.tech-game-section{width:100%;max-width:1200px;margin:8px auto 10px;padding:0 25px;max-height:calc(100dvh - 8px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(0,200,255,.8) rgba(5,12,28,.85);-webkit-overflow-scrolling:touch}
 .tech-game{position:relative;width:100%;height:420px;overflow:hidden;border-radius:20px;background:radial-gradient(ellipse at 50% 0%,#0a1228 0%,#000 70%);border:1px solid rgba(255,205,0,.28);box-shadow:0 0 0 1px rgba(0,56,168,.35),0 0 32px rgba(206,17,38,.12),0 12px 40px rgba(0,0,0,.55);touch-action:none}
 .tech-game::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:36px 36px;pointer-events:none;z-index:1;opacity:.35}
 .tech-game::after{content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;z-index:1;box-shadow:inset 0 0 40px rgba(0,56,168,.08),inset 0 1px 0 rgba(255,205,0,.08)}
@@ -105,6 +105,11 @@ body::before{content:"";position:fixed;width:100%;height:200%;background-image:r
 #touchDash{border-color:rgba(100,200,255,.55);color:#88DDFF}
 #touchShield{border-color:rgba(80,200,255,.6);color:#66DDFF}
 #touchWorld{border-color:rgba(120,255,160,.55);color:#88FFAA}
+/* Barra de desplazamiento propia del bloque del juego; no depende del scroll global. */
+.tech-game-section::-webkit-scrollbar{width:8px}
+.tech-game-section::-webkit-scrollbar-track{background:rgba(5,12,28,.85);border-radius:8px}
+.tech-game-section::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#00c8ff,#2456d8);border-radius:8px;border:1px solid rgba(255,255,255,.18)}
+@media(max-width:600px){.tech-game-section{max-height:calc(100dvh - 4px);padding-left:8px;padding-right:8px;margin-top:2px}}
 /* Touch pad: visible en móvil y en pantallas táctiles / grandes adaptadas */
 @media(max-width:1100px){.touch-pad{display:block}}
 @media(pointer:coarse){.touch-pad{display:block}}
@@ -7035,7 +7040,7 @@ function doDash(){
   const dist=88*((typeof getScale==="function")?getScale():1);
   const ox=player.x,oy=player.y;
   player.x=Math.max(player.size,Math.min(canvas.width-player.size,player.x+dx*dist));
-  player.y=Math.max(player.size*1.8,Math.min(canvas.height-player.size*2.8,player.y+dy*dist));
+  player.y=Math.max(player.size*2.0,Math.min(canvas.height-player.size*4.8,player.y+dy*dist));
   mouse.x=player.x;mouse.y=player.y;
   dashCd=90; /* 1.5s cooldown */
   dashInvuln=28; /* invulnerable breve */
@@ -9077,7 +9082,9 @@ if(!controlling){
 }
 if(stickActive)applyGravity(player,player.x,player.y,0.08);
 else applyGravity(player,player.x,player.y,0.35);
-const m=player.size;player.x=Math.max(m,Math.min(canvas.width-m,player.x));player.y=Math.max(m*1.8,Math.min(canvas.height-m*2.8,player.y));
+const m=player.size;player.x=Math.max(m,Math.min(canvas.width-m,player.x));player.y=Math.max(m*2.0,Math.min(canvas.height-m*4.8,player.y));
+/* Al soltar el control, la nave nunca puede quedar parcialmente fuera del cuadro. */
+mouse.y=Math.max(m*2.0,Math.min(canvas.height-m*4.8,mouse.y));
 
 // spawn meteors by level
 if(phase==="meteors"){
@@ -9281,7 +9288,7 @@ keys.up=keys.down=keys.left=keys.right=false;
 if(scoreElement)scoreElement.textContent="0";
 record=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;if(recordElement)recordElement.textContent=record;
 updateLivesUI();
-player.x=canvas.width/2;player.y=Math.min(canvas.height*0.52,canvas.height-player.size*2.8);mouse.x=player.x;mouse.y=player.y;gameRunning=true;
+player.x=canvas.width/2;player.y=Math.min(canvas.height*0.50,canvas.height-player.size*4.8);mouse.x=player.x;mouse.y=player.y;gameRunning=true;
 combo=0;comboTimer=0;comboMult=1;feverMode=0;feverAnnounced=false;supplyCrates=[];lastSupplyDrop=performance.now();damageFlash=0;introTimer=36;screenShake=0;hitSparks=[];
 const rec=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;
 ammo=100+(rec>=30?20:0)+Math.min(50,(upgAmmo||0)*12);lives=1+(rec>=60?1:0)+Math.min(2,upgLives||0);updateLivesUI();
@@ -13043,6 +13050,8 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
  // El nombre de la cuenta es el nombre oficial del jugador; no se puede sustituir por otro al iniciar.
  const oldValidate=window.techValidateOnlineUsername;
  window.techValidateOnlineUsername=async function(nick){
+   /* 'Usuario' es el nombre local fijo del modo invitado, no un nombre registrable ni sujeto a duplicados. */
+   if(!isLogged()&&String(nick||'').trim().toLocaleLowerCase()==='usuario')return {ok:true,guest:true,silent:true};
    if(!isLogged())return {ok:false,message:'Inicia sesión para continuar.'};
    if(!owns(nick))return {ok:false,message:'Usa el nombre de tu cuenta: '+username()+'.'};
    return {ok:true};
