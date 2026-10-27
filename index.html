@@ -1233,6 +1233,21 @@ body {min-height:100vh !important}
   .touch-pad .goku-form-btn {padding:4px 6px !important;font-size:9px !important}
 }
 
+
+/* Botón SALIR: visible únicamente cuando hay una cuenta iniciada */
+#techAccountExit{
+  display:none;position:fixed;top:14px;right:14px;z-index:99999;
+  padding:10px 16px;border:1px solid #ff6b7d;border-radius:10px;
+  background:linear-gradient(135deg,#b71932,#e43d52);color:#fff;
+  font-family:'Orbitron',sans-serif;font-size:12px;font-weight:800;
+  letter-spacing:.7px;cursor:pointer;box-shadow:0 4px 16px rgba(206,17,38,.3);
+}
+#techAccountExit.is-visible{display:inline-flex;align-items:center;gap:8px}
+#techAccountExit:hover{background:#e43d52}
+@media(max-width:600px){
+  #techAccountExit{top:8px;right:8px;padding:9px 11px;font-size:10px}
+}
+
 </style>
 
 <style id="tech-statistics-styles">
@@ -12336,6 +12351,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
  window.alert=function(message){window.techNotify(String(message??''),'info','TECH RUN');};
 })();
 </script>
+<button type="button" id="techAccountExit" aria-label="Salir de la cuenta" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i> Salir</button>
 <div id="techAuthModal" role="dialog" aria-modal="true" aria-labelledby="techAuthTitle">
  <div class="ta-card">
   <button type="button" id="taCloseModal" class="ta-close" aria-label="Cerrar ventana" title="Cerrar">×</button>
@@ -12858,7 +12874,10 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
    mode='home';modal.style.display='flex';setMode('home');status('Sesión cerrada. Inicia sesión o crea una cuenta para continuar.',true);
    if(window.techNotify)window.techNotify('Sesión cerrada. Inicia sesión para continuar.','success','Sesión cerrada');
  }
- function updateAccountUI(){const b=$('openTechAccount');if(b)b.textContent=isLogged()?'Cuenta: '+username()+' · Gestionar / salir':'Crear cuenta / Iniciar sesión';}
+ function updateAccountUI(){
+   const b=$('openTechAccount');if(b)b.textContent=isLogged()?'Cuenta: '+username()+' · Gestionar / salir':'Crear cuenta / Iniciar sesión';
+   const exit=$('techAccountExit');if(exit)exit.classList.toggle('is-visible',isLogged());
+ }
  $('openTechAccount')&&$('openTechAccount').addEventListener('click',open);
  $('taCloseModal').addEventListener('click',()=>{modal.style.display='none';if(!isLogged()&&window.techNotify)window.techNotify('Estás jugando como invitado. El ranking online no se guarda si no estás registrado.','warning','TECH RUN');});
  $('taGuestPlay').addEventListener('click',()=>{modal.style.display='none';if(window.techNotify)window.techNotify('Estás jugando como invitado. El ranking online no se guarda si no estás registrado.','warning','TECH RUN');});
@@ -12870,6 +12889,11 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
  $('taResetPassword').addEventListener('click',resetPassword);
  $('taBack').addEventListener('click',()=>setMode(isLogged()?'logged':'home'));
  $('taLogout').addEventListener('click',logout);
+ const accountExit=$('techAccountExit');
+ if(accountExit)accountExit.addEventListener('click',function(){
+   if(!isLogged()){accountExit.classList.remove('is-visible');return;}
+   logout();
+ });
  // El nombre de la cuenta es el nombre oficial del jugador; no se puede sustituir por otro al iniciar.
  const oldValidate=window.techValidateOnlineUsername;
  window.techValidateOnlineUsername=async function(nick){
