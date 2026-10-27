@@ -2216,24 +2216,20 @@ html, body {
 <style id="tech-stat-view-switch-styles">
 .tech-stat-view-switch{position:sticky;top:0;z-index:5;padding:8px 0;background:rgba(4,10,25,.96);border-bottom:1px solid rgba(93,229,255,.2)}
 .tech-stat-view-switch .tech-stat-action[aria-pressed="true"]{background:linear-gradient(135deg,#b88600,#ffcd00);color:#151515;border-color:#fff0a0}
-/* Datos estadísticos: se muestran datos + gráficas debajo (siempre visibles en este modo) */
-#techStatisticsPanel.stats-mode-data .tech-stat-data-view{display:grid!important}
-#techStatisticsPanel.stats-mode-data .tech-stat-graph-view{display:block!important}
-#techStatisticsPanel.stats-mode-data .tech-stat-breakdown.tech-stat-graph-view{display:grid!important}
-/* Solo gráficas: oculta bloques de datos tabulares, deja las gráficas */
-#techStatisticsPanel.stats-mode-chart .tech-stat-data-view{display:none!important}
-#techStatisticsPanel.stats-mode-chart .tech-stat-section:not(.tech-stat-graph-view):not(.tech-stat-filters){display:none!important}
-#techStatisticsPanel.stats-mode-chart .tech-stat-graph-view{display:block!important}
-#techStatisticsPanel.stats-mode-chart .tech-stat-breakdown.tech-stat-graph-view{display:grid!important}
-/* Separador visual entre datos y gráficas en modo datos */
-#techStatisticsPanel.stats-mode-data .tech-stat-graph-view:first-of-type,
-#techStatisticsPanel.stats-mode-data section.tech-stat-graph-view{
-  margin-top:16px;
-}
+/* Siempre visibles: datos y gráficas juntos (los dos botones muestran el mismo contenido) */
+#techStatisticsPanel .tech-stat-data-view{display:grid!important}
+#techStatisticsPanel .tech-stat-graph-view{display:block!important;visibility:visible!important;opacity:1!important}
+#techStatisticsPanel .tech-stat-breakdown.tech-stat-graph-view{display:grid!important}
+#techStatisticsPanel section.tech-stat-graph-view{display:block!important}
 #techStatisticsPanel .tech-stat-graphs-heading{
-  margin:18px 0 8px;padding-top:12px;border-top:1px solid rgba(93,229,255,.25);
-  color:#eaf8ff;font-size:14px;font-weight:700;letter-spacing:.03em;
+  display:block!important;
+  margin:20px 0 10px;padding:14px 4px 8px;border-top:1px solid rgba(93,229,255,.28);
+  color:#eaf8ff;font-size:15px;font-weight:700;letter-spacing:.03em;
 }
+#techStatisticsPanel .tech-stat-linewrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+#techStatisticsPanel .tech-stat-line{width:100%;min-width:280px;min-height:160px;height:auto;display:block}
+#techStatisticsPanel .tech-stat-chart{min-height:120px}
+#techStatisticsPanel .tech-stat-chartbar{min-height:4px}
 </style>
 
 <style id="tech-perf-fluid-v2">
@@ -11272,7 +11268,7 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
 
     panel.innerHTML=`<div class="tech-stat-head"><div><h2>📊 Centro de estadísticas PRO</h2></div><button id="closeStatistics" class="tech-stat-close" aria-label="Cerrar estadísticas">✕</button></div>
       <section class="tech-stat-section tech-stat-filters"><h3>🔎 Filtros y comparación</h3><div class="tech-stat-filtergrid"><label>Comparar<select id="statRange"><option value="5" ${range==='5'?'selected':''}>Últimas 5</option><option value="10" ${range==='10'?'selected':''}>Últimas 10</option><option value="20" ${range==='20'?'selected':''}>Últimas 20</option><option value="all" ${range==='all'?'selected':''}>Todas las filtradas</option></select></label><label>Modo<select id="statMode"><option value="all" ${filterMode==='all'?'selected':''}>Todos los modos</option><option value="classic" ${filterMode==='classic'?'selected':''}>Clásico</option><option value="infinite" ${filterMode==='infinite'?'selected':''}>Infinito</option><option value="online" ${filterMode==='online'?'selected':''}>Online</option><option value="story" ${filterMode==='story'?'selected':''}>Historia</option></select></label><label>Desde<input id="statFrom" type="date" value="${esc(filterFrom)}"></label><label>Hasta<input id="statTo" type="date" value="${esc(filterTo)}"></label></div><div class="tech-stat-tools"><button class="tech-stat-action" id="applyStatFilters">Aplicar filtros</button><button class="tech-stat-action" id="clearStatFilters">Limpiar filtros</button><span class="tech-stat-pill">${filtered.length} partidas coinciden</span><span class="tech-stat-pill">${h.length} en comparación</span></div></section>
-      <div class="tech-stat-tools tech-stat-view-switch" role="group" aria-label="Vista de estadísticas"><button type="button" class="tech-stat-action" id="showStatsCharts" aria-pressed="false">📈 Solo gráficas</button><button type="button" class="tech-stat-action" id="showStatsData" aria-pressed="true">📊 Datos + gráficas</button><button type="button" class="tech-stat-action" id="downloadAllStatsData">📄 Descargar datos estadísticos (PDF)</button><button type="button" class="tech-stat-action" id="downloadAllStatsCSV">⬇ Descargar historial completo (CSV)</button></div>
+      <div class="tech-stat-tools tech-stat-view-switch" role="group" aria-label="Vista de estadísticas"><button type="button" class="tech-stat-action" id="showStatsCharts" aria-pressed="false">📈 Ir a gráficas</button><button type="button" class="tech-stat-action" id="showStatsData" aria-pressed="true">📊 Datos y gráficas</button><button type="button" class="tech-stat-action" id="downloadAllStatsData">📄 Descargar datos estadísticos (PDF)</button><button type="button" class="tech-stat-action" id="downloadAllStatsCSV">⬇ Descargar historial completo (CSV)</button></div>
       <div class="tech-stat-cards tech-stat-data-view">
        <div class="tech-stat-card"><span>Partidas jugadas</span><strong>${totalGamesPlayed.toLocaleString('es-CO')}</strong><small>Contador desde este navegador · +1 al terminar cada partida</small></div>
        <div class="tech-stat-card"><span>Récord personal</span><strong>${recordText}</strong><small>Mejor puntuación guardada</small></div>
@@ -11337,7 +11333,7 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
         <span class="tech-stat-pill">Incluye gráfica de evolución + resumen de métricas</span>
       </div>
     </section>
-      <div class="tech-stat-graphs-heading tech-stat-graph-view">📈 Gráficas y evolución</div>
+      <div id="techStatGraphsAnchor" class="tech-stat-graphs-heading tech-stat-graph-view">📈 Gráficas y evolución (mismos datos filtrados)</div>
       <section class="tech-stat-section tech-stat-graph-view"><h3>📈 Evolución de puntuación: subidas y bajadas</h3>${buildChart(h)}<h3 style="margin-top:18px">📊 Comparación visual de puntuaciones</h3>${buildScoreBars(h)}</section>
       <section class="tech-stat-section tech-stat-graph-view"><h3>🧰 Builds y loadouts</h3>
       <div class="tech-stat-cards" style="margin-bottom:12px">
@@ -11408,7 +11404,18 @@ const scores=h.map(m=>safeNum(m.score));const sum=scores.reduce((a,b)=>a+b,0),av
       try{if(window.techNotify)window.techNotify('Estadísticas reiniciadas a 0.','success','Estadísticas');}catch(e){}
     };const pdfBtn=document.getElementById('exportStatsPDF');if(pdfBtn)pdfBtn.onclick=exportStatsPDF;const pdfBtn2=document.getElementById('exportStatsPDF2');if(pdfBtn2)pdfBtn2.onclick=exportStatsPDF;
     const chartsBtn=document.getElementById('showStatsCharts'),dataBtn=document.getElementById('showStatsData'),downloadDataBtn=document.getElementById('downloadAllStatsData'),downloadCSVBtn=document.getElementById('downloadAllStatsCSV');
-    function setStatsView(mode){panel.classList.toggle('stats-mode-chart',mode==='chart');panel.classList.toggle('stats-mode-data',mode==='data');if(chartsBtn)chartsBtn.setAttribute('aria-pressed',String(mode==='chart'));if(dataBtn)dataBtn.setAttribute('aria-pressed',String(mode==='data'));}
+    function setStatsView(mode){
+      panel.classList.remove('stats-mode-chart','stats-mode-data');
+      panel.classList.add('stats-mode-data'); /* siempre datos + gráficas visibles */
+      if(chartsBtn)chartsBtn.setAttribute('aria-pressed',String(mode==='chart'));
+      if(dataBtn)dataBtn.setAttribute('aria-pressed',String(mode!=='chart'));
+      if(mode==='chart'){
+        const target=panel.querySelector('.tech-stat-graphs-heading')||panel.querySelector('.tech-stat-graph-view');
+        if(target){try{target.scrollIntoView({behavior:'smooth',block:'start'})}catch(e){target.scrollIntoView(true)}}
+      }else{
+        try{panel.scrollTop=0}catch(e){}
+      }
+    }
     if(chartsBtn)chartsBtn.onclick=()=>setStatsView('chart');if(dataBtn)dataBtn.onclick=()=>setStatsView('data');if(downloadDataBtn)downloadDataBtn.onclick=exportAllStatsDataPDF;if(downloadCSVBtn)downloadCSVBtn.onclick=exportCSV;
     setStatsView('data');
     function wireToggle(btnId,bodyId){
