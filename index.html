@@ -2795,7 +2795,7 @@ function promptGokuAccessAsync(){
 }
 let shipName=(lsGet("techShipName","Br7")||"Br7").slice(0,10);
 
-let selectedWorld=Math.min(14,Math.max(1,Number(lsGet("techWorld","1"))||1)); // 1-14 mundos
+let selectedWorld=Math.min(19,Math.max(1,Number(lsGet("techWorld","1"))||1)); // 1-19 mundos
 
 let metaCoins=Number(lsGet("techCoins",0))||0;
 let upgSpeed=Number(lsGet("techUpgSpeed",0))||0;
@@ -4648,7 +4648,17 @@ function syncTouchPad(){
   if(!tp)return;
   const fs=!!(document.fullscreenElement||document.webkitFullscreenElement);
   const touch=isTouchUI();
-  if(touch){
+  const game=document.querySelector(".tech-game");
+  const playing=!!(game&&game.classList.contains("is-playing"));
+  /* El touch path se mantiene totalmente fuera del menú inicial para ganar altura visible. */
+  if(touch && !playing){
+    tp.classList.remove("show-fs");
+    tp.classList.add("show-touch");
+    tp.style.setProperty("display","none","important");
+    tp.style.removeProperty("width");tp.style.removeProperty("max-width");
+    return;
+  }
+  if(touch && playing){
     tp.classList.add("show-touch");
     tp.style.display="block";
     if(fs){
@@ -4671,7 +4681,12 @@ function onFS(){
   setTimeout(()=>{resizeCanvas();updateGokuFormsUI();syncTouchPad()},150);
 }
 document.addEventListener("fullscreenchange",onFS);document.addEventListener("webkitfullscreenchange",onFS);
-try{syncTouchPad();window.addEventListener("resize",()=>{clearTimeout(window._tpR);window._tpR=setTimeout(syncTouchPad,120)})}catch(e){}
+try{
+  syncTouchPad();
+  window.addEventListener("resize",()=>{clearTimeout(window._tpR);window._tpR=setTimeout(syncTouchPad,120)});
+  const gameShell=document.querySelector(".tech-game");
+  if(gameShell&&window.MutationObserver){new MutationObserver(()=>syncTouchPad()).observe(gameShell,{attributes:true,attributeFilter:["class"]});}
+}catch(e){}
 const btnPause=mk("btnPause","⏸","Pausa (P)","position:absolute;top:8px;right:80px;z-index:30;width:32px;height:32px;border:none;border-radius:8px;background:rgba(0,56,168,.9);color:#fff;font-size:14px;cursor:pointer;display:none");
 btnPause.onclick=()=>togglePause();
 const btnMuteLive=mk("btnMuteLive",audioMuted?"🔇":"🔊","Silenciar / Activar audio","position:absolute;top:8px;right:152px;z-index:30;width:32px;height:32px;border:none;border-radius:8px;background:rgba(0,0,0,.55);color:#fff;font-size:15px;cursor:pointer;display:none;line-height:1");
@@ -4944,6 +4959,11 @@ if(startPanel&&!document.getElementById("startExtras")){
       <button type="button" data-world="12" class="${selectedWorld===12?"active":""}">12 Aurora</button>
       <button type="button" data-world="13" class="${selectedWorld===13?"active":""}">13 Volcán</button>
       <button type="button" data-world="14" class="${selectedWorld===14?"active":""}">14 Glitch</button>
+      <button type="button" data-world="15" class="${selectedWorld===15?"active":""}">15 🌋 Ráfagas de lava</button>
+      <button type="button" data-world="16" class="${selectedWorld===16?"active":""}">16 🔥 Fuego eterno</button>
+      <button type="button" data-world="17" class="${selectedWorld===17?"active":""}">17 🎆 Pirotecnia</button>
+      <button type="button" data-world="18" class="${selectedWorld===18?"active":""}">18 ☀️ Infierno solar</button>
+      <button type="button" data-world="19" class="${selectedWorld===19?"active":""}">19 💥 Núcleo magma</button>
     </div>
         <h3>🚀 Seleccionar nave</h3>
     <div id="shipCarousel" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 4px;user-select:none;-webkit-user-select:none">
@@ -6886,14 +6906,14 @@ function updateTraps(){
 function teleportWorld(){
   if(!gameRunning||gamePaused)return;
   if(worldTeleportCd>0){doVibrate(8);return}
-  const worlds=[1,2,3,4,5,6,7,8,9,10,11,12,13,14];
+  const worlds=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19];
   let next=selectedWorld;
   /* siguiente mundo (ciclo) */
-  next = (selectedWorld % 14) + 1;
+  next = (selectedWorld % 19) + 1;
   selectedWorld=next;
   lsSet("techWorld",selectedWorld);
   scenario=selectedWorld;
-  const names={1:"ESPACIO",2:"NIEVE",3:"FUEGO",4:"CRISTAL",5:"HALLOWEEN",6:"NEÓN",7:"TÓXICO",8:"VACÍO",9:"OCÉANO",10:"DESIERTO",11:"TORMENTA",12:"AURORA",13:"VOLCÁN",14:"GLITCH"};
+  const names={1:"ESPACIO",2:"NIEVE",3:"FUEGO",4:"CRISTAL",5:"HALLOWEEN",6:"NEÓN",7:"TÓXICO",8:"VACÍO",9:"OCÉANO",10:"DESIERTO",11:"TORMENTA",12:"AURORA",13:"VOLCÁN",14:"GLITCH",15:"RÁFAGAS DE LAVA",16:"FUEGO ETERNO",17:"PIROTECNIA",18:"INFIERNO SOLAR",19:"NÚCLEO MAGMA"};
   scenarioMsg="🌍 TELEPORTE → "+(names[selectedWorld]||("MUNDO "+selectedWorld));
   scenarioTransition=100;
   worldTeleportCd=30*60; /* 30 s cooldown */
@@ -7623,7 +7643,12 @@ function drawShipPreview(){
     11:["#060810","#101828","#182030",["#a0c8ff","#e0f0ff"]],
     12:["#030812","#061828","#0a2030",["#40ffc0","#80a0ff"]],
     13:["#100200","#220800","#301000",["#ff4020","#ffaa40"]],
-    14:["#050010","#001818","#0a0018",["#00ff9a","#ff00aa"]]
+    14:["#050010","#001818","#0a0018",["#00ff9a","#ff00aa"]],
+    15:["#180200","#4a0900","#210300",["#ff3b00","#ffd000"]],
+    16:["#160000","#5c0800","#250000",["#ff2400","#ff9a00"]],
+    17:["#100014","#30051d","#100018",["#ff35a8","#ffd34d"]],
+    18:["#210700","#641300","#260300",["#ff6a00","#fff06a"]],
+    19:["#100000","#3a0500","#180000",["#ff1800","#ffb000"]]
   };
   const th=themes[w]||themes[1];
   const bg=g.createLinearGradient(0,0,0,H);
@@ -8877,6 +8902,54 @@ function drawSpaceBG(){
     }
     farStars("0,255,180");
     vignette(.38);
+  } else if(w===15){
+    /* RÁFAGAS DE LAVA: grietas incandescentes y chorros eruptivos */
+    baseGradient("#180200","#4a0900","#210300");
+    nebula(W*.5,H*.9,W*.75,"rgba(255,45,0,A)",.32);
+    for(let i=0;i<(lite?4:9);i++){
+      const phase=(t/5+i*73)%360, x=(i*137+Math.sin(t/180+i)*W*.08)%W;
+      const rise=(phase/360)*H*.72;
+      ctx.strokeStyle=`rgba(255,${65+(i%4)*35},0,${.18+(i%3)*.12})`;ctx.lineWidth=lite?2:3+(i%3);
+      ctx.beginPath();ctx.moveTo(x,H-rise);ctx.quadraticCurveTo(x+Math.sin(t/90+i)*18,H-rise-18,x+Math.sin(t/110+i)*10,H-rise-38);ctx.stroke();
+      if(!lite&&phase<35){ctx.fillStyle=`rgba(255,${90+(i%3)*40},0,${.55-phase/80})`;ctx.beginPath();ctx.arc(x,H-rise,4+(i%3)*2,0,Math.PI*2);ctx.fill();}
+    }
+    farStars("255,130,50");vignette(.4);
+  } else if(w===16){
+    /* FUEGO ETERNO: columnas de fuego y brasas ascendentes */
+    baseGradient("#160000","#5c0800","#250000");
+    for(let i=0;i<(lite?4:8);i++){
+      const x=W*(i+0.5)/(lite?4:8), h=H*(.22+(.5+.5*Math.sin(t/150+i*1.7))*.34);
+      const flame=ctx.createLinearGradient(x,H, x+Math.sin(t/220+i)*18,H-h);
+      flame.addColorStop(0,"rgba(255,35,0,.0)");flame.addColorStop(.45,"rgba(255,75,0,.20)");flame.addColorStop(1,"rgba(255,210,30,.0)");
+      ctx.fillStyle=flame;ctx.beginPath();ctx.moveTo(x-13,H);ctx.quadraticCurveTo(x-25,H-h*.45,x+Math.sin(t/180+i)*8,H-h);ctx.quadraticCurveTo(x+25,H-h*.35,x+13,H);ctx.fill();
+    }
+    farStars("255,100,40");vignette(.42);
+  } else if(w===17){
+    /* PIROTECNIA: explosiones de chispas multicolor tipo fuegos artificiales */
+    baseGradient("#100014","#30051d","#100018");
+    const colors=["255,55,80","255,190,40","70,220,255","220,70,255"];
+    for(let b=0;b<(lite?2:4);b++){
+      const phase=(t/7+b*91)%360, cx=W*(.18+((b*29)%65)/100), cy=H*(.16+((b*17)%38)/100), radius=phase*.34;
+      if(phase<150)for(let j=0;j<(lite?8:18);j++){
+        const a=j*Math.PI*2/(lite?8:18)+b*.4, r=radius*(.55+(j%3)*.18);
+        ctx.fillStyle=`rgba(${colors[b]},${Math.max(0,.9-phase/190)})`;ctx.beginPath();ctx.arc(cx+Math.cos(a)*r,cy+Math.sin(a)*r,1.2+(j%3)*.55,0,Math.PI*2);ctx.fill();
+      }
+    }
+    farStars("255,190,220");vignette(.38);
+  } else if(w===18){
+    /* INFIERNO SOLAR: sol ardiente, llamaradas y arcos solares */
+    baseGradient("#210700","#641300","#260300");
+    const sx=W*.78, sy=H*.22, sr=Math.min(W,H)*.12;
+    const sun=ctx.createRadialGradient(sx,sy,2,sx,sy,sr*2.8);sun.addColorStop(0,"rgba(255,245,150,.9)");sun.addColorStop(.25,"rgba(255,110,0,.55)");sun.addColorStop(1,"rgba(255,30,0,0)");ctx.fillStyle=sun;ctx.fillRect(0,0,W,H);
+    if(!lite){ctx.strokeStyle="rgba(255,150,25,.42)";ctx.lineWidth=2;for(let i=0;i<5;i++){ctx.beginPath();ctx.ellipse(sx,sy,sr*(1.2+i*.23),sr*(.7+i*.16),Math.sin(t/700+i)*.25,t/900+i,t/900+i+Math.PI*.8);ctx.stroke();}}
+    farStars("255,200,90");vignette(.42);
+  } else if(w===19){
+    /* NÚCLEO MAGMA: núcleo pulsante con ondas de calor */
+    baseGradient("#100000","#3a0500","#180000");
+    const cx=W*.5,cy=H*.52,pulse=.75+.25*Math.sin(t/160),r=Math.min(W,H)*(.16+.025*pulse);
+    const core=ctx.createRadialGradient(cx,cy,2,cx,cy,r*2.8);core.addColorStop(0,"rgba(255,245,120,.95)");core.addColorStop(.25,"rgba(255,70,0,.7)");core.addColorStop(.65,"rgba(150,0,0,.22)");core.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=core;ctx.fillRect(0,0,W,H);
+    if(!lite)for(let i=0;i<7;i++){ctx.strokeStyle=`rgba(255,${55+i*18},0,${.10+i*.025})`;ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(cx,cy,r*(1.2+i*.27),r*(.6+i*.17),t/1800+i*.2,0,Math.PI*2);ctx.stroke();}
+    farStars("255,120,50");vignette(.44);
   } else {
     baseGradient("#020818","#0a1840","#061028");
     farStars("200,220,255");
@@ -13170,4 +13243,23 @@ html,body{overflow-x:hidden}
 #startPanel::-webkit-scrollbar{width:5px !important;}
 #startPanel::-webkit-scrollbar-thumb{background:#CE1126 !important;border-radius:5px !important;}
 #startPanel::-webkit-scrollbar-track{background:transparent !important;}
+</style>
+
+<style id="tech-run-mobile-start-and-desktop-lift">
+/* Los controles táctiles no ocupan espacio en el menú inicial; aparecen al iniciar. */
+.touch-pad{display:none!important}
+.tech-game-section:not(:has(.tech-game.is-playing)) + .touch-pad{display:none!important}
+@media (max-width:1100px),(pointer:coarse){
+  .tech-game-section:not(:has(.tech-game.is-playing)) ~ .touch-pad{display:none!important}
+  .tech-game.is-playing ~ .touch-pad{display:block!important}
+}
+/* En PC, eliminar el margen superior sobrante y subir el menú dentro del juego. */
+@media (min-width:1101px) and (pointer:fine){
+  .tech-game-section{padding-top:0!important;margin-top:-8px!important}
+  #startPanel{top:43%!important;max-height:88%!important}
+  #gameOverPanel{top:43%!important}
+}
+/* No permitir que el mapa/radar ni los paneles creen desbordamiento horizontal. */
+.tech-game, .tech-game-section{min-width:0;max-width:100%;}
+.tech-game canvas{max-width:100%;}
 </style>
