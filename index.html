@@ -4219,15 +4219,31 @@ function fireRedLBeam(){
   const scale=(typeof getScale==="function")?getScale():1;
   const dmg=(10+(typeof bulletDamage==="function"?bulletDamage():1)*5);
   /* Rayo vertical rojo intenso: daña a los enemigos alineados y limpia proyectiles */
-  chainFX.push({x1:x,y1:bottom,x2:x,y2:top,life:180,maxLife:180,rail:true,red:true,w:18*scale});
+  chainFX.push({x1:x,y1:bottom,x2:x,y2:top,life:180,maxLife:180,rail:true,red:true,w:10*scale});
   for(let j=obstacles.length-1;j>=0;j--){
     const o=obstacles[j]; if(!o||o.__techDestroyed)continue;
     const ox=o.x+(o.size||10)/2, oy=o.y+(o.size||10)/2;
-    if(Math.abs(ox-x)<(o.size||10)*0.65+12*scale && oy<player.y){
+    if(Math.abs(ox-x)<(o.size||10)*0.8+18*scale && oy<player.y){
       damageObstacleAt(j,dmg); createExplosion(ox,oy,14,"255,20,55");
     }
   }
   for(let i=enemyBullets.length-1;i>=0;i--){const b=enemyBullets[i];if(Math.abs(b.x-x)<20*scale&&b.y<player.y)enemyBullets.splice(i,1)}
+  /* Esquirlas al terminar el rayo: salen en abanico y también dañan meteoritos. */
+  const shardCount=12, shardSpeed=7*scale;
+  for(let k=0;k<shardCount;k++){
+    const a=(-Math.PI/2)+((k/(shardCount-1))-0.5)*1.45;
+    bullets.push({
+      x:x+(Math.random()-.5)*player.size*.7,
+      y:bottom,
+      vx:Math.cos(a)*shardSpeed,
+      vy:Math.sin(a)*shardSpeed,
+      speed:shardSpeed,
+      size:Math.max(2.5,2.8*scale),
+      pierce:true,
+      dmg:Math.max(2,dmg*.65),
+      shrapnel:true
+    });
+  }
   createExplosion(x,bottom,16,"255,20,55");
   try{playSfx("laser")}catch(e){try{playSfx("power")}catch(_){}}
   try{triggerShake(8)}catch(e){}
@@ -8259,7 +8275,7 @@ p.y+=p.vy;
 /* Solo icono/texto, sin fondo de color */
 ctx.shadowColor=colors[p.type]||"#FFCD00";ctx.shadowBlur=10;
 ctx.fillStyle=colors[p.type]||"#FFCD00";
-const iconBoost=(p.type==="redL"||p.type==="laser")?1.65:1;ctx.font=`bold ${Math.max(isMobile()?9:11,p.size*(isMobile()?.5:.65))*iconBoost}px Orbitron`;ctx.textAlign="center";ctx.textBaseline="middle";
+const iconBoost=(p.type==="redL"||p.type==="laser")?1.12:1;ctx.font=`bold ${Math.max(isMobile()?9:11,p.size*(isMobile()?.5:.65))*iconBoost}px Orbitron`;ctx.textAlign="center";ctx.textBaseline="middle";
 ctx.fillText(labels[p.type]||"?",p.x,p.y);
 ctx.shadowBlur=0;
 if(Math.hypot(player.x-p.x,player.y-p.y)<player.size+p.size){
