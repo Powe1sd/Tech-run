@@ -2385,6 +2385,29 @@ html,body{width:100%;min-width:320px}
 <button class="game-btn" id="openTechAccount" style="margin-top:8px;background:linear-gradient(135deg,#35205e,#6b39a8);border-color:#c9a4ff;color:#fff">Crear cuenta / Iniciar sesión</button>
 <button class="game-btn" id="startGame" style="margin-top:10px">🚀 Iniciar</button>
 </div>
+<div class="game-panel" id="pvpRoomPanel" style="display:none;z-index:95">
+  <h2>⚔ Duelo 1v1</h2>
+  <p style="font-size:12px;color:#c8d6e8;margin:0 0 10px">Una nave abajo, la otra arriba. Mejor de 3. 100 HP, daño moderado.</p>
+  <div id="pvpLobbyHome">
+    <button type="button" class="game-btn" id="pvpCreateBtn" style="width:100%;margin:6px 0">＋ Crear sala</button>
+    <div style="display:flex;gap:8px;margin:10px 0;align-items:center">
+      <input id="pvpCodeInput" maxlength="6" placeholder="CÓDIGO" style="flex:1;text-align:center;letter-spacing:3px;text-transform:uppercase;font-size:18px;padding:12px" />
+      <button type="button" class="game-btn game-btn-blue" id="pvpJoinBtn">Unirse</button>
+    </div>
+  </div>
+  <div id="pvpLobbyWait" style="display:none">
+    <p style="margin:8px 0 4px;color:#9fdfff">Código de sala</p>
+    <div id="pvpCodeDisplay" style="font-size:34px;letter-spacing:8px;color:#FFCD00;font-weight:800;margin:6px 0 12px">————</div>
+    <p id="pvpLobbyStatus" style="font-size:12px;color:#a8b6c9;min-height:36px">Esperando rival…</p>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px">
+      <button type="button" class="game-btn" id="pvpReadyBtn">Listo</button>
+      <button type="button" class="game-btn game-btn-blue" id="pvpCopyCodeBtn">Copiar código</button>
+    </div>
+  </div>
+  <p id="pvpErr" style="color:#ff8899;font-size:12px;min-height:18px;margin-top:8px"></p>
+  <button type="button" class="game-btn" id="pvpBackBtn" style="margin-top:12px;width:100%">← Volver al menú</button>
+  <small style="display:block;margin-top:10px;color:#7a8aa0;font-size:10px">Requiere cuenta iniciada y tablas pvp_* en Supabase (ver SQL al final del archivo).</small>
+</div>
 <div class="game-panel" id="gameOverPanel">
 <h2>💥 Game over</h2>
 <p>Sistema impactado.</p>
@@ -2597,9 +2620,11 @@ const CREDITS={name:"Brayhan Rubio",phone:"3052076713",email:"brayan32455415@gma
 
 /* ========== SISTEMA EXTRA: dificultad, combo, logros, ranking, mejoras ========== */
 let difficulty=lsGet("techDiff","normal"); // easy|normal|hard
-let gameMode=lsGet("techGameMode","classic"); // classic|infinite|online
+let gameMode=lsGet("techGameMode","classic"); // classic|infinite|online|pvp
 function isInfiniteMode(){return gameMode==="infinite"||gameMode==="online"}
 function isOnlineMode(){return gameMode==="online"}
+function isPvpMode(){return gameMode==="pvp"}
+window.isPvpMode=isPvpMode;
 let kamehameha=0; /* frames del rayo Kamehameha */
 let combo=0,comboTimer=0,comboMult=1;
 let screenShake=0,hitSparks=[];
@@ -4898,9 +4923,11 @@ if(startPanel&&!document.getElementById("startExtras")){
       <button type="button" data-mode="classic" class="${gameMode==="classic"?"active":""}">Clásico</button>
       <button type="button" data-mode="infinite" class="${gameMode==="infinite"?"active":""}">∞ Infinito</button>
       <button type="button" data-mode="online" class="${gameMode==="online"?"active":""}">🌐 ∞ Online</button>
+      <button type="button" data-mode="pvp" class="${gameMode==="pvp"?"active":""}">⚔ 1v1 Online</button>
     </div>
     <p style="font-size:9px;color:#888;margin:2px 0 6px" data-i18n-key="infiniteDesc">Infinito: oleadas interminables, sin jefes; la velocidad y la dificultad aumentan con cada oleada.</p>
     <p style="font-size:9px;color:#8fd;margin:0 0 6px" data-i18n-key="onlineDesc">Online: igual que Infinito y al terminar se publica tu puntuación en el ranking online.</p>
+    <p style="font-size:9px;color:#fa8;margin:0 0 6px" data-i18n-key="pvpDesc">1v1 Online: duelo en tiempo real (nave abajo vs nave arriba). Crea o únete con un código de sala.</p>
     <h3 style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
       <span>⬆ Mejoras permanentes</span>
       <span style="color:#FFCD00;font-size:12px;font-weight:700;letter-spacing:.5px">${coins} ⭐</span>
@@ -9270,6 +9297,12 @@ function gameLoop(ts){
 
 /* Reinicia variables y empieza la partida */
 function startGame(){
+/* Modo 1v1: abrir lobby de salas en lugar de la partida clásica. */
+if(typeof gameMode!=='undefined' && gameMode==='pvp'){
+  try{
+    if(typeof window.techPvpOpenLobby==='function'){window.techPvpOpenLobby();return;}
+  }catch(e){console.warn('[PvP]',e)}
+}
 /* Reinicio limpio: elimina frames anteriores y evita iniciar detrás de un panel abierto. */
 try{cancelAnimationFrame(animationFrame)}catch(e){}
 try{stopLoopWatchdog()}catch(e){}
@@ -13169,6 +13202,581 @@ html,body{overflow-x:hidden}
  window.addEventListener('resize',hideClassicWorldOnMobile);
  const oldRenderStart=window.renderStart;
  if(typeof oldRenderStart==='function')window.renderStart=function(){const r=oldRenderStart.apply(this,arguments);hideClassicWorldOnMobile();return r;};
+})();
+</script>
+
+<script id="tech-pvp-1v1-engine">
+(function(){
+'use strict';
+/**
+ * TECH RUN — Modo 1v1 Online
+ * Host abajo (dispara ↑), Guest arriba (dispara ↓).
+ * Estado canónico en Supabase: pvp_rooms + pvp_match_state.
+ * Balance: 100 HP, daño 10/bala, i-frames, sin oleadas letales.
+ */
+const SUPABASE_URL = 'https://bkfpvwsahffrrkckjfre.supabase.co';
+const SUPABASE_REST = SUPABASE_URL + '/rest/v1';
+const ANON = 'sb_publishable_89MkxFSiW8Et_qNZXzhXSA_6ouvoKgI';
+const T_ROOMS = 'pvp_rooms';
+const T_STATE = 'pvp_match_state';
+const T_RESULTS = 'pvp_results';
+
+const PVP = {
+  active: false,
+  role: null, // 'host' | 'guest'
+  roomId: null,
+  code: null,
+  pollTimer: null,
+  pushTimer: null,
+  remote: {x:0.5,y:0.15,hp:100,shield:0,name:'Rival'},
+  localHp: 100,
+  localShield: 0,
+  invuln: 0,
+  bullets: [], // local prediction
+  remoteBullets: [],
+  lastShot: 0,
+  tick: 0,
+  rounds: {mine:0, theirs:0, max:3},
+  status: 'idle',
+  lastStateAt: 0,
+  opponentConnected: false
+};
+
+function authHeaders(json){
+  const token = (window.techAuthAccessToken) || ANON;
+  const h = {
+    'apikey': ANON,
+    'Authorization': 'Bearer ' + token,
+    'Accept': 'application/json'
+  };
+  if(json){ h['Content-Type']='application/json'; h['Prefer']='return=representation'; }
+  return h;
+}
+function uid(){ try{return (window.techAuthUserId&&window.techAuthUserId())||''}catch(e){return ''} }
+function uname(){ try{return (window.techAuthUsername&&window.techAuthUsername())||'Jugador'}catch(e){return 'Jugador'} }
+function logged(){ try{return !!(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn())}catch(e){return false} }
+
+function genCode(){
+  const chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let c='';
+  for(let i=0;i<6;i++) c+=chars[(Math.random()*chars.length)|0];
+  return c;
+}
+
+function $(id){return document.getElementById(id)}
+function setErr(msg){const el=$('pvpErr');if(el)el.textContent=msg||'';}
+function setStatus(msg){const el=$('pvpLobbyStatus');if(el)el.textContent=msg||'';}
+
+function showPanel(id){
+  ['startPanel','gameOverPanel','pausePanel','pvpRoomPanel'].forEach(function(pid){
+    const el=$(pid); if(!el) return;
+    el.style.setProperty('display', pid===id?'block':'none', 'important');
+  });
+}
+
+window.techPvpOpenLobby = function(){
+  if(!logged()){
+    try{window.techAuthOpen&&window.techAuthOpen();}catch(e){}
+    if(window.techNotify) window.techNotify('Inicia sesión para jugar 1v1 online.','warning','1v1');
+    else setErr('Inicia sesión para jugar 1v1.');
+    return;
+  }
+  PVP.status='lobby';
+  const home=$('pvpLobbyHome'), wait=$('pvpLobbyWait');
+  if(home) home.style.display='block';
+  if(wait) wait.style.display='none';
+  setErr('');
+  showPanel('pvpRoomPanel');
+};
+
+function closeLobbyToStart(){
+  stopNet();
+  PVP.active=false; PVP.status='idle';
+  showPanel('startPanel');
+  try{if(typeof renderStart==='function')renderStart()}catch(e){}
+}
+
+async function api(path, method, body, qs){
+  let url = SUPABASE_REST + '/' + path + (qs||'');
+  const res = await fetch(url, {
+    method: method||'GET',
+    headers: authHeaders(!!body),
+    body: body?JSON.stringify(body):undefined
+  });
+  const text = await res.text();
+  let data=null;
+  try{data=text?JSON.parse(text):null}catch(e){data=text}
+  if(!res.ok){
+    const msg=(data&&(data.message||data.error||data.msg))||('HTTP '+res.status);
+    throw new Error(String(msg));
+  }
+  return data;
+}
+
+async function createRoom(){
+  setErr('');
+  const code=genCode();
+  const me=uid(); const nick=uname();
+  if(!me){setErr('Sesión no válida.');return}
+  try{
+    setStatus('Creando sala…');
+    const rooms = await api(T_ROOMS,'POST',{
+      code: code,
+      status: 'waiting',
+      host_id: me,
+      host_name: nick,
+      host_ready: false,
+      guest_ready: false,
+      max_rounds: 3,
+      round: 1
+    });
+    const room = Array.isArray(rooms)?rooms[0]:rooms;
+    if(!room||!room.id) throw new Error('No se pudo crear la sala (¿existe la tabla pvp_rooms?)');
+    PVP.roomId=room.id; PVP.code=code; PVP.role='host';
+    try{
+      await api(T_STATE,'POST',{
+        room_id: room.id,
+        host_x:0.5, host_y:0.85, guest_x:0.5, guest_y:0.15,
+        host_hp:100, guest_hp:100, host_shield:0, guest_shield:0,
+        bullets:[], events:[], tick:0
+      });
+    }catch(e){
+      console.warn('[PvP] state insert', e);
+      // puede fallar por RLS; se reintentará
+    }
+    $('pvpCodeDisplay').textContent=code;
+    $('pvpLobbyHome').style.display='none';
+    $('pvpLobbyWait').style.display='block';
+    setStatus('Comparte el código. Esperando rival…');
+    startPollingRoom();
+  }catch(err){
+    console.error(err);
+    setErr('Error al crear: '+err.message+'. Ejecuta el SQL de tablas pvp_* en Supabase.');
+  }
+}
+
+async function joinRoom(){
+  setErr('');
+  const code=String(($('pvpCodeInput')&&$('pvpCodeInput').value)||'').trim().toUpperCase();
+  if(code.length<4){setErr('Escribe un código válido.');return}
+  const me=uid(); const nick=uname();
+  if(!me){setErr('Sesión no válida.');return}
+  try{
+    setStatus('Buscando sala…');
+    const rows = await api(T_ROOMS,'GET',null,
+      '?select=*&code=eq.'+encodeURIComponent(code)+'&status=in.(waiting,ready)&limit=1');
+    if(!Array.isArray(rows)||!rows.length){setErr('Sala no encontrada o ya empezó.');return}
+    const room=rows[0];
+    if(room.host_id===me){setErr('Ya eres el anfitrión de esta sala.');return}
+    await api(T_ROOMS+'?id=eq.'+room.id,'PATCH',{
+      guest_id: me,
+      guest_name: nick,
+      status: 'ready',
+      guest_ready: false
+    });
+    PVP.roomId=room.id; PVP.code=code; PVP.role='guest';
+    $('pvpCodeDisplay').textContent=code;
+    $('pvpLobbyHome').style.display='none';
+    $('pvpLobbyWait').style.display='block';
+    setStatus('Conectado. Pulsa Listo cuando quieras.');
+    startPollingRoom();
+  }catch(err){
+    console.error(err);
+    setErr('Error al unirse: '+err.message);
+  }
+}
+
+async function toggleReady(){
+  if(!PVP.roomId||!PVP.role)return;
+  try{
+    const field = PVP.role==='host'?'host_ready':'guest_ready';
+    const body={}; body[field]=true;
+    await api(T_ROOMS+'?id=eq.'+PVP.roomId,'PATCH',body);
+    setStatus('Listo. Esperando al otro jugador…');
+  }catch(e){setErr(e.message)}
+}
+
+function startPollingRoom(){
+  stopNet();
+  PVP.pollTimer=setInterval(pollRoom, 900);
+  pollRoom();
+}
+
+function stopNet(){
+  if(PVP.pollTimer){clearInterval(PVP.pollTimer);PVP.pollTimer=null}
+  if(PVP.pushTimer){clearInterval(PVP.pushTimer);PVP.pushTimer=null}
+}
+
+async function pollRoom(){
+  if(!PVP.roomId)return;
+  try{
+    const rows=await api(T_ROOMS,'GET',null,'?select=*&id=eq.'+PVP.roomId+'&limit=1');
+    if(!Array.isArray(rows)||!rows.length)return;
+    const r=rows[0];
+    const other = PVP.role==='host' ? r.guest_name : r.host_name;
+    if(r.guest_id){
+      setStatus((other?('Rival: '+other+' · '):'')+'Host listo: '+(r.host_ready?'✓':'…')+' · Tú/Guest: '+(r.guest_ready?'✓':'…'));
+    }
+    if(r.status==='playing' || (r.host_ready && r.guest_ready && r.guest_id)){
+      if(r.status!=='playing' && PVP.role==='host'){
+        try{await api(T_ROOMS+'?id=eq.'+PVP.roomId,'PATCH',{status:'playing'})}catch(e){}
+      }
+      beginMatch(r);
+    }
+  }catch(e){console.warn('[PvP] poll room',e)}
+}
+
+function beginMatch(room){
+  if(PVP.active) return;
+  stopNet();
+  PVP.active=true;
+  PVP.status='playing';
+  PVP.localHp=100; PVP.localShield=30; PVP.invuln=60;
+  PVP.bullets=[]; PVP.remoteBullets=[];
+  PVP.rounds={mine:0,theirs:0,max:3};
+  showPanel(null);
+  try{
+    const sp=$('startPanel'); if(sp)sp.style.setProperty('display','none','important');
+    const pp=$('pvpRoomPanel'); if(pp)pp.style.setProperty('display','none','important');
+    const gp=$('gameOverPanel'); if(gp)gp.style.setProperty('display','none','important');
+  }catch(e){}
+
+  // Arrancar partida local con reglas PvP
+  try{
+    if(typeof gameMode!=='undefined') gameMode='pvp';
+    // Reutilizar startGame sin reentrar al lobby
+    const orig = window.__techPvpBypass;
+    window.__techPvpBypass = true;
+    // Inicialización mínima sin enemigos
+    bootstrapPvpArena();
+  }catch(e){console.error(e)}
+
+  PVP.pushTimer=setInterval(syncTick, 80); // ~12.5 Hz
+  PVP.pollTimer=setInterval(pullState, 100);
+}
+
+function bootstrapPvpArena(){
+  try{cancelAnimationFrame(animationFrame)}catch(e){}
+  gameRunning=true; gamePaused=false;
+  try{document.querySelector('.tech-game')&&document.querySelector('.tech-game').classList.add('is-playing')}catch(e){}
+  // Posición local
+  try{
+    if(typeof player!=='undefined'){
+      player.x = (typeof canvas!=='undefined'?canvas.width:600)/2;
+      player.y = PVP.role==='host' ? (canvas.height*0.85) : (canvas.height*0.15);
+    }
+  }catch(e){}
+  // Limpiar oleadas
+  try{obstacles=[];enemyBullets=[];pickups=[];traps=[];}catch(e){}
+  try{lives=99; updateLivesUI&&updateLivesUI()}catch(e){} // no game-over clásico
+  try{score=0; if(scoreElement)scoreElement.textContent='0'}catch(e){}
+  try{animationFrame=requestAnimationFrame(gameLoop)}catch(e){}
+  if(window.techNotify) window.techNotify('Duelo iniciado. ¡Buena suerte!','success','1v1');
+}
+
+function localNorm(){
+  const w=canvas.width||1, h=canvas.height||1;
+  return {
+    x: Math.max(0,Math.min(1,(player.x||0)/w)),
+    y: Math.max(0,Math.min(1,(player.y||0)/h))
+  };
+}
+
+async function syncTick(){
+  if(!PVP.active||!PVP.roomId)return;
+  const n=localNorm();
+  const body={tick: ++PVP.tick, updated_at: new Date().toISOString()};
+  if(PVP.role==='host'){
+    body.host_x=n.x; body.host_y=n.y; body.host_hp=PVP.localHp; body.host_shield=PVP.localShield;
+  }else{
+    body.guest_x=n.x; body.guest_y=n.y; body.guest_hp=PVP.localHp; body.guest_shield=PVP.localShield;
+  }
+  // Balas locales compactas (máx 12)
+  const bl = PVP.bullets.slice(-12).map(b=>({
+    x:b.x/(canvas.width||1), y:b.y/(canvas.height||1),
+    vx:b.vx/(canvas.width||1), vy:b.vy/(canvas.height||1),
+    owner:PVP.role, id:b.id
+  }));
+  body.bullets = bl;
+  try{
+    await api(T_STATE+'?room_id=eq.'+PVP.roomId,'PATCH',body);
+  }catch(e){
+    // insert if missing
+    try{
+      body.room_id=PVP.roomId;
+      await api(T_STATE,'POST',Object.assign({
+        host_x:0.5,host_y:0.85,guest_x:0.5,guest_y:0.15,
+        host_hp:100,guest_hp:100,host_shield:0,guest_shield:0,events:[]
+      }, body));
+    }catch(e2){}
+  }
+}
+
+async function pullState(){
+  if(!PVP.active||!PVP.roomId)return;
+  try{
+    const rows=await api(T_STATE,'GET',null,'?select=*&room_id=eq.'+PVP.roomId+'&limit=1');
+    if(!Array.isArray(rows)||!rows.length)return;
+    const s=rows[0];
+    PVP.lastStateAt=Date.now();
+    PVP.opponentConnected=true;
+    if(PVP.role==='host'){
+      PVP.remote.x=s.guest_x; PVP.remote.y=s.guest_y;
+      PVP.remote.hp=s.guest_hp; PVP.remote.shield=s.guest_shield;
+    }else{
+      PVP.remote.x=s.host_x; PVP.remote.y=s.host_y;
+      PVP.remote.hp=s.host_hp; PVP.remote.shield=s.host_shield;
+    }
+    // Balas del rival
+    const all=Array.isArray(s.bullets)?s.bullets:[];
+    PVP.remoteBullets = all.filter(b=>b.owner && b.owner!==PVP.role).map(b=>({
+      x:(b.x||0)*(canvas.width||1),
+      y:(b.y||0)*(canvas.height||1),
+      vx:(b.vx||0)*(canvas.width||1),
+      vy:(b.vy||0)*(canvas.height||1),
+      id:b.id
+    }));
+  }catch(e){}
+}
+
+// Disparo PvP (teclado/táctil reutiliza controls existentes vía hook)
+function pvpTryShoot(){
+  if(!PVP.active)return;
+  const now=performance.now();
+  if(now-PVP.lastShot<160)return; // cadencia limitada
+  PVP.lastShot=now;
+  const dir = PVP.role==='host' ? -1 : 1; // host dispara arriba
+  const sp = 9 * (typeof getSpeedScale==='function'?getSpeedScale():1);
+  PVP.bullets.push({
+    id: (PVP.role||'x')+'-'+Date.now()+'-'+((Math.random()*999)|0),
+    x: player.x,
+    y: player.y + (dir<0?-player.size:player.size),
+    vx: 0,
+    vy: dir * sp,
+    life: 90
+  });
+  try{playSfx&&playSfx('shoot')}catch(e){}
+}
+
+function pvpUpdate(dt){
+  if(!PVP.active)return;
+  if(PVP.invuln>0)PVP.invuln--;
+
+  // Mover balas locales
+  for(let i=PVP.bullets.length-1;i>=0;i--){
+    const b=PVP.bullets[i];
+    b.x+=b.vx; b.y+=b.vy; b.life--;
+    if(b.life<=0||b.y<-20||b.y>canvas.height+20){PVP.bullets.splice(i,1);continue}
+    // Hit rival
+    const rx=PVP.remote.x*canvas.width, ry=PVP.remote.y*canvas.height;
+    if(Math.hypot(b.x-rx,b.y-ry)<18){
+      PVP.bullets.splice(i,1);
+      // El daño lo aplica el dueño de la bala en el HP remoto reportado;
+      // para feedback local restamos al remote visible si somos autoridad simple:
+      if(PVP.remote.shield>0){PVP.remote.shield=Math.max(0,PVP.remote.shield-25)}
+      else {PVP.remote.hp=Math.max(0,(PVP.remote.hp||100)-10)}
+      try{createExplosion&&createExplosion(rx,ry,14,'255,200,50')}catch(e){}
+      if(PVP.remote.hp<=0) onRoundEnd(true);
+    }
+  }
+  // Balas rivales vs yo
+  for(let i=PVP.remoteBullets.length-1;i>=0;i--){
+    const b=PVP.remoteBullets[i];
+    if(Math.hypot(b.x-player.x,b.y-player.y)<16){
+      PVP.remoteBullets.splice(i,1);
+      if(PVP.invuln>0) continue;
+      if(PVP.localShield>0){PVP.localShield=Math.max(0,PVP.localShield-25);PVP.invuln=20}
+      else {PVP.localHp=Math.max(0,PVP.localHp-10);PVP.invuln=35;try{playSfx&&playSfx('hit')}catch(e){}}
+      try{createExplosion&&createExplosion(player.x,player.y,12,'255,80,60')}catch(e){}
+      if(PVP.localHp<=0) onRoundEnd(false);
+    }
+  }
+
+  // Bloquear spawns clásicos
+  try{obstacles.length=0;enemyBullets.length=0;}catch(e){}
+}
+
+function onRoundEnd(iWon){
+  if(iWon) PVP.rounds.mine++; else PVP.rounds.theirs++;
+  const need=Math.ceil(PVP.rounds.max/2);
+  if(PVP.rounds.mine>=need || PVP.rounds.theirs>=need){
+    endPvpMatch(PVP.rounds.mine>PVP.rounds.theirs);
+    return;
+  }
+  // reset round
+  PVP.localHp=100; PVP.localShield=30; PVP.invuln=90;
+  PVP.bullets=[]; PVP.remoteBullets=[];
+  try{
+    player.x=canvas.width/2;
+    player.y=PVP.role==='host'?canvas.height*0.85:canvas.height*0.15;
+  }catch(e){}
+  if(window.techNotify){
+    window.techNotify((iWon?'Ganaste':'Perdiste')+' la ronda. Marcador '+PVP.rounds.mine+'-'+PVP.rounds.theirs,'info','1v1');
+  }
+}
+
+async function endPvpMatch(iWon){
+  PVP.active=false;
+  stopNet();
+  gameRunning=false;
+  try{
+    if(PVP.roomId){
+      await api(T_ROOMS+'?id=eq.'+PVP.roomId,'PATCH',{
+        status:'finished',
+        winner_id: iWon?uid():null
+      });
+      try{
+        await api(T_RESULTS,'POST',{
+          room_id:PVP.roomId,
+          host_id: PVP.role==='host'?uid():null,
+          guest_id: PVP.role==='guest'?uid():null,
+          winner_id: iWon?uid():null,
+          host_score: PVP.role==='host'?PVP.rounds.mine:PVP.rounds.theirs,
+          guest_score: PVP.role==='guest'?PVP.rounds.mine:PVP.rounds.theirs
+        });
+      }catch(e){}
+    }
+  }catch(e){}
+  try{
+    const gp=$('gameOverPanel');
+    if(gp){
+      gp.style.setProperty('display','block','important');
+      const h=gp.querySelector('h2'); if(h)h.textContent=iWon?'🏆 ¡Victoria 1v1!':'💥 Derrota 1v1';
+      if(finalScoreElement) finalScoreElement.textContent=PVP.rounds.mine+'-'+PVP.rounds.theirs;
+    }
+  }catch(e){}
+  if(window.techNotify) window.techNotify(iWon?'¡Ganaste el duelo!':'Has perdido el duelo.',iWon?'success':'warning','1v1');
+}
+
+function pvpDraw(){
+  if(!PVP.active||!ctx)return;
+  // Rival
+  const rx=PVP.remote.x*canvas.width, ry=PVP.remote.y*canvas.height;
+  ctx.save();
+  ctx.translate(rx,ry);
+  if(PVP.role==='host'){ctx.rotate(Math.PI)} // guest ship points down visually for host view? 
+  // Always draw rival pointing toward us
+  ctx.fillStyle='#CE1126';
+  ctx.beginPath();
+  ctx.moveTo(0,-14); ctx.lineTo(10,12); ctx.lineTo(-10,12); ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // Balas locales
+  ctx.fillStyle='#FFCD00';
+  PVP.bullets.forEach(function(b){ctx.fillRect(b.x-2,b.y-5,4,10)});
+  // Balas rivales
+  ctx.fillStyle='#5de5ff';
+  PVP.remoteBullets.forEach(function(b){ctx.fillRect(b.x-2,b.y-5,4,10)});
+
+  // HUD HP
+  ctx.save();
+  ctx.font='bold 13px Share Tech Mono,monospace';
+  ctx.textAlign='left';
+  ctx.fillStyle='#fff';
+  ctx.fillText('TÚ '+PVP.localHp+' HP'+(PVP.localShield>0?' 🛡'+PVP.localShield:''), 12, canvas.height-12);
+  ctx.textAlign='right';
+  ctx.fillStyle='#ff8899';
+  ctx.fillText('RIVAL '+(PVP.remote.hp|0)+' HP', canvas.width-12, 22);
+  ctx.textAlign='center';
+  ctx.fillStyle='#FFCD00';
+  ctx.fillText(PVP.rounds.mine+' — '+PVP.rounds.theirs+'  ·  Ronda', canvas.width/2, 20);
+  ctx.restore();
+}
+
+// Hooks en game loop
+const _pvpHookInstalled = {v:false};
+function installHooks(){
+  if(_pvpHookInstalled.v)return;
+  _pvpHookInstalled.v=true;
+  // Disparo: space / click ya existen — escuchamos tecla y touch fire
+  window.addEventListener('keydown',function(e){
+    if(!PVP.active)return;
+    if(e.code==='Space'||e.key===' '){e.preventDefault();pvpTryShoot()}
+  });
+  document.addEventListener('click',function(e){
+    if(!PVP.active)return;
+    if(e.target&&e.target.id==='gameCanvas') pvpTryShoot();
+  });
+  const fire=document.getElementById('touchFire');
+  if(fire){
+    fire.addEventListener('pointerdown',function(){if(PVP.active)pvpTryShoot()});
+  }
+  // Envolver gameLoopCore si existe
+  try{
+    if(typeof gameLoopCore==='function' && !gameLoopCore.__pvp){
+      const orig=gameLoopCore;
+      function wrapped(ts){
+        if(PVP.active){
+          // limitar lógica hostil
+          try{obstacles=[];}catch(e){}
+          pvpUpdate(ts);
+          orig(ts);
+          pvpDraw();
+          return;
+        }
+        return orig(ts);
+      }
+      wrapped.__pvp=true;
+      gameLoopCore=wrapped;
+    }
+  }catch(e){console.warn('[PvP] hook loop',e)}
+}
+
+function wireUi(){
+  const c=$('pvpCreateBtn'); if(c)c.onclick=createRoom;
+  const j=$('pvpJoinBtn'); if(j)j.onclick=joinRoom;
+  const r=$('pvpReadyBtn'); if(r)r.onclick=toggleReady;
+  const b=$('pvpBackBtn'); if(b)b.onclick=function(){stopNet();closeLobbyToStart()};
+  const cp=$('pvpCopyCodeBtn');
+  if(cp)cp.onclick=function(){
+    const code=PVP.code||'';
+    try{navigator.clipboard.writeText(code);if(window.techNotify)window.techNotify('Código copiado: '+code,'success')}catch(e){setStatus('Código: '+code)}
+  };
+  installHooks();
+}
+
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',wireUi);
+else wireUi();
+setInterval(wireUi,3000);
+
+// SQL de referencia embebido
+window.TECH_PVP_SQL = `
+create table if not exists public.pvp_rooms (
+  id uuid primary key default gen_random_uuid(),
+  code text not null unique,
+  status text not null default 'waiting',
+  host_id uuid references auth.users(id) on delete set null,
+  guest_id uuid references auth.users(id) on delete set null,
+  host_name text, guest_name text,
+  host_ready boolean default false,
+  guest_ready boolean default false,
+  winner_id uuid, round integer default 1, max_rounds integer default 3,
+  created_at timestamptz default now(), updated_at timestamptz default now(),
+  expires_at timestamptz default (now() + interval '30 minutes')
+);
+create table if not exists public.pvp_match_state (
+  room_id uuid primary key references public.pvp_rooms(id) on delete cascade,
+  host_x real default 0.5, host_y real default 0.85,
+  guest_x real default 0.5, guest_y real default 0.15,
+  host_hp integer default 100, guest_hp integer default 100,
+  host_shield integer default 0, guest_shield integer default 0,
+  bullets jsonb default '[]'::jsonb, events jsonb default '[]'::jsonb,
+  tick bigint default 0, updated_at timestamptz default now()
+);
+create table if not exists public.pvp_results (
+  id uuid primary key default gen_random_uuid(),
+  room_id uuid, host_id uuid, guest_id uuid, winner_id uuid,
+  host_score integer default 0, guest_score integer default 0,
+  duration_ms integer, created_at timestamptz default now()
+);
+alter table public.pvp_rooms enable row level security;
+alter table public.pvp_match_state enable row level security;
+alter table public.pvp_results enable row level security;
+create policy "pvp_rooms_all" on public.pvp_rooms for all to authenticated using (true) with check (true);
+create policy "pvp_state_all" on public.pvp_match_state for all to authenticated using (true) with check (true);
+create policy "pvp_results_all" on public.pvp_results for all to authenticated using (true) with check (true);
+`;
 })();
 </script>
 
