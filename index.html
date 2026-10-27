@@ -2222,6 +2222,51 @@ html, body {
 #techStatisticsPanel.stats-mode-chart .tech-stat-graph-view{display:block!important}
 #techStatisticsPanel.stats-mode-chart .tech-stat-breakdown.tech-stat-graph-view{display:grid!important}
 </style>
+
+<style id="tech-perf-fluid-v1">
+/* Fluidez: menos trabajo de composición y repaint */
+.tech-game, #gameCanvas {
+  contain: layout paint size style;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+#gameCanvas {
+  image-rendering: auto;
+  will-change: contents;
+}
+/* Estrellas del fondo de página: más suaves / apagadas en juego */
+body.game-active::before,
+body:has(.tech-game.is-playing)::before {
+  animation: none !important;
+  opacity: 0.25 !important;
+}
+/* Reducir sombras y filtros costosos fuera de PC potente */
+@media (max-width: 1100px), (pointer: coarse) {
+  body::before { display: none !important; animation: none !important; }
+  .tech-game, .game-panel, .touch-pad-inner, .data-card, .contact-card {
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    filter: none !important;
+  }
+  .mini-triangle { animation: none !important; }
+  * { scroll-behavior: auto !important; }
+}
+/* Preferencia del sistema: menos movimiento */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  body::before { animation: none !important; }
+}
+/* Bajo consumo: forzar canvas más ligero vía clase en body */
+body.low-power #gameCanvas { image-rendering: auto; }
+body.low-power .tech-game { box-shadow: none !important; }
+</style>
+
 </head>
 <body>
 
@@ -2469,6 +2514,16 @@ let lowPower=(function(){
   /* por defecto activado en móvil / touch para evitar lag y pausas */
   try{return window.innerWidth<=1024||('ontouchstart' in window)||/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent||"")}catch(e){return true}
 })();
+/* Distancia de cámara / zoom visual: close | standard | far */
+let viewDistance=(function(){
+  const v=String(lsGet("techViewDistance","standard")||"standard").toLowerCase();
+  return (v==="close"||v==="far"||v==="standard")?v:"standard";
+})();
+function getViewMult(){
+  if(viewDistance==="close") return 1.38;   /* pantalla más cerca: sprites más grandes */
+  if(viewDistance==="far") return 0.70;     /* pantalla más alejada: más campo de visión */
+  return 1.0;                               /* estándar */
+}
 let gyroOn=lsGet("techGyro","0")==="1";
 let oneHand=lsGet("techOneHand","0")==="1";
 let shipSkin=lsGet("techShipSkin","white");
@@ -2681,7 +2736,7 @@ es:{
   sensPad:"Sensibilidad touch pad / mando",
   audio:"🔊 AUDIO",music:"Música de fondo",sfx:"Efectos (disparo, explosión, poderes)",
   mute:"Silenciar todo",vibMeteor:"Vibrar al destruir meteoritos",vibShoot:"Vibrar al disparar",
-  lowPower:"Modo bajo consumo",gyro:"Giroscopio (inclinar móvil)",
+  lowPower:"Modo bajo consumo",viewDistance:"Distancia de pantalla",viewClose:"Cerca",viewStandard:"Estándar",viewFar:"Lejos",viewHint:"Cambia el zoom visual del campo de juego",gyro:"Giroscopio (inclinar móvil)",
   language:"Idioma",touchLayout:"Controles táctiles (layout)",
   layoutLeft:"Mover ← · FIRE → (clásico)",
   layoutRight:"FIRE ← · Mover → (invertido)",
@@ -2715,7 +2770,7 @@ en:{
   sensPad:"Touch pad / gamepad sensitivity",
   audio:"🔊 AUDIO",music:"Background music",sfx:"SFX (shot, explosion, powers)",
   mute:"Mute all",vibMeteor:"Vibrate on meteor kill",vibShoot:"Vibrate on shoot",
-  lowPower:"Low power mode",gyro:"Gyroscope (tilt phone)",
+  lowPower:"Low power mode",viewDistance:"Screen distance",viewClose:"Close",viewStandard:"Standard",viewFar:"Far",viewHint:"Changes the visual zoom of the playfield",gyro:"Gyroscope (tilt phone)",
   language:"Language",touchLayout:"Touch controls layout",
   layoutLeft:"Move ← · FIRE → (classic)",
   layoutRight:"FIRE ← · Move → (inverted)",
@@ -3184,6 +3239,13 @@ function getConfigHTML(){
 <label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
 <input type="checkbox" id="lowPowerToggle" ${lowPower?"checked":""} style="accent-color:#00C8FF"> ${T("lowPower")}
 </label>
+<p style="color:#FFCD00;font-size:11px;margin:12px 0 4px">🔭 ${T("viewDistance")||"Distancia de pantalla"}</p>
+<select id="viewDistanceSelect" style="width:90%;padding:8px;border-radius:8px;background:#111;color:#fff;border:1px solid #444">
+<option value="close" ${viewDistance==="close"?"selected":""}>🔍 ${T("viewClose")||"Cerca"}</option>
+<option value="standard" ${viewDistance==="standard"?"selected":""}>🖥️ ${T("viewStandard")||"Estándar"}</option>
+<option value="far" ${viewDistance==="far"?"selected":""}>🌌 ${T("viewFar")||"Lejos"}</option>
+</select>
+<p style="color:#888;font-size:10px;margin:4px 0 8px">${T("viewHint")||"Cambia el zoom visual del campo de juego"}</p>
 <label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
 <input type="checkbox" id="gyroToggle" ${gyroOn?"checked":""} style="accent-color:#AA88FF"> ${T("gyro")}
 </label>
@@ -4608,7 +4670,9 @@ const vt=document.getElementById("vibrateToggle");
 if(vt)vt.onchange=()=>{vibrateOn=vt.checked;if(vibrateOn)doVibrate(30)};
 const vst=document.getElementById("vibrateShootToggle");
 if(vst)vst.onchange=()=>{vibrateShoot=vst.checked;if(vibrateShoot)doVibrate(15)};
-const lp=document.getElementById("lowPowerToggle");if(lp)lp.onchange=()=>{lowPower=lp.checked};
+const lp=document.getElementById("lowPowerToggle");if(lp)lp.onchange=()=>{lowPower=lp.checked;try{resizeCanvas()}catch(e){}};
+const vds=document.getElementById("viewDistanceSelect");
+if(vds){vds.value=viewDistance;vds.onchange=()=>{viewDistance=String(vds.value||"standard");if(!["close","standard","far"].includes(viewDistance))viewDistance="standard";lsSet("techViewDistance",viewDistance);try{resizeCanvas()}catch(e){}}};
 const gy=document.getElementById("gyroToggle");if(gy)gy.onchange=()=>{gyroOn=gy.checked;if(gyroOn&&window.DeviceOrientationEvent){
   const en=()=>window.addEventListener("deviceorientation",e=>{window._gyro={x:Math.max(-1,Math.min(1,(e.gamma||0)/30)),y:Math.max(-1,Math.min(1,(e.beta||0)/30 - 0.5))}} );
   if(typeof DeviceOrientationEvent.requestPermission==="function"){DeviceOrientationEvent.requestPermission().then(s=>{if(s==="granted")en()}).catch(()=>{})}
@@ -4641,7 +4705,7 @@ const btnMan=document.getElementById("btnManual");if(btnMan)btnMan.onclick=()=>s
 document.getElementById("closeConfig").onclick=()=>{
   lsSet("techSensMouse",sensMouse);lsSet("techSensKeys",sensKeys);lsSet("techSensPadV7",sensPad);
   lsSet("techVolMusicV3",volMusic);lsSet("techVolSfxV3",volSfx);lsSet("techAudioMuted",audioMuted?"1":"0");
-  lsSet("techVibrate",vibrateOn?"1":"0");lsSet("techVibrateShoot",vibrateShoot?"1":"0");lsSet("techLowPower",lowPower?"1":"0");lsSet("techGyro",gyroOn?"1":"0");lsSet("techLang",lang);lsSet("techTouchLayout",touchLayout||"left");lsSet("techPowerMode",powerMode);lsSet("techShowMinimap",window.showMinimap?"1":"0");lsSet("techShowOnlineRank",window.showOnlineRank?"1":"0");try{applyTouchLayout();applyUILanguage();refreshHudToggleIcons()}catch(e){}
+  lsSet("techVibrate",vibrateOn?"1":"0");lsSet("techVibrateShoot",vibrateShoot?"1":"0");lsSet("techLowPower",lowPower?"1":"0");lsSet("techViewDistance",viewDistance||"standard");lsSet("techGyro",gyroOn?"1":"0");lsSet("techLang",lang);lsSet("techTouchLayout",touchLayout||"left");lsSet("techPowerMode",powerMode);lsSet("techShowMinimap",window.showMinimap?"1":"0");lsSet("techShowOnlineRank",window.showOnlineRank?"1":"0");try{applyTouchLayout();applyUILanguage();refreshHudToggleIcons()}catch(e){}
   cfg.classList.remove("config-panel-open");cfg.style.setProperty("display","none","important");
   const wasConfiguringDuringGame=!!window.__configOpenedFromPause;
   window.__configOpenedFromPause=false;
@@ -5167,7 +5231,9 @@ function getScale(){
   /* Escala en píxeles del buffer (CSS × DPR) → nítido en pantallas HD/Retina */
   const css=Math.min(canvas.clientWidth||400, canvas.clientHeight||400);
   const dpr=(canvas.clientWidth>0)?(canvas.width/canvas.clientWidth):1;
-  return (css/400)*dpr;
+  const base=(css/400)*dpr;
+  const vm=(typeof getViewMult==="function")?getViewMult():1;
+  return base*vm;
 }
 /* Píxeles CSS → buffer (textos nítidos en HD) */
 function px(n){
@@ -5206,8 +5272,8 @@ function resizeCanvas(){
   /* HD real: buffer = CSS × devicePixelRatio (nunca por debajo de 1×) */
   const mobile=isMobile();
   let dpr=window.devicePixelRatio||1;
-  if(mobile) dpr=Math.min(Math.max(dpr,1), lowPower?1.25:1.75); /* móvil: nítido pero más ligero */
-  else dpr=Math.min(Math.max(dpr,1), 2);
+  if(mobile) dpr=Math.min(Math.max(dpr,1), lowPower?1.15:1.5); /* móvil: prioriza FPS */
+  else dpr=Math.min(Math.max(dpr,1), lowPower?1.5:2);
   const w=Math.max(1,Math.floor(cssW*dpr));
   const h=Math.max(1,Math.floor(cssH*dpr));
   if(canvas.width!==w||canvas.height!==h){
@@ -5218,11 +5284,13 @@ function resizeCanvas(){
   canvas.style.width=cssW+"px";
   canvas.style.height=cssH+"px";
   try{
+    /* En bajo consumo: menos calidad de suavizado = más FPS */
     ctx.imageSmoothingEnabled=true;
-    ctx.imageSmoothingQuality="high";
+    ctx.imageSmoothingQuality=(typeof lowPower!=="undefined"&&lowPower)?"low":"high";
   }catch(e){}
-  /* nave pequeña / alejada (zoom visual, sin bajar resolución) */
-  player.size=Math.max(11,Math.min(16,12.1*getScale())); /* +8% zoom */
+  /* Tamaño de nave según distancia de pantalla (cerca / estándar / lejos) */
+  const baseShip=12.1*((typeof getViewMult==="function")?getViewMult():1);
+  player.size=Math.max(9,Math.min(22,baseShip*Math.min(1.15,(canvas.clientWidth||400)/400*((canvas.clientWidth>0)?(canvas.width/canvas.clientWidth):1))));
   if(!gameRunning){player.x=canvas.width/2;player.y=canvas.height/2;mouse.x=player.x;mouse.y=player.y}
   initStars()
 }
@@ -12868,6 +12936,22 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
  }else{
    restorePersistentSession();
  }
+})();
+</script>
+
+
+<script id="tech-perf-body-class">
+(function(){
+  function syncBodyClass(){
+    try{
+      document.body.classList.toggle('low-power', !!window.lowPower || (typeof lowPower!=='undefined'&&!!lowPower));
+      const playing = !!(typeof gameRunning!=='undefined' && gameRunning && !(typeof gamePaused!=='undefined' && gamePaused));
+      document.body.classList.toggle('game-active', playing);
+    }catch(e){}
+  }
+  setInterval(syncBodyClass, 800);
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', syncBodyClass);
+  else syncBodyClass();
 })();
 </script>
 
