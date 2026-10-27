@@ -4947,7 +4947,7 @@ if(startPanel&&!document.getElementById("startExtras")){
     </div>
     <p style="font-size:9px;color:#888;margin:2px 0 6px" data-i18n-key="infiniteDesc">Infinito: oleadas interminables, sin jefes; la velocidad y la dificultad aumentan con cada oleada.</p>
     <p style="font-size:9px;color:#8fd;margin:0 0 6px" data-i18n-key="onlineDesc">Online: igual que Infinito y al terminar se publica tu puntuación en el ranking online.</p>
-    <p style="font-size:9px;color:#fa8;margin:0 0 6px" data-i18n-key="pvpDesc">1v1 Online: duelo en tiempo real (nave abajo vs nave arriba). Crea o únete con un código de sala.</p>
+    <p style="font-size:9px;color:#fa8;margin:0 0 6px" data-i18n-key="pvpDesc">Actualizando</p>
     <h3 style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap">
       <span>⬆ Mejoras permanentes</span>
       <span style="color:#FFCD00;font-size:12px;font-weight:700;letter-spacing:.5px">${coins} ⭐</span>
@@ -5134,7 +5134,15 @@ if(startPanel&&!document.getElementById("startExtras")){
     <button class="game-btn game-btn-blue" id="btnLoadSave" style="margin-top:6px;width:100%;padding:8px">💾 Continuar partida</button>
     `;
     box.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{difficulty=b.getAttribute("data-d");lsSet("techDiff",difficulty);renderStart()});
-    box.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{gameMode=b.getAttribute("data-mode");lsSet("techGameMode",gameMode);renderStart()});
+    box.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{
+      const selectedMode=b.getAttribute("data-mode");
+      if(selectedMode==="pvp"){
+        if(window.techNotify) window.techNotify('Actualizando','warning','1v1');
+        else alert('Actualizando');
+        return;
+      }
+      gameMode=selectedMode;lsSet("techGameMode",gameMode);renderStart()
+    });
     box.querySelectorAll("[data-upg]").forEach(b=>b.onclick=()=>{if(buyUpgrade(b.getAttribute("data-upg")))renderStart()});
     box.querySelectorAll("[data-skin]").forEach(b=>b.onclick=()=>{
       shipSkin=b.getAttribute("data-skin");lsSet("techShipSkin",shipSkin);renderStart();
@@ -13334,6 +13342,9 @@ function showPanel(id){
 }
 
 window.techPvpOpenLobby = function(){
+  if(window.techNotify) window.techNotify('Actualizando','warning','1v1');
+  else alert('Actualizando');
+  return;
   if(!logged()){
     try{window.techAuthOpen&&window.techAuthOpen();}catch(e){}
     if(window.techNotify) window.techNotify('Inicia sesión para jugar 1v1 online.','warning','1v1');
