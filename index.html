@@ -2304,6 +2304,62 @@ body.low-power #gameCanvas { image-rendering: auto; }
 body.low-power .tech-game { box-shadow: none !important; }
 </style>
 
+<style id="tech-run-responsive-redesign-v2">
+/* Rediseño responsive: inicio limpio, juego amplio y controles solo al jugar */
+:root{color-scheme:dark}
+html,body{width:100%;min-width:320px}
+.tech-game-section{width:100%;max-width:none;margin:0 auto;padding:clamp(12px,2vw,30px);}
+.tech-game{width:100%;max-width:none;height:clamp(560px,82vh,1050px);min-height:560px;border-radius:clamp(14px,1.5vw,24px);}
+.game-panel{width:min(680px,88vw);max-width:92%;max-height:90%;padding:clamp(24px,3vw,44px);border-radius:22px;}
+.game-panel h2{font-size:clamp(28px,2.5vw,42px);line-height:1.2;margin-bottom:18px}
+.game-panel p{font-size:clamp(15px,1.1vw,19px);line-height:1.65}
+.game-panel small{font-size:clamp(12px,.9vw,15px)}
+.game-btn{font-size:clamp(14px,1.05vw,18px);padding:15px 26px;min-height:48px;border-radius:12px}
+#startPanel{width:min(760px,90vw);padding:clamp(28px,3.5vw,52px);}
+#startPanel h2{font-size:clamp(32px,3.2vw,52px);letter-spacing:2px}
+#startPanel small{display:inline-block;margin:5px 0 12px;font-size:clamp(13px,1.1vw,17px);line-height:1.6}
+#startPanel .game-btn{min-width:210px}
+.game-top{top:clamp(14px,1.5vw,24px);left:clamp(18px,2vw,34px);right:clamp(18px,2vw,34px);gap:8px}
+.game-title{font-size:clamp(16px,1.35vw,23px);letter-spacing:2px}
+.game-score{font-size:clamp(14px,1.05vw,18px);padding:8px 12px;gap:14px}
+.game-score span{font-size:clamp(15px,1.15vw,20px)}
+.game-help{font-size:clamp(12px,.9vw,15px);bottom:20px}
+/* El touch pad nunca aparece en la pantalla inicial */
+.tech-game-section:not(:has(.tech-game.is-playing)) .touch-pad{display:none!important}
+/* En PC: espacio completo y sin controles táctiles */
+@media (min-width:1101px) and (pointer:fine){
+ .tech-game-section{padding:clamp(14px,1.5vw,28px) clamp(18px,2.2vw,42px)}
+ .tech-game{height:clamp(650px,86vh,1150px);min-height:650px}
+ .touch-pad{display:none!important}
+ .game-panel{width:min(760px,70vw)}
+ #startPanel{width:min(800px,72vw)}
+}
+/* Tablet / celular: controles aparecen únicamente después de iniciar la partida */
+@media (max-width:1100px),(pointer:coarse){
+ .tech-game-section{padding:8px 10px 16px;margin:0 auto}
+ .tech-game{height:clamp(420px,72vh,760px);min-height:420px}
+ .touch-pad{display:none!important;margin:8px auto 16px!important}
+ .tech-game.is-playing ~ .touch-pad{display:block!important}
+ .game-panel{width:min(620px,94vw);padding:22px 18px}
+ #startPanel{width:min(640px,94vw);padding:25px 18px}
+ .game-top{left:45px;right:12px;top:8px;gap:3px}
+ .game-title{font-size:12px}
+ .game-score{font-size:11px;padding:3px 6px}
+ .game-score span{font-size:12px}
+}
+@media(max-width:600px){
+ .tech-game-section{padding:5px 7px 12px}
+ .tech-game{height:clamp(410px,66vh,590px);min-height:410px;border-radius:14px}
+ .game-panel{width:94%;max-width:94%;padding:18px 13px;max-height:92%}
+ .game-panel h2{font-size:25px}
+ #startPanel{padding:22px 13px}
+ #startPanel h2{font-size:30px}
+ #startPanel .game-btn{min-width:0;width:min(100%,280px)}
+ .game-help{font-size:9px;bottom:9px}
+}
+@media(min-width:601px) and (max-width:1100px){.tech-game{height:clamp(500px,75vh,800px)}}
+</style>
+
 </head>
 <body>
 
@@ -12960,6 +13016,37 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
 
 </body>
 </html>
+<style id="tech-run-desktop-large-final">
+/* PC: usar todo el ancho disponible y hacer el menú realmente legible */
+@media (min-width: 1101px) and (pointer: fine) {
+  html, body { width:100% !important; max-width:none !important; overflow-x:hidden !important; }
+  .tech-game-section {
+    position:relative !important; width:100vw !important; max-width:none !important;
+    margin-left:calc(50% - 50vw) !important; margin-right:0 !important;
+    padding:18px clamp(24px,3vw,60px) 28px !important; box-sizing:border-box !important;
+  }
+  .tech-game { width:100% !important; max-width:none !important; height: min(88vh, 1200px) !important; min-height:760px !important; }
+  .game-panel, #startPanel {
+    width:min(1120px, 88vw) !important; min-width:min(760px, 80vw) !important;
+    max-width:88vw !important; max-height:94vh !important; box-sizing:border-box !important;
+    padding:clamp(38px,4vw,68px) !important; border-radius:30px !important;
+  }
+  #startPanel h1, #startPanel h2, #startPanel h3, .game-panel h1, .game-panel h2, .game-panel h3 {
+    font-size:clamp(34px,2.8vw,52px) !important; line-height:1.2 !important;
+  }
+  #startPanel p, #startPanel label, #startPanel .section-title, .game-panel p {
+    font-size:clamp(18px,1.25vw,24px) !important; line-height:1.6 !important;
+  }
+  #startPanel small, #startPanel .hint, #startPanel .subtext { font-size:clamp(15px,1vw,19px) !important; }
+  #startPanel button, #startPanel .game-btn, .game-panel button, .game-panel .game-btn {
+    font-size:clamp(19px,1.35vw,25px) !important; min-height:60px !important;
+    padding:18px 30px !important; border-radius:16px !important;
+  }
+  #startPanel .game-btn { min-width:280px !important; }
+  .game-top { font-size:clamp(17px,1.2vw,22px) !important; }
+}
+</style>
+
 
 
 <style id="tech-run-touch-center-scroll-left-final">
