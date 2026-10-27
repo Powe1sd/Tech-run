@@ -4883,6 +4883,7 @@ document.getElementById("resumeGame").onclick=()=>togglePause(false);const rp=do
 if(startPanel&&!document.getElementById("startExtras")){
   const box=document.createElement("div");box.id="startExtras";box.className="extra-panel";
   function renderStart(){
+    const loggedForNotice=!!(window.techAuthIsLoggedIn && window.techAuthIsLoggedIn());
     const rank=getRanking().map((r,i)=>(i+1)+". "+r.score).join(" · ")||"Sin récords aún";
     const ach=Object.values(getAchievements()).map(a=>a.title).slice(0,6).join(", ")||"—";
     const histHtml=formatMatchHistoryHtml(20);
@@ -5078,6 +5079,11 @@ if(startPanel&&!document.getElementById("startExtras")){
     <h3>TOP: ${rank}</h3>
     <p style="font-size:9px;opacity:.8">${ach}</p>
     <p style="color:#888;font-size:10px;margin:8px 0 4px">Ajustes en ⚙ Config (arriba a la izquierda)</p>
+    <div id="guestDataNotice" style="margin:10px 0 6px;padding:12px;border:1px solid ${loggedForNotice?'rgba(93,255,176,.4)':'rgba(255,205,0,.55)'};border-radius:12px;background:${loggedForNotice?'rgba(0,90,55,.2)':'rgba(80,55,0,.22)'};text-align:center;line-height:1.5;font-family:Arial,sans-serif">
+      ${loggedForNotice
+        ? '<strong style="display:block;color:#5dffb0;font-size:12px;margin-bottom:4px">✅ Sesión iniciada</strong><span style="font-size:11px;color:#e5f5ff">Tus estadísticas y progreso están vinculados a tu usuario.</span>'
+        : '<strong style="display:block;color:#ffda55;font-size:12px;margin-bottom:4px">👤 Estás jugando como invitado</strong><span style="display:block;font-size:11px;color:#fff">Tus datos y estadísticas no se guardan permanentemente. Inicia sesión con tu usuario para disfrutar todas las funcionalidades, incluidas 📊 Estadísticas y 👹 Cazador de jefes.</span><button type="button" id="guestAccountCta" class="game-btn" style="margin-top:9px;padding:8px 12px;width:100%;border-color:#5de5ff;color:#fff;background:linear-gradient(135deg,#142b52,#087c9d)">🔐 Iniciar sesión / Crear cuenta</button>'}
+    </div>
     <button class="game-btn game-btn-blue" id="btnLoadSave" style="margin-top:6px;width:100%;padding:8px">💾 Continuar partida</button>
     `;
     box.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{difficulty=b.getAttribute("data-d");lsSet("techDiff",difficulty);renderStart()});
@@ -5172,6 +5178,7 @@ if(startPanel&&!document.getElementById("startExtras")){
       currentWeapon=w;lsSet("techWeapon",w);renderStart();
     });
     const bms=box.querySelector("#btnManualStart");if(bms)bms.onclick=()=>showUserManual();
+    const guestAccountCta=box.querySelector("#guestAccountCta");if(guestAccountCta)guestAccountCta.onclick=()=>{const accountButton=document.getElementById("openTechAccount");if(accountButton)accountButton.click();};
     const bgc=box.querySelector("#btnGameCredits");
     const gcb=box.querySelector("#gameCreditsBox");
     if(bgc&&gcb){
@@ -9376,9 +9383,6 @@ async function validateUsernameBeforeStart(){
     try { lsSet("techShipName", "Usuario"); } catch(e) {}
     if(input){ input.value="Usuario"; input.readOnly=true; input.disabled=true; input.setAttribute("aria-label","Nombre fijo para invitado"); input.title="Regístrate e inicia sesión para usar el nombre de tu cuenta"; }
     startGame();
-    if(typeof gameMode !== "undefined" && gameMode === "online" && window.techNotify){
-      window.techNotify("Estás jugando como invitado. El ranking online no se guarda si no estás registrado.","warning","TECH RUN");
-    }
     return;
   }
   const nick = String(window.techAuthUsername ? window.techAuthUsername() : "Usuario").trim().slice(0,10) || "Usuario";
@@ -13037,9 +13041,9 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
    const exit=$('techAccountExit');if(exit)exit.classList.toggle('is-visible',isLogged());
  }
  $('openTechAccount')&&$('openTechAccount').addEventListener('click',open);
- $('taCloseModal').addEventListener('click',()=>{modal.style.display='none';if(!isLogged()&&window.techNotify)window.techNotify('Estás jugando como invitado. El ranking online no se guarda si no estás registrado.','warning','TECH RUN');});
- $('taGuestPlay').addEventListener('click',()=>{modal.style.display='none';if(window.techNotify)window.techNotify('Estás jugando como invitado. El ranking online no se guarda si no estás registrado.','warning','TECH RUN');});
- modal.addEventListener('click',e=>{if(e.target===modal){modal.style.display='none';if(!isLogged()&&window.techNotify)window.techNotify('Estás jugando como invitado. El ranking online no se guarda si no estás registrado.','warning','TECH RUN');}});
+ $('taCloseModal').addEventListener('click',()=>{modal.style.display='none';});
+ $('taGuestPlay').addEventListener('click',()=>{modal.style.display='none';});
+ modal.addEventListener('click',e=>{if(e.target===modal){modal.style.display='none';}});
  $('taRegister').addEventListener('click',()=>{if(mode!=='register')setMode('register');else register();});
  $('taLogin').addEventListener('click',()=>{if(mode==='register')return;login();});
  $('taForgot').addEventListener('click',()=>setMode('forgot'));
