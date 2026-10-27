@@ -1248,6 +1248,25 @@ body {min-height:100vh !important}
   letter-spacing:.7px;cursor:pointer;box-shadow:0 4px 16px rgba(206,17,38,.3);
 }
 #techAccountExit.is-visible{display:inline-flex;align-items:center;gap:8px}
+/* Salir solo en menú principal, nunca durante la partida */
+.tech-game.is-playing ~ #techAccountExit,
+body:has(.tech-game.is-playing) #techAccountExit{
+  display:none!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+/* Controles en partida siempre por encima */
+.tech-game.is-playing #btnPause,
+.tech-game.is-playing #btnMuteLive,
+.tech-game.is-playing #btnRestartLive,
+.tech-game.is-playing #btnConfig,
+.tech-game.is-playing #btnFullscreen{
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+  z-index:200!important;
+  pointer-events:auto!important;
+}
 #techAccountExit:hover{background:#e43d52}
 @media(max-width:600px){
   #techAccountExit{top:8px;right:8px;padding:9px 11px;font-size:10px}
@@ -4718,12 +4737,12 @@ try{
   const gameShell=document.querySelector(".tech-game");
   if(gameShell&&window.MutationObserver){new MutationObserver(()=>syncTouchPad()).observe(gameShell,{attributes:true,attributeFilter:["class"]});}
 }catch(e){}
-const btnPause=mk("btnPause","⏸","Pausa (P)","position:absolute;top:8px;right:80px;z-index:30;width:32px;height:32px;border:none;border-radius:8px;background:rgba(0,56,168,.9);color:#fff;font-size:14px;cursor:pointer;display:none");
+const btnPause=mk("btnPause","⏸","Pausa (P)","position:absolute;top:8px;right:80px;z-index:200;width:32px;height:32px;border:none;border-radius:8px;background:rgba(0,56,168,.9);color:#fff;font-size:14px;cursor:pointer;display:none");
 btnPause.onclick=()=>togglePause();
-const btnMuteLive=mk("btnMuteLive",audioMuted?"🔇":"🔊","Silenciar / Activar audio","position:absolute;top:8px;right:152px;z-index:30;width:32px;height:32px;border:none;border-radius:8px;background:rgba(0,0,0,.55);color:#fff;font-size:15px;cursor:pointer;display:none;line-height:1");
+const btnMuteLive=mk("btnMuteLive",audioMuted?"🔇":"🔊","Silenciar / Activar audio","position:absolute;top:8px;right:152px;z-index:200;width:32px;height:32px;border:none;border-radius:8px;background:rgba(0,0,0,.55);color:#fff;font-size:15px;cursor:pointer;display:none;line-height:1");
 window.refreshMuteLiveIcon=function refreshMuteLiveIcon(){try{const b=document.getElementById("btnMuteLive");if(b)b.textContent=audioMuted?"🔇":"🔊";}catch(e){}};
 btnMuteLive.onclick=()=>{try{toggleMute();lsSet("techAudioMuted",audioMuted?"1":"0");window.refreshMuteLiveIcon();const mu=document.getElementById("audioMute");if(mu)mu.checked=!!audioMuted;const pmu=document.getElementById("pauseMute");if(pmu)pmu.checked=!!audioMuted;}catch(e){}};
-const btnRestartLive=mk("btnRestartLive","🔄","Reiniciar","position:absolute;top:8px;right:116px;z-index:30;width:32px;height:32px;border:none;border-radius:8px;background:rgba(206,17,38,.85);color:#fff;font-size:13px;cursor:pointer;display:none");
+const btnRestartLive=mk("btnRestartLive","🔄","Reiniciar","position:absolute;top:8px;right:116px;z-index:200;width:32px;height:32px;border:none;border-radius:8px;background:rgba(206,17,38,.85);color:#fff;font-size:13px;cursor:pointer;display:none");
 btnRestartLive.onclick=()=>{if(confirm("¿Reiniciar partida?"))startGame()};
 
 const btnCfg=mk("btnConfig","⚙","Config","position:absolute;top:8px;left:8px;z-index:30;width:32px;height:32px;border:none;border-radius:8px;background:rgba(255,255,255,.15);color:#FFCD00;font-size:15px;cursor:pointer");
@@ -9322,7 +9341,11 @@ gameOverPanel.style.setProperty("display","none","important");
 const configShortcut=document.getElementById("btnConfig");if(configShortcut){configShortcut.style.setProperty("display","flex","important");configShortcut.style.setProperty("position","absolute","important");configShortcut.style.setProperty("top","8px","important");configShortcut.style.setProperty("left","10px","important");configShortcut.style.setProperty("right","auto","important");configShortcut.style.setProperty("z-index","60","important");configShortcut.style.setProperty("align-items","center","important");configShortcut.style.setProperty("justify-content","center","important");configShortcut.setAttribute("aria-label","Abrir configuraciones durante la partida");configShortcut.title="Configuraciones";}
 const pp=document.getElementById("pausePanel");if(pp)pp.style.display="none";
 const cp=document.getElementById("configPanel");if(cp){cp.classList.remove("config-panel-open");cp.style.setProperty("display","none","important");cp.hidden=false;}
-const bp=document.getElementById("btnPause");if(bp){bp.style.display="block";bp.innerHTML="⏸"}const br=document.getElementById("btnRestartLive");if(br)br.style.display="block";const bm=document.getElementById("btnMuteLive");if(bm){bm.style.display="block";try{window.refreshMuteLiveIcon()}catch(e){}}try{const btm=document.getElementById("btnToggleMap");if(btm)btm.style.display="block";const btr=document.getElementById("btnToggleRank");if(btr)btr.style.display="block";refreshHudToggleIcons()}catch(e){}
+const bp=document.getElementById("btnPause");if(bp){bp.style.setProperty("display","flex","important");bp.innerHTML="⏸"}const br=document.getElementById("btnRestartLive");if(br)br.style.setProperty("display","flex","important");const bm=document.getElementById("btnMuteLive");if(bm){bm.style.setProperty("display","flex","important");try{window.refreshMuteLiveIcon()}catch(e){}}try{const btm=document.getElementById("btnToggleMap");if(btm)btm.style.display="block";const btr=document.getElementById("btnToggleRank");if(btr)btr.style.display="block";refreshHudToggleIcons()}catch(e){}
+try{if(typeof showLiveGameControls==="function")showLiveGameControls(true);else{
+  ["btnPause","btnMuteLive","btnRestartLive","btnConfig","btnFullscreen"].forEach(function(id){var el=document.getElementById(id);if(el)el.style.setProperty("display","flex","important")});
+  var ex=document.getElementById("techAccountExit");if(ex){ex.classList.remove("is-visible");ex.style.setProperty("display","none","important")}
+}}catch(e){}
 obstacles=[];particles=[];bullets=[];enemyBullets=[];pickups=[];explosions=[];traps=[];missiles=[];lightningFX=[];allies=[];gravZones=[];drones=[];
 score=0;meteorsDestroyed=0;shipsDestroyed=0;ki=0;kiReady=false;kamehameha=0;dashCd=0;dashInvuln=0;dashTrail=[];shieldCd=0;activeShield=0;chargeShot=0;worldTeleportCd=0;droneCd=0;bounceShot=0;bounceShotCd=0;freezeCd=0;phaseShift=0;railgun=0;lootVacuum=0;orbitalMines=[];chainFX=[];ammo=100;shield=0;rapidFire=0;tripleShot=0;slowMo=0;laser=0;pierce=0;invisible=0;magnet=0;missilePower=0;allyPower=0;storm=0;overdrive=0;nova=0;reflect=0;burst=0;repair=0;freezeEnemies=0;barrier=0;bazooka=0;specialCharges=3;powersCollected=0;lives=1;level=1;waveCount=0;waveNumber=1;scenario=selectedWorld||1;scenarioTransition=0;scenarioMsg="";gamePaused=false;lastEnemySpawn=0;
 keys.up=keys.down=keys.left=keys.right=false;
@@ -9356,6 +9379,7 @@ const pp=document.getElementById("pausePanel");if(pp)pp.style.display="none";
 if(finalScoreElement)finalScoreElement.textContent=score;saveRecord();try{saveCurrentMatchToHistory();}catch(e){console.error("Error guardando la partida:",e)}try{if(typeof renderStart==="function")renderStart()}catch(e){}pushRanking(score);
 checkAchievements();
 try{document.querySelector(".tech-game")&&document.querySelector(".tech-game").classList.remove("is-playing")}catch(e){}
+try{if(typeof showLiveGameControls==="function")showLiveGameControls(false)}catch(e){}
 gameOverPanel.style.setProperty("display","block","important");
 let extra=document.getElementById("goExtra");
 if(!extra){extra=document.createElement("div");extra.id="goExtra";gameOverPanel.appendChild(extra)}
@@ -9384,6 +9408,9 @@ try{
 }
 function continueToSite(){try{document.querySelector(".tech-game")&&document.querySelector(".tech-game").classList.remove("is-playing")}catch(e){}gameOverPanel.style.setProperty("display","none","important");startPanel.style.setProperty("display","block","important")}
 function goToStartMenu(){
+try{if(typeof showLiveGameControls==="function")showLiveGameControls(false)}catch(e){}
+try{document.querySelector(".tech-game")&&document.querySelector(".tech-game").classList.remove("is-playing")}catch(e){}
+
   /* Transición directa a menú: detener el motor antes de ocultar paneles. */
   gameRunning=false;gamePaused=false;
   try{cancelAnimationFrame(animationFrame)}catch(e){}
@@ -13072,7 +13099,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
  }
  function updateAccountUI(){
    const b=$('openTechAccount');if(b)b.textContent=isLogged()?'Cuenta: '+username()+' · Gestionar / salir':'Crear cuenta / Iniciar sesión';
-   const exit=$('techAccountExit');if(exit)exit.classList.toggle('is-visible',isLogged());
+   const exit=$('techAccountExit');if(exit){const playing=!!(document.querySelector('.tech-game.is-playing'));if(playing){exit.classList.remove('is-visible');exit.style.setProperty('display','none','important');}else{exit.style.removeProperty('display');exit.classList.toggle('is-visible',isLogged());}}
  }
  $('openTechAccount')&&$('openTechAccount').addEventListener('click',open);
  $('taCloseModal').addEventListener('click',()=>{modal.style.display='none';});
@@ -13579,23 +13606,98 @@ function beginMatch(room){
   PVP.pollTimer=setInterval(pullState, 100);
 }
 
+function showLiveGameControls(show){
+  const ids=['btnPause','btnMuteLive','btnRestartLive','btnConfig','btnFullscreen'];
+  ids.forEach(function(id){
+    const el=document.getElementById(id);
+    if(!el) return;
+    if(show){
+      el.style.setProperty('display','flex','important');
+      el.style.setProperty('visibility','visible','important');
+      el.style.setProperty('opacity','1','important');
+      el.style.setProperty('z-index','200','important');
+      el.style.setProperty('pointer-events','auto','important');
+    }else{
+      el.style.setProperty('display','none','important');
+    }
+  });
+  /* Salir: solo menú principal */
+  try{
+    const exit=document.getElementById('techAccountExit');
+    if(exit){
+      if(show){
+        exit.classList.remove('is-visible');
+        exit.style.setProperty('display','none','important');
+      }else{
+        exit.style.removeProperty('display');
+        try{
+          if(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn()) exit.classList.add('is-visible');
+        }catch(e){}
+      }
+    }
+  }catch(e){}
+  try{if(show&&window.refreshMuteLiveIcon)window.refreshMuteLiveIcon()}catch(e){}
+}
+
 function bootstrapPvpArena(){
   try{cancelAnimationFrame(animationFrame)}catch(e){}
   gameRunning=true; gamePaused=false;
   try{document.querySelector('.tech-game')&&document.querySelector('.tech-game').classList.add('is-playing')}catch(e){}
-  // Posición local
+  try{showLiveGameControls(true)}catch(e){}
+  /* Misma arena para ambos: mundo fijo, sin oleadas ni escenarios distintos */
+  try{
+    if(typeof selectedWorld!=='undefined') selectedWorld=1;
+    if(typeof scenario!=='undefined') scenario=1;
+    if(typeof phase!=='undefined') phase='pvp';
+    if(typeof waveCount!=='undefined') waveCount=0;
+    if(typeof level!=='undefined') level=1;
+  }catch(e){}
   try{
     if(typeof player!=='undefined'){
-      player.x = (typeof canvas!=='undefined'?canvas.width:600)/2;
-      player.y = PVP.role==='host' ? (canvas.height*0.85) : (canvas.height*0.15);
+      const W = (typeof canvas!=='undefined'?canvas.width:600);
+      const H = (typeof canvas!=='undefined'?canvas.height:400);
+      player.x = W/2;
+      player.y = PVP.role==='host' ? (H*0.82) : (H*0.18);
+      player.size = Math.max(14, Math.min(22, (W/400)*16));
+      if(typeof mouse!=='undefined'){ mouse.x=player.x; mouse.y=player.y; }
     }
   }catch(e){}
-  // Limpiar oleadas
-  try{obstacles=[];enemyBullets=[];pickups=[];traps=[];}catch(e){}
-  try{lives=99; updateLivesUI&&updateLivesUI()}catch(e){} // no game-over clásico
-  try{score=0; if(scoreElement)scoreElement.textContent='0'}catch(e){}
+  try{obstacles=[];enemyBullets=[];pickups=[];traps=[];missiles=[];allies=[];drones=[];}catch(e){}
+  try{lives=99; if(typeof updateLivesUI==='function')updateLivesUI()}catch(e){}
+  try{score=0; if(typeof scoreElement!=='undefined'&&scoreElement)scoreElement.textContent='0'}catch(e){}
+  try{shield=0; ammo=999;}catch(e){}
   try{animationFrame=requestAnimationFrame(gameLoop)}catch(e){}
-  if(window.techNotify) window.techNotify('Duelo iniciado. ¡Buena suerte!','success','1v1');
+  if(window.techNotify) window.techNotify('Duelo 1v1: no cruces la mitad del mapa.','success','1v1');
+}
+
+function clampPvpHalf(){
+  if(!PVP.active || typeof player==='undefined' || !canvas) return;
+  const H=canvas.height||400, W=canvas.width||600;
+  const mid=H*0.5;
+  const gap=18; /* zona muerta en el centro */
+  const m = (player.size||14);
+  player.x = Math.max(m, Math.min(W-m, player.x));
+  if(PVP.role==='host'){
+    /* Mitad inferior */
+    const minY = mid + gap;
+    const maxY = H - m*2.2;
+    player.y = Math.max(minY, Math.min(maxY, player.y));
+  }else{
+    /* Mitad superior */
+    const minY = m*2.2;
+    const maxY = mid - gap;
+    player.y = Math.max(minY, Math.min(maxY, player.y));
+  }
+  try{
+    if(typeof mouse!=='undefined'){
+      mouse.x = Math.max(m, Math.min(W-m, mouse.x));
+      if(PVP.role==='host'){
+        mouse.y = Math.max(mid+gap, Math.min(H-m*2.2, mouse.y));
+      }else{
+        mouse.y = Math.max(m*2.2, Math.min(mid-gap, mouse.y));
+      }
+    }
+  }catch(e){}
 }
 
 function localNorm(){
@@ -13686,38 +13788,45 @@ function pvpUpdate(dt){
   if(!PVP.active)return;
   if(PVP.invuln>0)PVP.invuln--;
 
+  /* Forzar misma "arena" en ambos clientes */
+  try{
+    if(typeof selectedWorld!=='undefined') selectedWorld=1;
+    if(typeof scenario!=='undefined') scenario=1;
+    if(typeof phase!=='undefined') phase='pvp';
+    obstacles.length=0; enemyBullets.length=0; traps.length=0;
+    if(pickups) pickups.length=0;
+  }catch(e){}
+
+  clampPvpHalf();
+
   // Mover balas locales
   for(let i=PVP.bullets.length-1;i>=0;i--){
     const b=PVP.bullets[i];
     b.x+=b.vx; b.y+=b.vy; b.life--;
-    if(b.life<=0||b.y<-20||b.y>canvas.height+20){PVP.bullets.splice(i,1);continue}
-    // Hit rival
+    if(b.life<=0||b.y<-30||b.y>canvas.height+30){PVP.bullets.splice(i,1);continue}
     const rx=PVP.remote.x*canvas.width, ry=PVP.remote.y*canvas.height;
-    if(Math.hypot(b.x-rx,b.y-ry)<18){
+    if(Math.hypot(b.x-rx,b.y-ry)<20){
       PVP.bullets.splice(i,1);
-      // El daño lo aplica el dueño de la bala en el HP remoto reportado;
-      // para feedback local restamos al remote visible si somos autoridad simple:
       if(PVP.remote.shield>0){PVP.remote.shield=Math.max(0,PVP.remote.shield-25)}
       else {PVP.remote.hp=Math.max(0,(PVP.remote.hp||100)-10)}
-      try{createExplosion&&createExplosion(rx,ry,14,'255,200,50')}catch(e){}
+      try{if(typeof createExplosion==='function')createExplosion(rx,ry,14,'255,200,50')}catch(e){}
       if(PVP.remote.hp<=0) onRoundEnd(true);
     }
   }
   // Balas rivales vs yo
   for(let i=PVP.remoteBullets.length-1;i>=0;i--){
     const b=PVP.remoteBullets[i];
-    if(Math.hypot(b.x-player.x,b.y-player.y)<16){
+    // avanzar un poco en local por si el sync va a baja frecuencia
+    b.x+=(b.vx||0)*0.35; b.y+=(b.vy||0)*0.35;
+    if(Math.hypot(b.x-player.x,b.y-player.y)<18){
       PVP.remoteBullets.splice(i,1);
       if(PVP.invuln>0) continue;
-      if(PVP.localShield>0){PVP.localShield=Math.max(0,PVP.localShield-25);PVP.invuln=20}
-      else {PVP.localHp=Math.max(0,PVP.localHp-10);PVP.invuln=35;try{playSfx&&playSfx('hit')}catch(e){}}
-      try{createExplosion&&createExplosion(player.x,player.y,12,'255,80,60')}catch(e){}
+      if(PVP.localShield>0){PVP.localShield=Math.max(0,PVP.localShield-25);PVP.invuln=22}
+      else {PVP.localHp=Math.max(0,PVP.localHp-10);PVP.invuln=38;try{if(typeof playSfx==='function')playSfx('hit')}catch(e){}}
+      try{if(typeof createExplosion==='function')createExplosion(player.x,player.y,12,'255,80,60')}catch(e){}
       if(PVP.localHp<=0) onRoundEnd(false);
     }
   }
-
-  // Bloquear spawns clásicos
-  try{obstacles.length=0;enemyBullets.length=0;}catch(e){}
 }
 
 function onRoundEnd(iWon){
@@ -13732,7 +13841,9 @@ function onRoundEnd(iWon){
   PVP.bullets=[]; PVP.remoteBullets=[];
   try{
     player.x=canvas.width/2;
-    player.y=PVP.role==='host'?canvas.height*0.85:canvas.height*0.15;
+    player.y=PVP.role==='host'?canvas.height*0.82:canvas.height*0.18;
+    if(typeof mouse!=='undefined'){mouse.x=player.x;mouse.y=player.y}
+    clampPvpHalf();
   }catch(e){}
   if(window.techNotify){
     window.techNotify((iWon?'Ganaste':'Perdiste')+' la ronda. Marcador '+PVP.rounds.mine+'-'+PVP.rounds.theirs,'info','1v1');
@@ -13743,6 +13854,8 @@ async function endPvpMatch(iWon){
   PVP.active=false;
   stopNet();
   gameRunning=false;
+  try{document.querySelector('.tech-game')&&document.querySelector('.tech-game').classList.remove('is-playing')}catch(e){}
+  try{if(typeof showLiveGameControls==='function')showLiveGameControls(false)}catch(e){}
   try{
     if(PVP.roomId){
       await api(T_ROOMS+'?id=eq.'+PVP.roomId,'PATCH',{
@@ -13772,39 +13885,97 @@ async function endPvpMatch(iWon){
   if(window.techNotify) window.techNotify(iWon?'¡Ganaste el duelo!':'Has perdido el duelo.',iWon?'success':'warning','1v1');
 }
 
-function pvpDraw(){
-  if(!PVP.active||!ctx)return;
-  // Rival
-  const rx=PVP.remote.x*canvas.width, ry=PVP.remote.y*canvas.height;
+function pvpDrawShipAt(x, y, faceDown, model, skin, label, accent){
+  const s = Math.max(14, (player&&player.size)||16);
   ctx.save();
-  ctx.translate(rx,ry);
-  if(PVP.role==='host'){ctx.rotate(Math.PI)} // guest ship points down visually for host view? 
-  // Always draw rival pointing toward us
-  ctx.fillStyle='#CE1126';
+  ctx.translate(x, y);
+  if(faceDown) ctx.rotate(Math.PI);
+  try{
+    if(typeof drawShipModel==='function'){
+      drawShipModel(ctx, s, model||'classic', skin||'white', label||null);
+    }else{
+      ctx.fillStyle=accent||'#FFCD00';
+      ctx.beginPath();
+      ctx.moveTo(0,-s); ctx.lineTo(s*.55,s*.7); ctx.lineTo(0,s*.35); ctx.lineTo(-s*.55,s*.7);
+      ctx.closePath(); ctx.fill();
+    }
+  }catch(e){
+    ctx.fillStyle=accent||'#FFCD00';
+    ctx.beginPath();
+    ctx.moveTo(0,-s); ctx.lineTo(s*.55,s*.7); ctx.lineTo(0,s*.35); ctx.lineTo(-s*.55,s*.7);
+    ctx.closePath(); ctx.fill();
+  }
+  /* motor */
+  ctx.fillStyle=faceDown?'rgba(255,120,40,.85)':'rgba(80,200,255,.85)';
   ctx.beginPath();
-  ctx.moveTo(0,-14); ctx.lineTo(10,12); ctx.lineTo(-10,12); ctx.closePath();
-  ctx.fill();
+  ctx.moveTo(-s*.18,s*.55); ctx.lineTo(0,s*.95+Math.random()*3); ctx.lineTo(s*.18,s*.55);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function pvpDraw(){
+  if(!PVP.active||!ctx||!canvas)return;
+  const W=canvas.width, H=canvas.height;
+  const mid=H*0.5;
+
+  /* Línea media + zonas */
+  ctx.save();
+  ctx.strokeStyle='rgba(255,205,0,.55)';
+  ctx.setLineDash([8,6]);
+  ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(12, mid); ctx.lineTo(W-12, mid); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle='rgba(0,160,255,.06)';
+  ctx.fillRect(0,0,W,mid);
+  ctx.fillStyle='rgba(206,17,38,.06)';
+  ctx.fillRect(0,mid,W,H-mid);
   ctx.restore();
 
-  // Balas locales
-  ctx.fillStyle='#FFCD00';
-  PVP.bullets.forEach(function(b){ctx.fillRect(b.x-2,b.y-5,4,10)});
-  // Balas rivales
-  ctx.fillStyle='#5de5ff';
-  PVP.remoteBullets.forEach(function(b){ctx.fillRect(b.x-2,b.y-5,4,10)});
+  /* Modelo local (el bucle principal también dibuja uno; lo repintamos bien orientado) */
+  const localModel = (typeof shipModel!=='undefined'?shipModel:'classic');
+  const localSkin = (typeof shipSkin!=='undefined'?shipSkin:'white');
+  const localName = (typeof shipName!=='undefined'?shipName:'TÚ');
+  const faceDownLocal = (PVP.role==='guest'); /* guest arriba mira hacia abajo */
+  pvpDrawShipAt(player.x, player.y, faceDownLocal, localModel, localSkin, localName, '#FFCD00');
 
-  // HUD HP
+  /* Rival */
+  const rx=(PVP.remote.x||0.5)*W;
+  const ry=(PVP.remote.y|| (PVP.role==='host'?0.18:0.82))*H;
+  const faceDownRemote = (PVP.role==='host'); /* el guest está arriba → su nave mira abajo */
+  pvpDrawShipAt(rx, ry, faceDownRemote, 'classic', 'crimson', 'RIVAL', '#CE1126');
+
+  /* Balas */
+  PVP.bullets.forEach(function(b){
+    ctx.save();
+    const grd=ctx.createLinearGradient(b.x,b.y,b.x,b.y+(b.vy>0?12:-12));
+    grd.addColorStop(0,'#fff'); grd.addColorStop(1,'#FFCD00');
+    ctx.fillStyle=grd;
+    ctx.fillRect(b.x-2.5,b.y-7,5,14);
+    ctx.restore();
+  });
+  PVP.remoteBullets.forEach(function(b){
+    ctx.save();
+    ctx.fillStyle='#5de5ff';
+    ctx.shadowColor='#5de5ff'; ctx.shadowBlur=6;
+    ctx.fillRect(b.x-2.5,b.y-7,5,14);
+    ctx.restore();
+  });
+
+  /* HUD */
   ctx.save();
   ctx.font='bold 13px Share Tech Mono,monospace';
   ctx.textAlign='left';
   ctx.fillStyle='#fff';
-  ctx.fillText('TÚ '+PVP.localHp+' HP'+(PVP.localShield>0?' 🛡'+PVP.localShield:''), 12, canvas.height-12);
+  ctx.fillText('TÚ '+PVP.localHp+' HP'+(PVP.localShield>0?'  🛡'+PVP.localShield:''), 12, H-14);
   ctx.textAlign='right';
   ctx.fillStyle='#ff8899';
-  ctx.fillText('RIVAL '+(PVP.remote.hp|0)+' HP', canvas.width-12, 22);
+  ctx.fillText('RIVAL '+(PVP.remote.hp|0)+' HP', W-12, 22);
   ctx.textAlign='center';
   ctx.fillStyle='#FFCD00';
-  ctx.fillText(PVP.rounds.mine+' — '+PVP.rounds.theirs+'  ·  Ronda', canvas.width/2, 20);
+  ctx.fillText(PVP.rounds.mine+' — '+PVP.rounds.theirs+'  ·  1v1', W/2, 20);
+  ctx.fillStyle='rgba(255,255,255,.55)';
+  ctx.font='11px Share Tech Mono,monospace';
+  ctx.fillText(PVP.role==='host'?'Zona inferior (no pases la línea)':'Zona superior (no pases la línea)', W/2, mid+(PVP.role==='host'?16:-10));
   ctx.restore();
 }
 
@@ -13832,10 +14003,15 @@ function installHooks(){
       const orig=gameLoopCore;
       function wrapped(ts){
         if(PVP.active){
-          // limitar lógica hostil
-          try{obstacles=[];}catch(e){}
+          try{
+            if(typeof selectedWorld!=='undefined') selectedWorld=1;
+            if(typeof scenario!=='undefined') scenario=1;
+            obstacles=[]; enemyBullets=[]; traps=[];
+          }catch(e){}
           pvpUpdate(ts);
           orig(ts);
+          /* Tras el movimiento del juego base: mitad de campo */
+          try{clampPvpHalf()}catch(e){}
           pvpDraw();
           return;
         }
