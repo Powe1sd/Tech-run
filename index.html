@@ -2935,7 +2935,7 @@ function promptGokuAccessAsync(){
 }
 let shipName=(lsGet("techShipName","Br7")||"Br7").slice(0,10);
 
-let selectedWorld=Math.min(19,Math.max(1,Number(lsGet("techWorld","1"))||1)); // 1-19 mundos
+let selectedWorld=Math.min(24,Math.max(1,Number(lsGet("techWorld","1"))||1)); // 1-24 mundos
 
 let metaCoins=Number(lsGet("techCoins",0))||0;
 let upgSpeed=Number(lsGet("techUpgSpeed",0))||0;
@@ -4495,9 +4495,123 @@ try {
   try{SFX.laser = SFX.laser || new Audio("audios/laser.mp3")}catch(e){}
 } catch(e) {}
 
+
+/* ===== Ambiente sintético por mundo (Web Audio, sin descargas) ===== */
+let _worldAmbCtx=null, _worldAmbNodes=null, _worldAmbId=null, _worldAmbGain=null;
+function _ensureWorldAmbCtx(){
+  try{
+    if(_worldAmbCtx) return _worldAmbCtx;
+    const AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC) return null;
+    _worldAmbCtx=new AC();
+    return _worldAmbCtx;
+  }catch(e){return null}
+}
+function stopWorldAmbient(){
+  try{
+    if(_worldAmbNodes){
+      _worldAmbNodes.forEach(function(n){
+        try{if(n.stop)n.stop()}catch(e){}
+        try{if(n.disconnect)n.disconnect()}catch(e){}
+      });
+    }
+  }catch(e){}
+  _worldAmbNodes=null; _worldAmbId=null; _worldAmbGain=null;
+}
+function setWorldAmbient(worldId){
+  try{
+    if(typeof audioMuted!=="undefined"&&audioMuted){stopWorldAmbient();return}
+    const w=Number(worldId)||1;
+    // Solo mundos 20-24 tienen atmósfera propia; el resto usa el mp3 de fondo
+    if(w<20||w>24){stopWorldAmbient();return}
+    if(_worldAmbId===w && _worldAmbNodes) return;
+    stopWorldAmbient();
+    const ctx=_ensureWorldAmbCtx();
+    if(!ctx) return;
+    if(ctx.state==="suspended") try{ctx.resume()}catch(e){}
+    const master=ctx.createGain();
+    const baseVol=(typeof volMusic==="number"?volMusic:0.12)*0.55;
+    master.gain.value=baseVol;
+    master.connect(ctx.destination);
+    const nodes=[];
+    function tone(freq,type,vol,lfoHz,lfoDepth){
+      const o=ctx.createOscillator();
+      o.type=type||"sine";
+      o.frequency.value=freq;
+      const g=ctx.createGain();
+      g.gain.value=vol;
+      if(lfoHz){
+        const lfo=ctx.createOscillator();
+        const lg=ctx.createGain();
+        lfo.frequency.value=lfoHz;
+        lg.gain.value=lfoDepth||4;
+        lfo.connect(lg); lg.connect(o.frequency);
+        lfo.start(); nodes.push(lfo);
+      }
+      o.connect(g); g.connect(master);
+      o.start(); nodes.push(o,g);
+      return o;
+    }
+    function noise(vol,filterFreq,filterQ){
+      const bufSize=2*ctx.sampleRate;
+      const buf=ctx.createBuffer(1,bufSize,ctx.sampleRate);
+      const data=buf.getChannelData(0);
+      for(let i=0;i<bufSize;i++) data[i]=Math.random()*2-1;
+      const src=ctx.createBufferSource();
+      src.buffer=buf; src.loop=true;
+      const filt=ctx.createBiquadFilter();
+      filt.type="bandpass";
+      filt.frequency.value=filterFreq||800;
+      filt.Q.value=filterQ||0.7;
+      const g=ctx.createGain();
+      g.gain.value=vol;
+      src.connect(filt); filt.connect(g); g.connect(master);
+      src.start(); nodes.push(src,filt,g);
+      return src;
+    }
+    if(w===20){ // Luna — vacío, grave, tintineo lejano
+      tone(55,"sine",0.18,0.07,6);
+      tone(82.5,"triangle",0.07,0.05,3);
+      tone(330,"sine",0.025,0.2,8);
+      noise(0.03,200,0.4);
+    } else if(w===21){ // Hielo — cristalino y viento frío
+      tone(110,"sine",0.12,0.08,5);
+      tone(220,"triangle",0.06,0.12,10);
+      tone(880,"sine",0.02,0.3,20);
+      noise(0.05,2400,1.2);
+    } else if(w===22){ // Desolación — dron oscuro y polvo
+      tone(40,"sawtooth",0.08,0.04,2);
+      tone(60,"sine",0.14,0.06,4);
+      noise(0.06,350,0.5);
+    } else if(w===23){ // Otra dimensión — disonancia y fase
+      tone(90,"sawtooth",0.07,0.15,12);
+      tone(95.5,"sawtooth",0.06,0.11,9);
+      tone(180,"triangle",0.05,0.2,15);
+      tone(272,"sine",0.03,0.25,18);
+      noise(0.04,900,1.5);
+    } else if(w===24){ // Lluvia — lluvia filtrada + pad suave
+      noise(0.11,1800,0.6);
+      noise(0.06,4200,1.0);
+      tone(98,"sine",0.09,0.05,3);
+      tone(196,"triangle",0.04,0.08,5);
+    }
+    _worldAmbNodes=nodes;
+    _worldAmbGain=master;
+    _worldAmbId=w;
+  }catch(e){console.warn("[TECH] world ambient",e)}
+}
+function updateWorldAmbientVolume(){
+  try{
+    if(!_worldAmbGain) return;
+    if(typeof audioMuted!=="undefined"&&audioMuted){_worldAmbGain.gain.value=0;return}
+    _worldAmbGain.gain.value=(typeof volMusic==="number"?volMusic:0.12)*0.55;
+  }catch(e){}
+}
+
 function applyAudioVolumes(){
   try{
     if(SFX.bg){ SFX.bg.volume = audioMuted ? 0 : volMusic; SFX.bg.loop = true; }
+    try{updateWorldAmbientVolume()}catch(e){}
     if(SFX.engine){
       SFX.engine.loop = true;
       SFX.engine.volume = audioMuted ? 0 : Math.min(1, volSfx * 0.55);
@@ -4721,14 +4835,19 @@ function updateEngineSound(){
 
 function startBgMusic(){
   try{
-    if(!SFX.bg || audioMuted) return;
     applyAudioVolumes();
+    try{if(typeof setWorldAmbient==="function")setWorldAmbient(typeof selectedWorld!=="undefined"?selectedWorld:1)}catch(e){}
+    if(!SFX.bg || audioMuted) return;
+    // En mundos 20-24 baja un poco el mp3 para dejar sitio al ambiente sintético
+    const w=typeof selectedWorld!=="undefined"?Number(selectedWorld):1;
+    if(w>=20&&w<=24){ try{SFX.bg.volume=audioMuted?0:Math.min(volMusic*0.35,0.06)}catch(e){} }
     SFX.bg.currentTime=0;
     SFX.bg.play().catch(()=>{});
   }catch(e){}
 }
 function stopBgMusic(){
   try{ if(SFX.bg){ SFX.bg.pause(); SFX.bg.currentTime=0; } }catch(e){}
+  try{if(typeof stopWorldAmbient==="function")stopWorldAmbient()}catch(e){}
   stopEngineSound();
 }
 function setMusicVolume(v){
@@ -5107,6 +5226,11 @@ if(startPanel&&!document.getElementById("startExtras")){
       <button type="button" data-world="17" class="${selectedWorld===17?"active":""}">17 🎆 Pirotecnia</button>
       <button type="button" data-world="18" class="${selectedWorld===18?"active":""}">18 ☀️ Infierno solar</button>
       <button type="button" data-world="19" class="${selectedWorld===19?"active":""}">19 💥 Núcleo magma</button>
+      <button type="button" data-world="20" class="${selectedWorld===20?"active":""}">20 🌙 Luna</button>
+      <button type="button" data-world="21" class="${selectedWorld===21?"active":""}">21 🧊 Hielo</button>
+      <button type="button" data-world="22" class="${selectedWorld===22?"active":""}">22 🌑 Desolación</button>
+      <button type="button" data-world="23" class="${selectedWorld===23?"active":""}">23 🌀 Otra dimensión</button>
+      <button type="button" data-world="24" class="${selectedWorld===24?"active":""}">24 🌧 Lluvia</button>
     </div>
         <h3>🚀 Seleccionar nave</h3>
     <div id="shipCarousel" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 4px;user-select:none;-webkit-user-select:none">
@@ -7063,15 +7187,16 @@ function updateTraps(){
 function teleportWorld(){
   if(!gameRunning||gamePaused)return;
   if(worldTeleportCd>0){doVibrate(8);return}
-  const worlds=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19];
+  const worlds=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24];
   let next=selectedWorld;
   /* siguiente mundo (ciclo) */
-  next = (selectedWorld % 19) + 1;
+  next = (selectedWorld % 24) + 1;
   selectedWorld=next;
   lsSet("techWorld",selectedWorld);
   scenario=selectedWorld;
-  const names={1:"ESPACIO",2:"NIEVE",3:"FUEGO",4:"CRISTAL",5:"HALLOWEEN",6:"NEÓN",7:"TÓXICO",8:"VACÍO",9:"OCÉANO",10:"DESIERTO",11:"TORMENTA",12:"AURORA",13:"VOLCÁN",14:"GLITCH",15:"RÁFAGAS DE LAVA",16:"FUEGO ETERNO",17:"PIROTECNIA",18:"INFIERNO SOLAR",19:"NÚCLEO MAGMA"};
+  const names={1:"ESPACIO",2:"NIEVE",3:"FUEGO",4:"CRISTAL",5:"HALLOWEEN",6:"NEÓN",7:"TÓXICO",8:"VACÍO",9:"OCÉANO",10:"DESIERTO",11:"TORMENTA",12:"AURORA",13:"VOLCÁN",14:"GLITCH",15:"RÁFAGAS DE LAVA",16:"FUEGO ETERNO",17:"PIROTECNIA",18:"INFIERNO SOLAR",19:"NÚCLEO MAGMA",20:"LUNA",21:"HIELO",22:"DESOLACIÓN",23:"OTRA DIMENSIÓN",24:"LLUVIA"};
   scenarioMsg="🌍 TELEPORTE → "+(names[selectedWorld]||("MUNDO "+selectedWorld));
+  try{if(typeof setWorldAmbient==="function")setWorldAmbient(selectedWorld)}catch(e){}
   scenarioTransition=100;
   worldTeleportCd=30*60; /* 30 s cooldown */
   /* limpia enemigos lejanos al cambiar de dimensión */
@@ -9107,6 +9232,122 @@ function drawSpaceBG(){
     const core=ctx.createRadialGradient(cx,cy,2,cx,cy,r*2.8);core.addColorStop(0,"rgba(255,245,120,.95)");core.addColorStop(.25,"rgba(255,70,0,.7)");core.addColorStop(.65,"rgba(150,0,0,.22)");core.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=core;ctx.fillRect(0,0,W,H);
     if(!lite)for(let i=0;i<7;i++){ctx.strokeStyle=`rgba(255,${55+i*18},0,${.10+i*.025})`;ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(cx,cy,r*(1.2+i*.27),r*(.6+i*.17),t/1800+i*.2,0,Math.PI*2);ctx.stroke();}
     farStars("255,120,50");vignette(.44);
+  } else if(w===20){
+    /* LUNA: superficie gris, cráteres y Tierra al fondo */
+    baseGradient("#05060a","#12151c","#080a10");
+    if(!lite){
+      const earthX=W*.18,earthY=H*.2,er=Math.min(W,H)*.07;
+      const eg=ctx.createRadialGradient(earthX,earthY,2,earthX,earthY,er*1.6);
+      eg.addColorStop(0,"rgba(90,170,255,.85)");eg.addColorStop(.45,"rgba(30,90,200,.45)");eg.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=eg;ctx.fillRect(0,0,W,H);
+      const moonX=W*.72,moonY=H*.28,mr=Math.min(W,H)*.16;
+      const mg=ctx.createRadialGradient(moonX-mr*.2,moonY-mr*.2,2,moonX,moonY,mr);
+      mg.addColorStop(0,"rgba(230,230,235,.95)");mg.addColorStop(.7,"rgba(150,150,160,.55)");mg.addColorStop(1,"rgba(80,80,90,.15)");
+      ctx.fillStyle=mg;ctx.beginPath();ctx.arc(moonX,moonY,mr,0,Math.PI*2);ctx.fill();
+      for(let i=0;i<(lite?3:7);i++){
+        const cx=moonX+Math.cos(i*1.7)*mr*.55,cy=moonY+Math.sin(i*2.1)*mr*.5,cr=2+(i%3)*2;
+        ctx.fillStyle="rgba(90,90,100,.35)";ctx.beginPath();ctx.arc(cx,cy,cr,0,Math.PI*2);ctx.fill();
+      }
+      // polvo lunar
+      for(let i=0;i<(lite?4:10);i++){
+        const x=(i*67+t*.008)%W, y=H*.72+(i*19)%(H*.25);
+        ctx.fillStyle="rgba(180,180,190,"+(.08+(i%3)*.04)+")";
+        ctx.fillRect(x,y,18+(i%4)*6,2);
+      }
+    }
+    farStars("220,220,255");vignette(.48);
+  } else if(w===21){
+    /* HIELO: cristales, brillos fríos y niebla */
+    baseGradient("#030a14","#0a2238","#061018");
+    if(!lite){
+      nebula(W*.3,H*.3,W*.4,"rgba(120,210,255,A)",.12);
+      nebula(W*.75,H*.65,W*.35,"rgba(180,240,255,A)",.08);
+      for(let i=0;i<(lite?3:8);i++){
+        const x=W*((i*0.13+.08)%1), h=H*(.15+(.2*Math.sin(t/800+i)));
+        ctx.strokeStyle=`rgba(180,230,255,${.12+(i%3)*.06})`;ctx.lineWidth=1+(i%2);
+        ctx.beginPath();ctx.moveTo(x,H);ctx.lineTo(x+Math.sin(t/600+i)*8,H-h);ctx.lineTo(x+10,H);ctx.stroke();
+      }
+      // copos
+      for(let i=0;i<(lite?5:14);i++){
+        const x=(i*53+t*.03)%W, y=(i*41+t*.05)%H;
+        ctx.fillStyle="rgba(220,245,255,"+(.25+(i%4)*.1)+")";
+        ctx.fillRect(x,y,1.5+(i%2),1.5+(i%2));
+      }
+    }
+    farStars("180,230,255");vignette(.36);
+  } else if(w===22){
+    /* DESOLACIÓN: páramo muerto, polvo y sol muerto */
+    baseGradient("#0c0806","#1a120c","#0a0705");
+    if(!lite){
+      const sx=W*.65,sy=H*.18,sr=Math.min(W,H)*.09;
+      const sun=ctx.createRadialGradient(sx,sy,2,sx,sy,sr*2.2);
+      sun.addColorStop(0,"rgba(255,180,90,.55)");sun.addColorStop(.4,"rgba(180,80,30,.2)");sun.addColorStop(1,"rgba(0,0,0,0)");
+      ctx.fillStyle=sun;ctx.fillRect(0,0,W,H);
+      hazeBand(H*.55,H*.25,"rgba(120,80,40,.12)");
+      for(let i=0;i<(lite?4:9);i++){
+        const x=(i*89+t*.01)%(W+40)-20;
+        const y=H*.7+(i%5)*8;
+        ctx.fillStyle="rgba(90,60,35,"+(.1+(i%3)*.05)+")";
+        ctx.beginPath();ctx.ellipse(x,y,30+(i%4)*10,4+(i%2)*2,0,0,Math.PI*2);ctx.fill();
+      }
+      // escombros
+      for(let i=0;i<(lite?3:6);i++){
+        const x=W*(.1+i*.15), y=H*.82+Math.sin(i)*6;
+        ctx.fillStyle="rgba(40,28,18,.5)";ctx.fillRect(x,y,8+(i%3)*4,3+(i%2)*2);
+      }
+    }
+    farStars("200,160,120");vignette(.5);
+  } else if(w===23){
+    /* OTRA DIMENSIÓN: portales, distorsión y colores irreales */
+    baseGradient("#080018","#140828","#050010");
+    if(!lite){
+      nebula(W*.25,H*.35,W*.45,"rgba(180,40,255,A)",.14);
+      nebula(W*.78,H*.55,W*.4,"rgba(40,220,255,A)",.12);
+      for(let i=0;i<(lite?2:5);i++){
+        const cx=W*(.2+((i*37)%60)/100), cy=H*(.25+((i*23)%50)/100);
+        const pr=20+10*Math.sin(t/400+i), pulse=.5+.5*Math.sin(t/200+i);
+        ctx.strokeStyle=`rgba(${120+i*30},${80+i*20},255,${.15+pulse*.15})`;
+        ctx.lineWidth=2;
+        ctx.beginPath();ctx.ellipse(cx,cy,pr*(1.4+i*.2),pr*(.7+i*.1),t/1500+i,0,Math.PI*2);ctx.stroke();
+        ctx.strokeStyle=`rgba(255,80,200,${.08+pulse*.1})`;
+        ctx.beginPath();ctx.ellipse(cx,cy,pr*(.9+i*.15),pr*(1.2+i*.12),-t/1200+i,0,Math.PI*2);ctx.stroke();
+      }
+      // grietas dimensionales
+      for(let i=0;i<(lite?2:4);i++){
+        const y=((i*97+t/20)%H);
+        ctx.strokeStyle=`rgba(100,255,255,${.06+(i%2)*.04})`;ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(0,y);ctx.bezierCurveTo(W*.3,y+Math.sin(t/300+i)*20,W*.7,y-Math.sin(t/250+i)*18,W,y+8);ctx.stroke();
+      }
+    }
+    farStars("200,120,255");vignette(.4);
+  } else if(w===24){
+    /* LLUVIA: cielo plomizo y cortinas de lluvia */
+    baseGradient("#060810","#0c1520","#05070c");
+    if(!lite){
+      hazeBand(H*.15,H*.3,"rgba(40,60,90,.14)");
+      nebula(W*.5,H*.1,W*.6,"rgba(60,90,130,A)",.1);
+      const drops=lite?18:42;
+      for(let i=0;i<drops;i++){
+        const x=(i*47+t*.18)%(W+10)-5;
+        const y=(i*31+t*.35)%(H+20)-10;
+        const len=8+(i%5)*3;
+        ctx.strokeStyle=`rgba(160,190,220,${.12+(i%4)*.06})`;
+        ctx.lineWidth=1;
+        ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-1.5,y+len);ctx.stroke();
+      }
+      // charcos reflejo
+      for(let i=0;i<(lite?2:4);i++){
+        const x=W*(.15+i*.22), y=H*.88;
+        ctx.fillStyle="rgba(80,120,160,"+(.06+Math.sin(t/400+i)*.03)+")";
+        ctx.beginPath();ctx.ellipse(x,y,28+(i%3)*10,3,0,0,Math.PI*2);ctx.fill();
+      }
+    } else {
+      for(let i=0;i<12;i++){
+        const x=(i*53+t*.2)%W, y=(i*29+t*.4)%H;
+        ctx.fillStyle="rgba(160,190,220,.2)";ctx.fillRect(x,y,1,6+(i%3)*2);
+      }
+    }
+    farStars("140,170,210");vignette(.42);
   } else {
     baseGradient("#020818","#0a1840","#061028");
     farStars("200,220,255");
