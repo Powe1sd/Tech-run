@@ -5729,9 +5729,10 @@ canvas.addEventListener("touchcancel",e=>{canvasShootId=null;if(fireTouchId===nu
     let v=(clientY-r.top)/Math.max(1,r.height);
     if(u<0)u=0;if(u>1)u=1;if(v<0)v=0;if(v>1)v=1;
     const m=player.size*1.2;
+    const bottomPad=Math.max(player.size*4.2,56);
     mouse.x=m+u*(canvas.width-m*2);
-    /* Y: no bajar de golpe; el pad mueve pero prioriza mantener altura al tocar */
-    mouse.y=m+v*(canvas.height-m*2);
+    /* Y: deja margen inferior para que la nave no se oculte */
+    mouse.y=m*2.0+v*(canvas.height-bottomPad-m*2.0);
     stickActive=true;
     touchDriving=true;
   }
@@ -7317,7 +7318,7 @@ function doDash(){
   const dist=88*((typeof getScale==="function")?getScale():1);
   const ox=player.x,oy=player.y;
   player.x=Math.max(player.size,Math.min(canvas.width-player.size,player.x+dx*dist));
-  player.y=Math.max(player.size*2.0,Math.min(canvas.height-player.size*2.8,player.y+dy*dist));
+  player.y=Math.max(player.size*2.0,Math.min(canvas.height-player.size*4.2,player.y+dy*dist));
   mouse.x=player.x;mouse.y=player.y;
   dashCd=90; /* 1.5s cooldown */
   dashInvuln=28; /* invulnerable breve */
@@ -8058,11 +8059,11 @@ function drawObstacle(o){
     }
   } else if(String(o.type).startsWith("boss")){
     const s=o.size;
-    /* Apuntar al jugador (la punta de la nave va hacia abajo/hacia ti) */
+    /* Orientación fija: proa hacia el jugador (abajo). Sin atan2 para no voltear el jefe. */
     {
-      const dx=player.x-(o.x+o.size/2), dy=player.y-(o.y+o.size/2);
-      /* Modelo dibujado con proa en -Y → rotar para mirar al jugador */
-      ctx.rotate(Math.atan2(dy,dx)+Math.PI/2);
+      /* boss_alien* se dibuja con proa en -Y → girar 180° para mirar abajo */
+      if(String(o.type).startsWith("boss_alien")) ctx.rotate(Math.PI);
+      /* mothership / meteor / pumpkin / etc. ya quedan bien sin rotación extra */
     }
     let c0,c1,glow,label;
     if(o.type==="boss_pumpkin"||o.type==="boss_witch"){
@@ -8428,16 +8429,22 @@ function drawBullets(){
     if(b.y<-120||b.y>canvas.height+40||b.x<-40||b.x>canvas.width+40){bullets.splice(i,1);continue}
     for(let j=obstacles.length-1;j>=0;j--){
       const o=obstacles[j];
+      if(!o||o.__techDestroyed)continue;
       const isBoss=String(o.type||"").startsWith("boss");
-      /* Hitbox rectangular generosa (el jefe sí recibe impacto) */
-      const pad=isBoss?Math.max(14,o.size*0.25):Math.max(4,o.size*0.08);
-      const hit=b.x>=o.x-pad&&b.x<=o.x+o.size+pad&&b.y>=o.y-pad&&b.y<=o.y+o.size+pad;
-      if(hit){
+      /* Hitbox generosa: rectángulo + círculo (las balas sí destruyen enemigos) */
+      const pad=isBoss?Math.max(18,o.size*0.32):Math.max(10,o.size*0.22);
+      const ox=o.x+(o.size||0)/2, oy=o.y+(o.size||0)/2;
+      const br=Math.max(4,(b.size||3)*1.6);
+      const hitRect=b.x>=o.x-pad&&b.x<=o.x+o.size+pad&&b.y>=o.y-pad&&b.y<=o.y+o.size+pad;
+      const hitCircle=Math.hypot(b.x-ox,b.y-oy)<=(o.size||12)*0.55+br+pad*0.25;
+      if(hitRect||hitCircle){
         if(o.indestructible||o.type==="hard"){createExplosion(b.x,b.y,4,"150,150,150");if(!b.pierce)bullets.splice(i,1);break}
-        o.hp-=(b.dmg||(typeof bulletDamage==="function"?bulletDamage():1));
+        if(o.hp==null||isNaN(o.hp))o.hp=o.maxHp!=null?o.maxHp:1;
+        const dmg=Number(b.dmg)||(typeof bulletDamage==="function"?bulletDamage():1)||1;
+        o.hp-=dmg;
         createExplosion(b.x,b.y,isBoss?10:7,"255,200,50");
         if(!b.pierce)bullets.splice(i,1);
-        if(o.hp<=0)destroyEnemy(o,j);
+        if(o.hp<=0){try{destroyEnemy(o,j)}catch(e){try{obstacles.splice(j,1)}catch(_){}}}
         if(!b.pierce)break;
       }
     }
@@ -9467,8 +9474,11 @@ const smooth=_ps3Slow?0.12:Math.min(0.82,baseSmooth*Math.max(1,Math.min(1.6,(sti
 const _psb=(typeof playerSpeedBonus==='function')?playerSpeedBonus():1;player.x+=(mouse.x-player.x)*smooth*_psb;player.y+=(mouse.y-player.y)*smooth*_psb;
 /* Solo al SOLTAR (ni mover ni disparar): retrocede */
 if(!controlling){
+  const bottomPad=Math.max(player.size*4.2,56);
+  const room=Math.max(0,(canvas.height-bottomPad)-player.y);
   const drift=1.35*getSpeedScale()*(overdrive>0?1.4:1);
-  player.y+=drift;
+  /* No empujar la nave fuera del margen inferior visible */
+  player.y+=Math.min(drift, room);
   mouse.y=player.y;
 } else if(isShooting&&!stickActive&&canvasShootId===null){
   /* Solo FIRE: mantiene altura actual */
@@ -9476,9 +9486,9 @@ if(!controlling){
 }
 if(stickActive)applyGravity(player,player.x,player.y,0.08);
 else applyGravity(player,player.x,player.y,0.35);
-const m=player.size;player.x=Math.max(m,Math.min(canvas.width-m,player.x));player.y=Math.max(m*2.0,Math.min(canvas.height-m*2.8,player.y));
+const m=player.size;const bottomPad=Math.max(m*4.2,56);player.x=Math.max(m,Math.min(canvas.width-m,player.x));player.y=Math.max(m*2.0,Math.min(canvas.height-bottomPad,player.y));
 /* Al soltar el control, la nave nunca puede quedar parcialmente fuera del cuadro. */
-mouse.y=Math.max(m*2.0,Math.min(canvas.height-m*2.8,mouse.y));
+mouse.y=Math.max(m*2.0,Math.min(canvas.height-bottomPad,mouse.y));
 
 // spawn meteors by level
 if(phase==="meteors"){
@@ -9692,7 +9702,7 @@ keys.up=keys.down=keys.left=keys.right=false;
 if(scoreElement)scoreElement.textContent="0";
 record=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;if(recordElement)recordElement.textContent=record;
 updateLivesUI();
-player.x=canvas.width/2;player.y=Math.min(canvas.height*0.50,canvas.height-player.size*2.8);mouse.x=player.x;mouse.y=player.y;gameRunning=true;
+player.x=canvas.width/2;player.y=Math.min(canvas.height*0.50,canvas.height-player.size*4.2);mouse.x=player.x;mouse.y=player.y;gameRunning=true;
 combo=0;comboTimer=0;comboMult=1;feverMode=0;feverAnnounced=false;supplyCrates=[];lastSupplyDrop=performance.now();damageFlash=0;introTimer=36;screenShake=0;hitSparks=[];
 const rec=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;
 ammo=100+(rec>=30?20:0)+Math.min(50,(upgAmmo||0)*12);lives=1+(rec>=60?1:0)+Math.min(2,upgLives||0);updateLivesUI();
