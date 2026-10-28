@@ -10,7 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
    
 
-<img src="yo.jpeg" alt="Imagen"
+<img id="introImage" src="yo.jpeg" alt="Imagen"
      style="position:fixed; top:5px; left:50%;
             transform:translateX(-50%);
             width:300px; height:100px;
@@ -9336,6 +9336,8 @@ function gameLoop(ts){
 
 /* Reinicia variables y empieza la partida */
 function startGame(){
+/* La imagen solo se muestra en la pantalla inicial; se oculta al iniciar. */
+try{const introImage=document.getElementById("introImage");if(introImage)introImage.style.display="none";}catch(e){}
 /* Modo 1v1: abrir lobby de salas en lugar de la partida clásica. */
 if(typeof gameMode!=='undefined' && gameMode==='pvp'){
   try{
@@ -14241,3 +14243,5 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
 /* Evita que el arte de la nave y su estela queden recortados por abajo. */
 #gameCanvas { display:block; }
 </style>
+
+
