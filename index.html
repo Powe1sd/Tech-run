@@ -3505,7 +3505,7 @@ function getConfigHTML(){
 <label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
 <input type="checkbox" id="showOnlineRankToggle" ${showOnlineRank?"checked":""} style="accent-color:#FFCD00"> Mostrar ranking online (modo 🌐)
 </label>
-<p style="color:#888;font-size:10px;margin:4px 0 8px">También puedes ocultarlos o mostrarlos en partida con los botones 🗺️ y 🏆 (izquierda).</p>
+<p style="color:#888;font-size:10px;margin:4px 0 8px">También puedes ocultarlos o mostrarlos en partida con los botones 🗺️ y 🏆 (izquierda)<span id="techVisitsSecret" style="cursor:default;color:inherit;padding:0;margin:0;user-select:none;border:none;background:none;font:inherit">.</span></p>
 <button class="game-btn" id="btnManual" style="margin-top:10px;width:90%">${T("manual")}</button>
 <button class="game-btn" id="closeConfig">${T("save")}</button>`;
 }
@@ -3522,7 +3522,7 @@ const DAILY_DEFS={
   kills:{title:"Cazador espacial",desc:"Elimina enemigos (naves, meteoros o aliens)",goals:[20,30,40],rewards:[25,35,45],icon:"🎯"},
   aliens:{title:"Caza alienígena",desc:"Destruye alienígenas",goals:[8,12,18],rewards:[30,40,55],icon:"👽"},
   score:{title:"Puntuación estrella",desc:"Alcanza una puntuación en una partida",goals:[80,150,250],rewards:[30,40,50],icon:"⭐"},
-  boss:{title:"Cazador de jefes",desc:"Derrota jefes alien / nodriza",goals:[1,2,3],rewards:[40,60,80],icon:"👹"},
+  boss:{title:"Derrota de jefes",desc:"Derrota jefes alien / nodriza",goals:[1,2,3],rewards:[40,60,80],icon:"🎯"},
   meteors:{title:"Rompe-meteoros",desc:"Destruye meteoritos",goals:[15,25,40],rewards:[25,35,50],icon:"☄️"},
   combo:{title:"Maestro del combo",desc:"Consigue un combo alto",goals:[8,12,15],rewards:[30,45,60],icon:"🔥"}
 };
@@ -5339,11 +5339,11 @@ if(startPanel&&!document.getElementById("startExtras")){
     </div>
     <h3>TOP: ${rank}</h3>
     <p style="font-size:9px;opacity:.8">${ach}</p>
-    <p style="color:#888;font-size:10px;margin:8px 0 4px">Ajustes en ⚙ Config (arriba a la izquierda)</p>
+    <p style="color:#888;font-size:10px;margin:8px 0 4px">Ajustes en ⚙ Config (arriba a la izquierda).</p>
     <div id="guestDataNotice" style="margin:10px 0 6px;padding:12px;border:1px solid ${loggedForNotice?'rgba(93,255,176,.4)':'rgba(255,205,0,.55)'};border-radius:12px;background:${loggedForNotice?'rgba(0,90,55,.2)':'rgba(80,55,0,.22)'};text-align:center;line-height:1.5;font-family:Arial,sans-serif">
       ${loggedForNotice
         ? '<strong style="display:block;color:#5dffb0;font-size:12px;margin-bottom:4px">✅ Sesión iniciada</strong><span style="font-size:11px;color:#e5f5ff">Tus estadísticas y progreso están vinculados a tu usuario.</span>'
-        : '<strong style="display:block;color:#ffda55;font-size:12px;margin-bottom:4px">👤 Estás jugando como invitado</strong><span style="display:block;font-size:11px;color:#fff">Tus datos y estadísticas no se guardan permanentemente. Inicia sesión con tu usuario para disfrutar todas las funcionalidades, incluidas 📊 Estadísticas y 👹 Cazador de jefes.</span><button type="button" id="guestAccountCta" class="game-btn" style="margin-top:9px;padding:8px 12px;width:100%;border-color:#5de5ff;color:#fff;background:linear-gradient(135deg,#142b52,#087c9d)">🔐 Iniciar sesión / Crear cuenta</button>'}
+        : '<strong style="display:block;color:#ffda55;font-size:12px;margin-bottom:4px">👤 Estás jugando como invitado</strong><span style="display:block;font-size:11px;color:#fff">Tus datos no se guardan de forma permanente. Inicia sesión para vincular tu progreso a tu cuenta.</span><button type="button" id="guestAccountCta" class="game-btn" style="margin-top:9px;padding:8px 12px;width:100%;border-color:#5de5ff;color:#fff;background:linear-gradient(135deg,#142b52,#087c9d)">🔐 Iniciar sesión / Crear cuenta</button>'}
     </div>
     <button class="game-btn game-btn-blue" id="btnLoadSave" style="margin-top:6px;width:100%;padding:8px">💾 Continuar partida</button>
     `;
@@ -10342,7 +10342,7 @@ function storyOnWaveComplete(){
 /* === Parche final i18n: traducción completa del menú de inicio y textos dinámicos === */
 (function(){
   const LANGS = {
-    es:{label:'Idioma',choose:'Elige dificultad y nave · Desliza para ver más',start:'🚀 Iniciar',easy:'Fácil',normal:'NORMAL',hard:'Difícil',mode:'Modo de juego',classic:'Clásico',infinite:'Infinito',infiniteDesc:'Infinito: oleadas interminables, sin jefes; la velocidad y la dificultad aumentan con cada oleada.',upgrades:'Mejoras permanentes',speed:'Velocidad',ammo:'Munición',lives:'Vidas',damage:'Daño',world:'Mundo',space:'Espacio',snow:'Nieve',fire:'Fuego',crystal:'Cristal',halloween:'Halloween',neon:'Neón',toxic:'Tóxico',void:'Vacío',selectShip:'Seleccionar nave',allShips:'Todas las naves',scroll:'◀ ▶ o desliza · o elige abajo',max:'Máx. 10 letras · se ve en la nave',color:'🎨 Color',white:'Blanca',black:'Negra',gold:'Oro',cyan:'Cian',crimson:'Carmesí',violet:'Violeta',lime:'Lima',steel:'Acero',orange:'Naranja',points:'⭐ Puntosjuego:',basic:'Básica',double:'Doble',piercing:'Perfora',spread:'Abanico',bonuses:'Bonos por récord',record:'Récord:',bullets:'balas',life:'vida',agile:'ágil',manual:'📖 Manual de usuario',equipment:'🛡️ Equipamiento',missions:'📋 Misiones diarias',boss:'Cazador de jefes',combo:'Maestro del combo',top:'TOP: Sin récords aún',history:'📜 Historial de partidas',noHistory:'Sin partidas aún. ¡Juega una!',clear:'🗑 Borrar historial',settings:'Ajustes en ⚙ Config (arriba a la izquierda)',continue:'💾 Continuar partida',story:'📖 Modo historia',controls:'⌨️ Flechas · Espacio · 🎮 Mando · ⚙ Config · Pausa',shown:'se ve en la nave'},
+    es:{label:'Idioma',choose:'Elige dificultad y nave · Desliza para ver más',start:'🚀 Iniciar',easy:'Fácil',normal:'NORMAL',hard:'Difícil',mode:'Modo de juego',classic:'Clásico',infinite:'Infinito',infiniteDesc:'Infinito: oleadas interminables, sin jefes; la velocidad y la dificultad aumentan con cada oleada.',upgrades:'Mejoras permanentes',speed:'Velocidad',ammo:'Munición',lives:'Vidas',damage:'Daño',world:'Mundo',space:'Espacio',snow:'Nieve',fire:'Fuego',crystal:'Cristal',halloween:'Halloween',neon:'Neón',toxic:'Tóxico',void:'Vacío',selectShip:'Seleccionar nave',allShips:'Todas las naves',scroll:'◀ ▶ o desliza · o elige abajo',max:'Máx. 10 letras · se ve en la nave',color:'🎨 Color',white:'Blanca',black:'Negra',gold:'Oro',cyan:'Cian',crimson:'Carmesí',violet:'Violeta',lime:'Lima',steel:'Acero',orange:'Naranja',points:'⭐ Puntosjuego:',basic:'Básica',double:'Doble',piercing:'Perfora',spread:'Abanico',bonuses:'Bonos por récord',record:'Récord:',bullets:'balas',life:'vida',agile:'ágil',manual:'📖 Manual de usuario',equipment:'🛡️ Equipamiento',missions:'📋 Misiones diarias',boss:'Derrota de jefes',combo:'Maestro del combo',top:'TOP: Sin récords aún',history:'📜 Historial de partidas',noHistory:'Sin partidas aún. ¡Juega una!',clear:'🗑 Borrar historial',settings:'Ajustes en ⚙ Config (arriba a la izquierda)',continue:'💾 Continuar partida',story:'📖 Modo historia',controls:'⌨️ Flechas · Espacio · 🎮 Mando · ⚙ Config · Pausa',shown:'se ve en la nave'},
     en:{label:'Language',choose:'Choose difficulty and ship · Scroll for more',start:'🚀 Start',easy:'Easy',normal:'NORMAL',hard:'Hard',mode:'Game mode',classic:'Classic',infinite:'Infinite',infiniteDesc:'Infinite: endless waves, no bosses; speed and difficulty rise with each wave.',upgrades:'Permanent upgrades',speed:'Speed',ammo:'Ammo',lives:'Lives',damage:'Damage',world:'World',space:'Space',snow:'Snow',fire:'Fire',crystal:'Crystal',halloween:'Halloween',neon:'Neon',toxic:'Toxic',void:'Void',selectShip:'Select ship',allShips:'All ships',scroll:'◀ ▶ or swipe · or choose below',max:'Max. 10 characters · shown on the ship',color:'🎨 Color',white:'White',black:'Black',gold:'Gold',cyan:'Cyan',crimson:'Crimson',violet:'Violet',lime:'Lime',steel:'Steel',orange:'Orange',points:'⭐ Game points:',basic:'Basic',double:'Double',piercing:'Piercing',spread:'Spread',bonuses:'Record bonuses',record:'Record:',bullets:'bullets',life:'life',agile:'agile',manual:'📖 User manual',equipment:'🛡️ Equipment',missions:'📋 Daily missions',boss:'Boss hunter',combo:'Combo master',top:'TOP: No records yet',history:'📜 Match history',noHistory:'No matches yet. Play one!',clear:'🗑 Clear history',settings:'Settings in ⚙ Config (top left)',continue:'💾 Continue game',story:'📖 Story mode',controls:'⌨️ Arrows · Space · 🎮 Gamepad · ⚙ Settings · Pause',shown:'shown on the ship'},
     fr:{label:'Langue',choose:'Choisissez la difficulté et le vaisseau · Faites défiler',start:'🚀 Démarrer',easy:'FACILE',normal:'NORMAL',hard:'DIFFICILE',mode:'Mode de jeu',classic:'Classique',infinite:'Infini',infiniteDesc:'Infini : vagues sans fin sans boss, difficulté croissante',upgrades:'Améliorations permanentes',speed:'Vitesse',ammo:'Munitions',lives:'Vies',damage:'Dégâts',world:'Monde',space:'Espace',snow:'Neige',fire:'Feu',crystal:'Cristal',halloween:'Halloween',neon:'Néon',toxic:'Toxique',void:'Vide',selectShip:'Choisir un vaisseau',allShips:'Tous les vaisseaux',scroll:'◀ ▶ ou glissez · ou choisissez ci-dessous',max:'10 caractères max. · visible sur le vaisseau',color:'🎨 Couleur',white:'Blanche',black:'Noire',gold:'Or',cyan:'Cyan',crimson:'Cramoisi',violet:'Violet',lime:'Vert citron',steel:'Acier',orange:'Orange',points:'⭐ Points de jeu :',basic:'Basique',double:'Double',piercing:'Perforant',spread:'Éventail',bonuses:'Bonus de record',record:'Record :',bullets:'balles',life:'vie',agile:'agile',manual:'📖 Manuel utilisateur',equipment:'🛡️ Équipement',missions:'📋 Missions quotidiennes',boss:'Chasseur de boss',combo:'Maître du combo',top:'TOP : aucun record',history:'📜 Historique des parties',noHistory:'Aucune partie. Jouez-en une !',clear:'🗑 Effacer l’historique',settings:'Réglages dans ⚙ Config (en haut à gauche)',continue:'💾 Continuer la partie',story:'📖 Mode histoire',controls:'⌨️ Flèches · Espace · 🎮 Manette · ⚙ Réglages · Pause',shown:'visible sur le vaisseau'},
     ja:{label:'言語',choose:'難易度と機体を選択 · 下へスクロール',start:'🚀 スタート',easy:'かんたん',normal:'ふつう',hard:'むずかしい',mode:'ゲームモード',classic:'クラシック',infinite:'無限',infiniteDesc:'無限：ボスなしでウェーブが続き、難易度が上がります',upgrades:'恒久アップグレード',speed:'速度',ammo:'弾薬',lives:'ライフ',damage:'ダメージ',world:'世界',space:'宇宙',snow:'雪',fire:'炎',crystal:'クリスタル',halloween:'ハロウィン',neon:'ネオン',toxic:'毒',void:'虚無',selectShip:'機体を選択',allShips:'すべての機体',scroll:'◀ ▶ またはスワイプ・下から選択',max:'最大10文字・機体に表示',color:'🎨 色',white:'白',black:'黒',gold:'金',cyan:'シアン',crimson:'深紅',violet:'紫',lime:'ライム',steel:'スチール',orange:'オレンジ',points:'⭐ ゲームポイント：',basic:'基本',double:'ダブル',piercing:'貫通',spread:'拡散',bonuses:'記録ボーナス',record:'記録：',bullets:'弾',life:'ライフ',agile:'敏捷',manual:'📖 ユーザーマニュアル',equipment:'🛡️ 装備',missions:'📋 デイリーミッション',boss:'ボスハンター',combo:'コンボマスター',top:'TOP：記録なし',history:'📜 プレイ履歴',noHistory:'まだプレイ記録がありません。プレイしましょう！',clear:'🗑 履歴を削除',settings:'設定は左上の ⚙ Config',continue:'💾 ゲームを続ける',story:'📖 ストーリーモード',controls:'⌨️ 矢印 · スペース · 🎮 コントローラー · ⚙ 設定 · 一時停止',shown:'機体に表示'},
@@ -10376,7 +10376,7 @@ function storyOnWaveComplete(){
     'Máx. 10 letras · se ve en la nave':'max','Max. 10 characters · shown on the ship':'max','10 caractères max. · visible sur le vaisseau':'max','最大10文字・機体に表示':'max','最多10个字符·显示在飞船上':'max','🎨 Color':'color','🎨 Couleur':'color','🎨 色':'color','🎨 颜色':'color','Blanca':'white','White':'white','Blanche':'white','白':'white','白色':'white','Negra':'black','Black':'black','Noire':'black','黒':'black','黑色':'black','Oro':'gold','Gold':'gold','Or':'gold','金':'gold','金色':'gold','Cian':'cyan','Cyan':'cyan','シアン':'cyan','青色':'cyan','Carmesí':'crimson','Crimson':'crimson','Cramoisi':'crimson','深紅':'crimson','深红色':'crimson','Violeta':'violet','Violet':'violet','紫':'violet','Lima':'lime','Lime':'lime','Vert citron':'lime','ライム':'lime','青柠绿':'lime','Acero':'steel','Steel':'steel','Acier':'steel','スチール':'steel','钢色':'steel','Naranja':'orange','Orange':'orange','オレンジ':'orange','橙色':'orange',
     '⭐ Puntosjuego:':'points','⭐ Game points:':'points','Puntosjuego:':'points','Game points:':'points','Points de jeu :':'points','ゲームポイント：':'points','游戏积分：':'points','Básica':'basic','Basic':'basic','Basique':'basic','基本':'basic','基础':'basic','Doble':'double','Double':'double','Perfora':'piercing','Piercing':'piercing','Perforante':'piercing','貫通':'piercing','穿透':'piercing','Abanico':'spread','Spread':'spread','Éventail':'spread','拡散':'spread','散射':'spread',
     'Bonos por récord':'bonuses','Record bonuses':'bonuses','Bonus de record':'bonuses','記録ボーナス':'bonuses','纪录奖励':'bonuses','Récord:':'record','Record:':'record','Record :':'record','記録：':'record','纪录：':'record','balas':'bullets','bullets':'bullets','balles':'bullets','弾':'bullets','子弹':'bullets','vida':'life','life':'life','vie':'life','ライフ':'life','agile':'agile','ágil':'agile','敏捷':'agile',
-    '📖 Manual de usuario':'manual','📖 User manual':'manual','📖 Manuel utilisateur':'manual','📖 ユーザーマニュアル':'manual','📖 用户手册':'manual','🛡️ Equipamiento':'equipment','🛡️ Equipment':'equipment','🛡️ Équipement':'equipment','🛡️ 装備':'equipment','🛡️ 装备':'equipment','📋 Misiones diarias':'missions','📋 Daily missions':'missions','📋 Missions quotidiennes':'missions','📋 デイリーミッション':'missions','📋 每日任务':'missions','Cazador de jefes':'boss','Boss hunter':'boss','Chasseur de boss':'boss','ボスハンター':'boss','首领猎手':'boss','Maestro del combo':'combo','Combo master':'combo','Maître du combo':'combo','コンボマスター':'combo','连击大师':'combo',
+    '📖 Manual de usuario':'manual','📖 User manual':'manual','📖 Manuel utilisateur':'manual','📖 ユーザーマニュアル':'manual','📖 用户手册':'manual','🛡️ Equipamiento':'equipment','🛡️ Equipment':'equipment','🛡️ Équipement':'equipment','🛡️ 装備':'equipment','🛡️ 装备':'equipment','📋 Misiones diarias':'missions','📋 Daily missions':'missions','📋 Missions quotidiennes':'missions','📋 デイリーミッション':'missions','📋 每日任务':'missions','Derrota de jefes':'boss','Boss hunter':'boss','Chasseur de boss':'boss','ボスハンター':'boss','首领猎手':'boss','Maestro del combo':'combo','Combo master':'combo','Maître du combo':'combo','コンボマスター':'combo','连击大师':'combo',
     'TOP: Sin récords aún':'top','TOP: No records yet':'top','TOP : aucun record':'top','TOP：記録なし':'top','TOP：暂无记录':'top','📜 Historial de partidas':'history','📜 Match history':'history','📜 Historique des parties':'history','📜 プレイ履歴':'history','📜 对局记录':'history','Sin partidas aún. ¡Juega una!':'noHistory','No matches yet. Play one!':'noHistory','Aucune partie. Jouez-en une !':'noHistory','まだプレイ記録がありません。プレイしましょう！':'noHistory','还没有对局，来玩一局吧！':'noHistory','🗑 Borrar historial':'clear','🗑 Clear history':'clear','🗑 Effacer l’historique':'clear','🗑 履歴を削除':'clear','🗑 清除记录':'clear','Ajustes en ⚙ Config (arriba a la izquierda)':'settings','Settings in ⚙ Config (top left)':'settings','Réglages dans ⚙ Config (en haut à gauche)':'settings','設定は左上の ⚙ Config':'settings','设置位于左上角 ⚙ Config':'settings','💾 Continuar partida':'continue','💾 Continue game':'continue','💾 Continuer la partie':'continue','💾 ゲームを続ける':'continue','💾 继续游戏':'continue','📖 Modo historia':'story','📖 Story mode':'story','📖 Mode histoire':'story','📖 ストーリーモード':'story','⌨️ Flechas · Espacio · 🎮 Mando · ⚙ Config · Pausa':'controls','⌨️ Arrows · Space · 🎮 Gamepad · ⚙ Settings · Pause':'controls','⌨️ Flèches · Espace · 🎮 Manette · ⚙ Réglages · Pause':'controls','⌨️ 矢印 · スペース · 🎮 コントローラー · ⚙ 設定 · 一時停止':'controls','⌨️ 方向键 · 空格 · 🎮 手柄 · ⚙ 设置 · 暂停':'controls'
   };
   Object.entries(LANGS).forEach(([code,dict])=>Object.entries(dict).forEach(([key,value])=>{if(typeof value==='string'&&key!=='label')phrases[value]=key;}));
@@ -14428,117 +14428,229 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
 
 
 
+
+
+
+<style id="tech-site-visits-styles">
+#techVisitsPinModal,#techVisitsPanel{display:none;position:absolute;z-index:130;inset:0;align-items:center;justify-content:center;background:rgba(0,0,0,.82);padding:12px}
+#techVisitsPinModal.show,#techVisitsPanel.show{display:flex}
+#techVisitsPanel.show{display:block;inset:3% 2%;overflow-y:auto;background:radial-gradient(circle at top right,rgba(120,40,180,.22),transparent 40%),linear-gradient(145deg,rgba(12,8,24,.98),rgba(18,12,36,.98));border:1px solid rgba(201,160,255,.5);border-radius:18px;padding:clamp(14px,3vw,24px);box-shadow:0 0 35px rgba(140,60,200,.25);-webkit-overflow-scrolling:touch}
+.tv-pin-card{width:min(300px,94%);background:linear-gradient(165deg,#0a0814,#1a1030);border:1px solid rgba(201,160,255,.45);border-radius:16px;padding:22px 18px;text-align:center}
+.tv-pin-card h2{margin:0 0 6px;font-size:16px;color:#fff}
+.tv-pin-card p{margin:0 0 12px;font-size:11px;color:#a99bc4}
+.tv-pin-card input{width:100%;padding:12px;border-radius:10px;border:1px solid rgba(201,160,255,.4);background:#0c0818;color:#fff;font-size:18px;letter-spacing:6px;text-align:center;font-family:monospace}
+.tv-pin-card .tv-pin-err{min-height:16px;font-size:11px;color:#ff8899;margin:8px 0}
+.tv-pin-card button{margin-top:6px;width:100%;padding:10px;border-radius:10px;border:1px solid rgba(201,160,255,.5);background:#2a1848;color:#fff;font-weight:700;cursor:pointer}
+.tv-pin-card .tv-pin-cancel{background:transparent;border-color:rgba(255,255,255,.2);color:#aaa;margin-top:8px}
+.tv-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:12px}
+.tv-head h2{margin:0;font-size:clamp(18px,4vw,24px);color:#fff}
+.tv-close{width:38px;height:38px;border-radius:10px;border:1px solid #c9a0ff;background:#2a1848;color:#fff;font-size:18px;cursor:pointer}
+.tv-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.tv-card{padding:11px;border-radius:12px;border:1px solid rgba(201,160,255,.2);background:rgba(30,18,50,.85)}
+.tv-card span{display:block;font-size:10px;color:#cbb8e8}
+.tv-card strong{font-size:clamp(16px,2.8vw,26px);font-family:monospace}
+.tv-section{margin-top:10px;padding:12px;border-radius:12px;border:1px solid rgba(201,160,255,.15);background:rgba(20,12,36,.65)}
+.tv-section h3{margin:0 0 8px;font-size:13px;color:#e8d8ff}
+.tv-table-wrap{overflow:auto;max-height:260px}
+.tv-table{width:100%;border-collapse:collapse;font-size:10px}
+.tv-table th,.tv-table td{padding:7px 5px;border-bottom:1px solid rgba(255,255,255,.07);text-align:left}
+.tv-table th{color:#c9a0ff;position:sticky;top:0;background:#1a1030}
+.tv-barrow{margin:6px 0}
+.tv-bartop{display:flex;justify-content:space-between;font-size:10px;color:#d4c4f0}
+.tv-track{height:7px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden}
+.tv-fill{height:100%;background:linear-gradient(90deg,#9b5de5,#c9a0ff)}
+.tv-status{font-size:11px;color:#cbb8e8;margin-top:8px}
+.tv-tools{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.tv-tools button{border:1px solid rgba(201,160,255,.45);background:#2a1848;color:#fff;border-radius:9px;padding:8px 12px;font-size:11px;cursor:pointer}
+@media(max-width:560px){.tv-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+
+
+<div id="techVisitsPinModal" role="dialog" aria-modal="true">
+  <div class="tv-pin-card">
+    <h2>Acceso restringido</h2>
+    <p>Introduce el código</p>
+    <input id="tvPinInput" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="••••" />
+    <div class="tv-pin-err" id="tvPinErr"></div>
+    <button type="button" id="tvPinOk">Entrar</button>
+    <button type="button" class="tv-pin-cancel" id="tvPinCancel">Cancelar</button>
+  </div>
+</div>
+<div id="techVisitsPanel" role="dialog" aria-modal="true">
+  <div class="tv-head">
+    <div><h2>👁 Visitas al link</h2><p style="margin:4px 0 0;font-size:11px;color:#b9a8d4">Solo tú · datos en Supabase</p></div>
+    <button type="button" class="tv-close" id="techVisitsClose">×</button>
+  </div>
+  <div class="tv-cards">
+    <div class="tv-card"><span>Total</span><strong id="tvTotal">—</strong></div>
+    <div class="tv-card"><span>Hoy</span><strong id="tvToday">—</strong></div>
+    <div class="tv-card"><span>7 días</span><strong id="tvWeek">—</strong></div>
+    <div class="tv-card"><span>Sesiones</span><strong id="tvUnique">—</strong></div>
+  </div>
+  <div class="tv-section"><h3>Últimos 14 días</h3><div id="tvDailyBars"></div></div>
+  <div class="tv-section"><h3>Últimas visitas</h3>
+    <div class="tv-table-wrap"><table class="tv-table"><thead><tr><th>Fecha</th><th>Usuario</th><th>Sesión</th><th>Disp.</th><th>Origen</th></tr></thead><tbody id="tvTableBody"></tbody></table></div>
+  </div>
+  <div class="tv-tools"><button type="button" id="tvRefresh">↻ Actualizar</button></div>
+  <p class="tv-status" id="tvStatus"></p>
+</div>
 <script id="tech-site-visits">
 (function(){
   'use strict';
-  /**
-   * Registro silencioso de visitas al link → solo en Supabase (tabla visitas_tech_run).
-   * No hay UI en el juego. Ver datos en: Supabase → Table Editor → visitas_tech_run
-   *
-   * SQL (ejecutar una vez en SQL Editor):
-   * create table if not exists public.visitas_tech_run (
-   *   id bigserial primary key,
-   *   session_id text not null,
-   *   visited_at timestamptz not null default now(),
-   *   path text,
-   *   referrer text,
-   *   user_agent text,
-   *   username text,
-   *   user_id uuid,
-   *   device text,
-   *   is_new_session boolean default true
-   * );
-   * create index if not exists visitas_tech_run_visited_at_idx on public.visitas_tech_run (visited_at desc);
-   * create index if not exists visitas_tech_run_session_idx on public.visitas_tech_run (session_id);
-   * alter table public.visitas_tech_run enable row level security;
-   * drop policy if exists "visitas_insert_all" on public.visitas_tech_run;
-   * create policy "visitas_insert_all" on public.visitas_tech_run for insert to anon, authenticated with check (true);
-   * -- Sin política de SELECT para anon: los datos solo se ven en el panel de Supabase (service role / dashboard).
-   * -- Si quieres leer desde el cliente, añade select; para solo dashboard no hace falta.
-   */
   const SUPABASE_URL = 'https://bkfpvwsahffrrkckjfre.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_89MkxFSiW8Et_qNZXzhXSA_6ouvoKgI';
   const TABLE = 'visitas_tech_run';
+  const PIN = '2727';
+  const UNLOCK_KEY = 'techVisitsUnlockedV1';
 
-  function headers(){
-    return {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      'Prefer': 'return=minimal'
-    };
+  function headers(json){
+    const h = {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Accept':'application/json'};
+    if(json){ h['Content-Type']='application/json'; h['Prefer']='return=minimal'; }
+    return h;
   }
+  function $(id){ return document.getElementById(id); }
   function sessionId(){
     try{
       let id = sessionStorage.getItem('techVisitSessionIdV1');
-      if(!id){
-        id = 's_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,10);
-        sessionStorage.setItem('techVisitSessionIdV1', id);
-      }
+      if(!id){ id='s_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10); sessionStorage.setItem('techVisitSessionIdV1',id); }
       return id;
-    }catch(e){ return 's_fallback_' + Date.now(); }
+    }catch(e){ return 's_'+Date.now(); }
   }
   function deviceLabel(){
     try{
-      const ua = navigator.userAgent || '';
+      const ua=navigator.userAgent||'';
       if(/iPad|Tablet/i.test(ua)) return 'tablet';
       if(/Mobi|Android|iPhone/i.test(ua)) return 'mobile';
       return 'desktop';
     }catch(e){ return 'unknown'; }
   }
   function username(){
-    try{
-      if(window.techAuthIsLoggedIn && window.techAuthIsLoggedIn() && window.techAuthUsername)
-        return String(window.techAuthUsername() || '').slice(0,32) || null;
-    }catch(e){}
+    try{ if(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn()&&window.techAuthUsername) return String(window.techAuthUsername()||'').slice(0,32)||null; }catch(e){}
     return null;
   }
   function userId(){
-    try{
-      if(window.techAuthUserId){
-        const id = window.techAuthUserId();
-        if(id) return String(id);
-      }
-    }catch(e){}
+    try{ if(window.techAuthUserId){ const id=window.techAuthUserId(); if(id) return String(id);} }catch(e){}
     return null;
   }
 
   async function logVisit(){
     try{
-      if(sessionStorage.getItem('techVisitLoggedV1') === '1') return;
-      sessionStorage.setItem('techVisitLoggedV1', '1');
-      const body = {
-        session_id: sessionId(),
-        path: (location.pathname || '/') + (location.search || ''),
-        referrer: (document.referrer || '').slice(0, 400) || null,
-        user_agent: (navigator.userAgent || '').slice(0, 300) || null,
-        username: username(),
-        user_id: userId(),
-        device: deviceLabel(),
-        is_new_session: true
-      };
-      Object.keys(body).forEach(function(k){ if(body[k] == null) delete body[k]; });
-      const res = await fetch(SUPABASE_URL + '/rest/v1/' + TABLE, {
-        method: 'POST',
-        headers: headers(),
-        body: JSON.stringify(body),
-        keepalive: true
-      });
+      if(sessionStorage.getItem('techVisitLoggedV1')==='1') return;
+      sessionStorage.setItem('techVisitLoggedV1','1');
+      const body={ session_id:sessionId(), path:(location.pathname||'/')+(location.search||''), referrer:(document.referrer||'').slice(0,400)||null, user_agent:(navigator.userAgent||'').slice(0,300)||null, username:username(), user_id:userId(), device:deviceLabel(), is_new_session:true };
+      Object.keys(body).forEach(function(k){ if(body[k]==null) delete body[k]; });
+      const res=await fetch(SUPABASE_URL+'/rest/v1/'+TABLE,{ method:'POST', headers:headers(true), body:JSON.stringify(body), keepalive:true });
+      if(!res.ok){ console.warn('[TECH visitas]', res.status, await res.text()); sessionStorage.setItem('techVisitLoggedV1','0'); }
+    }catch(e){ try{ sessionStorage.setItem('techVisitLoggedV1','0'); }catch(_){ } }
+  }
+
+  function esc(t){ return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
+  function fmtDate(iso){ try{ const d=new Date(iso); return isNaN(d)?String(iso||''):d.toLocaleString(undefined,{dateStyle:'short',timeStyle:'short'}); }catch(e){ return String(iso||''); } }
+  function dayKey(iso){ try{ return new Date(iso).toISOString().slice(0,10);}catch(e){return '';} }
+  function setStatus(m,ok){ const el=$('tvStatus'); if(!el)return; el.textContent=m||''; el.style.color=ok?'#9dffc0':'#cbb8e8'; }
+
+  async function fetchVisits(){
+    setStatus('Cargando…');
+    try{
+      const res=await fetch(SUPABASE_URL+'/rest/v1/'+TABLE+'?select=id,session_id,visited_at,path,referrer,username,device&order=visited_at.desc&limit=2000',{headers:headers(false)});
+      const text=await res.text();
+      let rows=[]; try{ rows=text?JSON.parse(text):[]; }catch(e){ rows=[]; }
       if(!res.ok){
-        const t = await res.text();
-        console.warn('[TECH visitas] insert', res.status, t);
-        try{ sessionStorage.setItem('techVisitLoggedV1', '0'); }catch(_){}
+        setStatus('No se pudo leer. ¿Ejecutaste el SQL con política SELECT? '+(rows.message||text||res.status), false);
+        return;
       }
-    }catch(e){
-      console.warn('[TECH visitas] network', e);
-      try{ sessionStorage.setItem('techVisitLoggedV1', '0'); }catch(_){}
+      if(!Array.isArray(rows)) rows=[];
+      const today=new Date().toISOString().slice(0,10);
+      const weekAgo=Date.now()-7*24*3600*1000;
+      const sessions=new Set();
+      let todayCount=0, weekCount=0; const byDay={};
+      rows.forEach(function(r){
+        sessions.add(r.session_id||('id:'+r.id));
+        const dk=dayKey(r.visited_at);
+        if(dk===today) todayCount++;
+        if(r.visited_at&&Date.parse(r.visited_at)>=weekAgo) weekCount++;
+        if(dk) byDay[dk]=(byDay[dk]||0)+1;
+      });
+      $('tvTotal').textContent=String(rows.length)+(rows.length>=2000?'+':'');
+      $('tvToday').textContent=String(todayCount);
+      $('tvWeek').textContent=String(weekCount);
+      $('tvUnique').textContent=String(sessions.size);
+      const days=[]; const now=Date.now();
+      for(let i=13;i>=0;i--){ const d=new Date(now-i*24*3600*1000); const k=d.toISOString().slice(0,10); days.push({k,n:byDay[k]||0,label:k.slice(5)}); }
+      const maxN=Math.max(1,...days.map(function(d){return d.n;}));
+      $('tvDailyBars').innerHTML=days.map(function(d){ return '<div class="tv-barrow"><div class="tv-bartop"><span>'+d.label+'</span><b>'+d.n+'</b></div><div class="tv-track"><div class="tv-fill" style="width:'+(100*d.n/maxN)+'%"></div></div></div>'; }).join('');
+      const recent=rows.slice(0,80);
+      $('tvTableBody').innerHTML=recent.length?recent.map(function(r){
+        const origin=(r.referrer&&r.referrer.trim())?r.referrer.replace(/^https?:\/\//,'').slice(0,36):'directo';
+        return '<tr><td>'+fmtDate(r.visited_at)+'</td><td>'+esc(r.username||'invitado')+'</td><td>…'+esc(String(r.session_id||'').slice(-8))+'</td><td>'+esc(r.device||'—')+'</td><td>'+esc(origin)+'</td></tr>';
+      }).join(''):'<tr><td colspan="5">Sin visitas aún</td></tr>';
+      setStatus('Actualizado · '+rows.length+' registros', true);
+    }catch(e){ setStatus('Error de red: '+(e.message||e), false); }
+  }
+
+  function openPin(){
+    const m=$('techVisitsPinModal'); if(!m) return;
+    m.classList.add('show');
+    const inp=$('tvPinInput'); if(inp){ inp.value=''; setTimeout(function(){inp.focus();},50); }
+    const err=$('tvPinErr'); if(err) err.textContent='';
+  }
+  function closePin(){ const m=$('techVisitsPinModal'); if(m) m.classList.remove('show'); }
+  function openPanel(){
+    closePin();
+    const p=$('techVisitsPanel'); if(!p) return;
+    p.classList.add('show');
+    fetchVisits();
+  }
+  function closePanel(){ const p=$('techVisitsPanel'); if(p) p.classList.remove('show'); }
+
+  function tryUnlock(){
+    const inp=$('tvPinInput');
+    const code=String((inp&&inp.value)||'').trim();
+    if(code===PIN){
+      try{ sessionStorage.setItem(UNLOCK_KEY,'1'); }catch(e){}
+      openPanel();
+    } else {
+      const err=$('tvPinErr'); if(err) err.textContent='Código incorrecto';
+      if(inp){ inp.value=''; inp.focus(); }
     }
   }
 
-  function boot(){ setTimeout(logVisit, 1200); }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  function requestAccess(){
+    try{
+      if(sessionStorage.getItem(UNLOCK_KEY)==='1'){ openPanel(); return; }
+    }catch(e){}
+    openPin();
+  }
+
+  function wireSecret(){
+    const el=$('techVisitsSecret');
+    if(el && !el.__tvBound){
+      el.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); requestAccess(); });
+      el.__tvBound=true;
+    }
+    if(!document.__tvSecretDelegation){
+      document.addEventListener('click', function(e){
+        const t=e.target && e.target.closest ? e.target.closest('#techVisitsSecret') : null;
+        if(!t) return;
+        e.preventDefault(); e.stopPropagation();
+        requestAccess();
+      }, true);
+      document.__tvSecretDelegation=true;
+    }
+    const ok=$('tvPinOk'); if(ok&&!ok.__tv){ ok.addEventListener('click', tryUnlock); ok.__tv=true; }
+    const cancel=$('tvPinCancel'); if(cancel&&!cancel.__tv){ cancel.addEventListener('click', closePin); cancel.__tv=true; }
+    const close=$('techVisitsClose'); if(close&&!close.__tv){ close.addEventListener('click', closePanel); close.__tv=true; }
+    const ref=$('tvRefresh'); if(ref&&!ref.__tv){ ref.addEventListener('click', fetchVisits); ref.__tv=true; }
+    const inp=$('tvPinInput'); if(inp&&!inp.__tv){ inp.addEventListener('keydown', function(e){ if(e.key==='Enter') tryUnlock(); }); inp.__tv=true; }
+  }
+
+  function boot(){
+    wireSecret();
+    setTimeout(logVisit, 1200);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
+  setInterval(wireSecret, 2000);
 
   window.TECH_VISITS_SQL = `create table if not exists public.visitas_tech_run (
   id bigserial primary key,
@@ -14556,10 +14668,11 @@ create index if not exists visitas_tech_run_visited_at_idx on public.visitas_tec
 create index if not exists visitas_tech_run_session_idx on public.visitas_tech_run (session_id);
 alter table public.visitas_tech_run enable row level security;
 drop policy if exists "visitas_insert_all" on public.visitas_tech_run;
-create policy "visitas_insert_all" on public.visitas_tech_run for insert to anon, authenticated with check (true);`;
+create policy "visitas_insert_all" on public.visitas_tech_run for insert to anon, authenticated with check (true);
+drop policy if exists "visitas_select_all" on public.visitas_tech_run;
+create policy "visitas_select_all" on public.visitas_tech_run for select to anon, authenticated using (true);`;
 })();
 </script>
-
 
 </body>
 </html>
