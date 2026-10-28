@@ -14424,6 +14424,143 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
 })();
 </script>
 
+
+
+
+
+<script id="tech-site-visits">
+(function(){
+  'use strict';
+  /**
+   * Registro silencioso de visitas al link → solo en Supabase (tabla visitas_tech_run).
+   * No hay UI en el juego. Ver datos en: Supabase → Table Editor → visitas_tech_run
+   *
+   * SQL (ejecutar una vez en SQL Editor):
+   * create table if not exists public.visitas_tech_run (
+   *   id bigserial primary key,
+   *   session_id text not null,
+   *   visited_at timestamptz not null default now(),
+   *   path text,
+   *   referrer text,
+   *   user_agent text,
+   *   username text,
+   *   user_id uuid,
+   *   device text,
+   *   is_new_session boolean default true
+   * );
+   * create index if not exists visitas_tech_run_visited_at_idx on public.visitas_tech_run (visited_at desc);
+   * create index if not exists visitas_tech_run_session_idx on public.visitas_tech_run (session_id);
+   * alter table public.visitas_tech_run enable row level security;
+   * drop policy if exists "visitas_insert_all" on public.visitas_tech_run;
+   * create policy "visitas_insert_all" on public.visitas_tech_run for insert to anon, authenticated with check (true);
+   * -- Sin política de SELECT para anon: los datos solo se ven en el panel de Supabase (service role / dashboard).
+   * -- Si quieres leer desde el cliente, añade select; para solo dashboard no hace falta.
+   */
+  const SUPABASE_URL = 'https://bkfpvwsahffrrkckjfre.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_89MkxFSiW8Et_qNZXzhXSA_6ouvoKgI';
+  const TABLE = 'visitas_tech_run';
+
+  function headers(){
+    return {
+      'apikey': SUPABASE_KEY,
+      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Prefer': 'return=minimal'
+    };
+  }
+  function sessionId(){
+    try{
+      let id = sessionStorage.getItem('techVisitSessionIdV1');
+      if(!id){
+        id = 's_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,10);
+        sessionStorage.setItem('techVisitSessionIdV1', id);
+      }
+      return id;
+    }catch(e){ return 's_fallback_' + Date.now(); }
+  }
+  function deviceLabel(){
+    try{
+      const ua = navigator.userAgent || '';
+      if(/iPad|Tablet/i.test(ua)) return 'tablet';
+      if(/Mobi|Android|iPhone/i.test(ua)) return 'mobile';
+      return 'desktop';
+    }catch(e){ return 'unknown'; }
+  }
+  function username(){
+    try{
+      if(window.techAuthIsLoggedIn && window.techAuthIsLoggedIn() && window.techAuthUsername)
+        return String(window.techAuthUsername() || '').slice(0,32) || null;
+    }catch(e){}
+    return null;
+  }
+  function userId(){
+    try{
+      if(window.techAuthUserId){
+        const id = window.techAuthUserId();
+        if(id) return String(id);
+      }
+    }catch(e){}
+    return null;
+  }
+
+  async function logVisit(){
+    try{
+      if(sessionStorage.getItem('techVisitLoggedV1') === '1') return;
+      sessionStorage.setItem('techVisitLoggedV1', '1');
+      const body = {
+        session_id: sessionId(),
+        path: (location.pathname || '/') + (location.search || ''),
+        referrer: (document.referrer || '').slice(0, 400) || null,
+        user_agent: (navigator.userAgent || '').slice(0, 300) || null,
+        username: username(),
+        user_id: userId(),
+        device: deviceLabel(),
+        is_new_session: true
+      };
+      Object.keys(body).forEach(function(k){ if(body[k] == null) delete body[k]; });
+      const res = await fetch(SUPABASE_URL + '/rest/v1/' + TABLE, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(body),
+        keepalive: true
+      });
+      if(!res.ok){
+        const t = await res.text();
+        console.warn('[TECH visitas] insert', res.status, t);
+        try{ sessionStorage.setItem('techVisitLoggedV1', '0'); }catch(_){}
+      }
+    }catch(e){
+      console.warn('[TECH visitas] network', e);
+      try{ sessionStorage.setItem('techVisitLoggedV1', '0'); }catch(_){}
+    }
+  }
+
+  function boot(){ setTimeout(logVisit, 1200); }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+
+  window.TECH_VISITS_SQL = `create table if not exists public.visitas_tech_run (
+  id bigserial primary key,
+  session_id text not null,
+  visited_at timestamptz not null default now(),
+  path text,
+  referrer text,
+  user_agent text,
+  username text,
+  user_id uuid,
+  device text,
+  is_new_session boolean default true
+);
+create index if not exists visitas_tech_run_visited_at_idx on public.visitas_tech_run (visited_at desc);
+create index if not exists visitas_tech_run_session_idx on public.visitas_tech_run (session_id);
+alter table public.visitas_tech_run enable row level security;
+drop policy if exists "visitas_insert_all" on public.visitas_tech_run;
+create policy "visitas_insert_all" on public.visitas_tech_run for insert to anon, authenticated with check (true);`;
+})();
+</script>
+
+
 </body>
 </html>
 <style id="tech-run-desktop-large-final">
