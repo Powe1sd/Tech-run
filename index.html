@@ -4,13 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TECH RUN — Juego</title>
-<link rel="icon" href="nave.png" type="image/x-icon">
 <link rel="icon" href="logo-no-background (2).png" type="image/x-icon">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-   
-
-
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -1276,6 +1272,39 @@ body:has(.tech-game.is-playing) #techAccountExit{
   #techAccountExit{top:8px;right:8px;padding:9px 11px;font-size:10px}
 }
 
+
+/* Ajustes de rendimiento y encuadre: móvil y pantallas pequeñas */
+.tech-game, #gameCanvas { contain: layout paint; }
+@media (max-width: 600px) {
+  .tech-game-section { padding-inline: 8px; margin-top: 5px; }
+  .tech-game {
+    height: min(62svh, 460px);
+    min-height: 300px;
+    border-radius: 12px;
+    box-shadow: 0 0 0 1px rgba(0,56,168,.22);
+  }
+  .tech-game::before { opacity: .18; background-size: 48px 48px; }
+  .tech-game::after { box-shadow: none; }
+  .game-panel {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,.55);
+    max-height: 88%;
+  }
+  .touch-pad-inner { box-shadow: none; }
+  body::before { animation: none; opacity: .45; }
+  .data-card, .game-btn { transition: none; }
+}
+@media (max-height: 650px) and (max-width: 600px) {
+  .tech-game { height: 54svh; min-height: 260px; }
+  .tech-game-section { margin-top: 3px; }
+  .game-panel { padding: 10px; }
+  .game-panel h2 { font-size: 18px; margin-bottom: 7px; }
+  .game-panel p { font-size: 12px; margin-bottom: 5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
 </style>
 
 <style id="tech-statistics-styles">
@@ -2403,7 +2432,6 @@ html,body{width:100%;min-width:320px}
 </div>
 <canvas id="gameCanvas"></canvas>
 <div class="game-panel" id="startPanel">
-<img src="yo.jpeg" alt="Imagen" style="display:block;width:min(240px,100%);height:80px;object-fit:contain;margin:0 auto 8px;position:relative;z-index:1">
 <h2>⚡ TECH RUN</h2>
 <small>Elige dificultad y nave · Desliza para ver más</small><br>
 <button class="game-btn" id="openTechAccount" style="margin-top:8px;background:linear-gradient(135deg,#35205e,#6b39a8);border-color:#c9a4ff;color:#fff">Crear cuenta / Iniciar sesión</button>
@@ -5404,8 +5432,8 @@ function resizeCanvas(){
   /* HD real: buffer = CSS × devicePixelRatio (nunca por debajo de 1×) */
   const mobile=isMobile();
   let dpr=window.devicePixelRatio||1;
-  if(mobile) dpr=Math.min(Math.max(dpr,1), lowPower?1:1.25); /* móvil: 1× / 1.25× máx → más FPS */
-  else dpr=Math.min(Math.max(dpr,1), lowPower?1.35:2);
+  if(mobile) dpr=1; /* móvil: resolución 1× para reducir mucho el trabajo de la GPU */
+  else dpr=Math.min(Math.max(dpr,1), lowPower?1.25:1.5); /* PC: limitar píxeles para mantener FPS estables */
   const w=Math.max(1,Math.floor(cssW*dpr));
   const h=Math.max(1,Math.floor(cssH*dpr));
   if(canvas.width!==w||canvas.height!==h){
@@ -9075,7 +9103,8 @@ function gameLoopCore(ts){
 if(!gameRunning||gamePaused)return;
 _lastLoopTs=performance.now();
 const _isMobLoop=(typeof isMobile==='function'&&isMobile());
-if((++_gcTick)%(_isMobLoop?2:8)===0)gcEntities();
+/* La limpieza de entidades no necesita ejecutarse en cada pocos frames. */
+if((++_gcTick)%(_isMobLoop?6:12)===0)gcEntities();
 ctx.clearRect(0,0,canvas.width,canvas.height);
 try{
   ctx.imageSmoothingEnabled=false;
@@ -14235,5 +14264,3 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
 /* Evita que el arte de la nave y su estela queden recortados por abajo. */
 #gameCanvas { display:block; }
 </style>
-
-
