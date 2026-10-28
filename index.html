@@ -4373,7 +4373,7 @@ function useSpecialPower(){
     fireKamehameha();
     return;
   }
-  const opts=["hammer","nova","bomb","burst","shield","rapid","missile","chain","phase","orbmine","vacuum","railgun","redL","redL"];
+  const opts=["hammer","bomb","burst","shield","missile","chain","phase","orbmine","vacuum","railgun","redL","redL"];
   const pick=opts[Math.floor(Math.random()*opts.length)];
   if(pick==="hammer"){activateHammer();playSfx("hammer");if(!SFX.hammer)playSfx("power");try{playSfx("explode")}catch(e){}}
   else if(pick==="nova"){activateNova();playSfx("nova");if(!SFX.nova)playSfx("explode")}
@@ -6194,7 +6194,7 @@ function maybeSpawnPickup(x,y){
   /* pool de poderes especiales (hammer, chrono, barrier, stormbolt, bazooka, etc.) */
   if(r<.72){
     /* L y ┘ ponderados: aparecen con más frecuencia */
-    const pool=["ammo","hammer","shield","bounce","rapid","triple","missile","allies","overdrive","nova","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","invisible","drone","freeze","barrier","stormbolt","bazooka","vortex","ion","emp","chain","phase","orbmine","vacuum","railgun","redL","redL","redL"];
+    const pool=["ammo","hammer","shield","bounce","missile","allies","overdrive","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","invisible","drone","barrier","stormbolt","bazooka","vortex","ion","emp","chain","phase","orbmine","vacuum","railgun","redL","redL","redL"];
     const type=pool[Math.floor(Math.random()*pool.length)];
     pickups.push({x,y,type,size:s,vy:1.5});
   }
@@ -6258,7 +6258,7 @@ function openSupplyCrate(x,y){
   createExplosion(x,y,18,"206,17,38");
   try{playSfx("power")}catch(e){}
   try{doVibrate(25)}catch(e){}
-  const rewards=["ammo","shield","rapid","coin","coin","missile","triple","life","overdrive","nova","chain","phase","orbmine","vacuum","railgun","redL","redL","redL","laser","laser","laser"];
+  const rewards=["ammo","shield","coin","coin","missile","life","overdrive","chain","phase","orbmine","vacuum","railgun","redL","redL","redL","laser","laser","laser"];
   const n=2+Math.floor(Math.random()*2);
   for(let k=0;k<n;k++){
     const type=rewards[Math.floor(Math.random()*rewards.length)];
@@ -8411,7 +8411,7 @@ if(p.type==="redL"){
 }else if(["chain","phase","orbmine","vacuum","railgun","redL"].includes(p.type)){applyNewPowerPickup(p.type)}
 else if(p.type==="ammo"){ammo=Math.min(ammo+40,250);playSfx("power")}
 else if(p.type==="coin"){coins+=(p.value||5)*2;lsSet("techCoinsV2",coins);playSfx("power");scenarioMsg="⭐ +"+(p.value||5)*2+" puntosjuego";scenarioTransition=40}
-else if(powerMode==="manual"&&["hammer","nova","bomb","burst","shield","bounce","rapid","missile","laser","triple","pierce","reflect","vortex","ion","emp","chain","phase","orbmine","vacuum","railgun","redL"].includes(p.type)){
+else if(powerMode==="manual"&&["hammer","bomb","burst","shield","bounce","missile","laser","pierce","reflect","vortex","ion","emp","chain","phase","orbmine","vacuum","railgun","redL"].includes(p.type)){
   specialCharges=Math.min(9,specialCharges+1);powersCollected++;playSfx("power");
 }else if(p.type==="shield"){shield=320;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("shield");if(!SFX.shield)playSfx("power")}
 else if(p.type==="bounce"){bounceShield=420;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("reflect");if(!SFX.reflect)playSfx("shield");scenarioMsg="↻ ESCUDO REBOTE";scenarioTransition=70}
@@ -8515,9 +8515,9 @@ if(orbitalMines&&orbitalMines.length)pows.push(["MIN"+orbitalMines.length,"#FF99
 if(bounceShield>0)pows.push(["REB","#AAFFFF"]);
 if(bounceShot>0)pows.push(["↻","#AAFFFF"]);
 if(drones&&drones.length)pows.push(["DRN","#88DDFF"]);
-if(freezeEnemies>0)pows.push(["❄","#AADDFF"]);
-if(rapidFire>0)pows.push(["RAP","#00FF88"]);
-if(tripleShot>0)pows.push(["TRI","#66CCFF"]);
+
+
+
 if(laser>0)pows.push(["LAS","#00FFFF"]);
 if(vortex>0)pows.push(["VOR","#CC66FF"]);
 if(ion>0)pows.push(["ION","#66FFEE"]);
