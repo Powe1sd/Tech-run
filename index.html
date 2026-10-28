@@ -7135,7 +7135,7 @@ function doDash(){
   const dist=88*((typeof getScale==="function")?getScale():1);
   const ox=player.x,oy=player.y;
   player.x=Math.max(player.size,Math.min(canvas.width-player.size,player.x+dx*dist));
-  player.y=Math.max(player.size*2.0,Math.min(canvas.height-player.size*4.8,player.y+dy*dist));
+  player.y=Math.max(player.size*2.0,Math.min(canvas.height-player.size*2.8,player.y+dy*dist));
   mouse.x=player.x;mouse.y=player.y;
   dashCd=90; /* 1.5s cooldown */
   dashInvuln=28; /* invulnerable breve */
@@ -9178,9 +9178,9 @@ if(!controlling){
 }
 if(stickActive)applyGravity(player,player.x,player.y,0.08);
 else applyGravity(player,player.x,player.y,0.35);
-const m=player.size;player.x=Math.max(m,Math.min(canvas.width-m,player.x));player.y=Math.max(m*2.0,Math.min(canvas.height-m*4.8,player.y));
+const m=player.size;player.x=Math.max(m,Math.min(canvas.width-m,player.x));player.y=Math.max(m*2.0,Math.min(canvas.height-m*2.8,player.y));
 /* Al soltar el control, la nave nunca puede quedar parcialmente fuera del cuadro. */
-mouse.y=Math.max(m*2.0,Math.min(canvas.height-m*4.8,mouse.y));
+mouse.y=Math.max(m*2.0,Math.min(canvas.height-m*2.8,mouse.y));
 
 // spawn meteors by level
 if(phase==="meteors"){
@@ -9394,7 +9394,7 @@ keys.up=keys.down=keys.left=keys.right=false;
 if(scoreElement)scoreElement.textContent="0";
 record=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;if(recordElement)recordElement.textContent=record;
 updateLivesUI();
-player.x=canvas.width/2;player.y=Math.min(canvas.height*0.50,canvas.height-player.size*4.8);mouse.x=player.x;mouse.y=player.y;gameRunning=true;
+player.x=canvas.width/2;player.y=Math.min(canvas.height*0.50,canvas.height-player.size*2.8);mouse.x=player.x;mouse.y=player.y;gameRunning=true;
 combo=0;comboTimer=0;comboMult=1;feverMode=0;feverAnnounced=false;supplyCrates=[];lastSupplyDrop=performance.now();damageFlash=0;introTimer=36;screenShake=0;hitSparks=[];
 const rec=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;
 ammo=100+(rec>=30?20:0)+Math.min(50,(upgAmmo||0)*12);lives=1+(rec>=60?1:0)+Math.min(2,upgLives||0);updateLivesUI();
