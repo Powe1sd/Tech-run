@@ -5611,8 +5611,10 @@ function getSpeedScale(){
 function getPlayerBottomPad(){
   const s=(typeof player!=="undefined"&&player&&player.size)?player.size:14;
   const h=(canvas&&canvas.height)?canvas.height:400;
-  /* Cuerpo+alas ~1.0s, estela/motor ~1.2s, aura/escudo ~1.0s + holgura del marco */
-  return Math.max(s*5.2, 78) + Math.max(18, Math.floor(h*0.02));
+  /* ~2 cm más abajo: margen justo para cuerpo+estela, pegado a la línea inferior del marco */
+  /* 2cm ≈ 75px CSS; en buffer usamos proporcional al alto del canvas */
+  const twoCm = Math.max(36, Math.min(90, Math.floor(h * 0.09)));
+  return Math.max(s * 2.2, 34) + Math.max(8, Math.floor(h * 0.012));
 }
 function getPlayerTopPad(){
   const s=(typeof player!=="undefined"&&player&&player.size)?player.size:14;
@@ -6240,7 +6242,7 @@ function shoot(){
     } else playSfx("shoot");
   }catch(e){}
   if(!isMobile()||Math.random()<0.15)doVibrate(8,"shoot");
-  const sp=10.5*getSpeedScale()*bufScale(),s=getScale();
+  const sp=12.5*getSpeedScale()*bufScale(),s=getScale(); /* más rápidas: llegan hasta arriba */
   const has=w=>Array.isArray(ownedWeapons)&&ownedWeapons.indexOf(w)>=0;
   /* Goku: bolitas de energía (ki) pequeñas */
   const pushKi=(x,y,spd,sz,opts)=>{
@@ -6313,9 +6315,9 @@ function enemyShoot(o){
   const dx=player.x-cx, dy=player.y-cy, dist=Math.hypot(dx,dy)||1;
   const isBoss=String(o.type||"").startsWith("boss");
   const speed=(4.2+Math.random()*1.8+level*.1)*getSpeedScale()*bufScale()*(isMobile()?1:1.05);
-  /* Jefe: balas más directas hacia la nave del jugador */
-  const aim=isBoss?1.0:0.55;
-  const vx=(dx/dist)*speed*aim, vy=(dy/dist)*speed*(isBoss?1.05:0.95);
+  /* Todas las naves apuntan directo a la nave principal */
+  const aim=1.0;
+  const vx=(dx/dist)*speed*aim, vy=(dy/dist)*speed*(isBoss?1.08:1.0);
   if(o.type==="sniper"){
     enemyBullets.push({x:cx,y:cy,vx:vx*1.15,vy:vy*1.15,size:3.4*s,aim:true});
   } else if(String(o.type).startsWith("boss")){
@@ -6329,10 +6331,10 @@ function enemyShoot(o){
   } else if(o.type==="drone"){
     enemyBullets.push({x:cx,y:cy,vx:vx*.9,vy:vy*.9,size:2.2*s});
   } else if(o.type==="bomber"){
-    /* bombas hacia abajo + un poco de aim */
-    enemyBullets.push({x:cx,y:cy,vx:vx*.35,vy:Math.max(vy,3.2*getSpeedScale()),size:4.2*s});
-    enemyBullets.push({x:cx-8,y:cy,vx:vx*.2-0.4,vy:Math.max(vy,2.8*getSpeedScale()),size:3.4*s});
-    enemyBullets.push({x:cx+8,y:cy,vx:vx*.2+0.4,vy:Math.max(vy,2.8*getSpeedScale()),size:3.4*s});
+    /* bombas apuntando a la nave principal */
+    enemyBullets.push({x:cx,y:cy,vx:vx,vy:vy,size:4.2*s});
+    enemyBullets.push({x:cx-8,y:cy,vx:vx-.35,vy:vy,size:3.4*s});
+    enemyBullets.push({x:cx+8,y:cy,vx:vx+.35,vy:vy,size:3.4*s});
   } else if(o.type==="armored"){
     enemyBullets.push({x:cx-6,y:cy,vx:vx-.15,vy:vy,size:3.5*s});
     enemyBullets.push({x:cx+6,y:cy,vx:vx+.15,vy:vy,size:3.5*s});
@@ -8306,20 +8308,13 @@ function drawObstacle(o){
         ctx.fillStyle="#2d6a1e";ctx.fillRect(-gs*.15,-gs*1.1,gs*.3,gs*.35);
       }
       ctx.shadowBlur=0;
-    } else if(o.type==="hunter"){c0="#0a0a0a";c1="#2a2a2a";wing="#111";glow="#CE1126"}
-    else if(o.type==="sniper"){c0="#0d0d0d";c1="#333";wing="#1a1a1a";glow="#FF4444"}
-    else if(o.type==="turret"){c0="#111";c1="#3a3a3a";wing="#222";glow="#FFAA44"}
-    else if(o.type==="kamikaze"){c0="#1a0505";c1="#3a1010";wing="#220808";glow="#FF2222"}
-    else if(o.type==="swarm"){c0="#0a0a0a";c1="#252525";wing="#151515";glow="#FF6644"}
-    else if(o.type==="thief"){c0="#0c0c0c";c1="#2c2c2c";wing="#181818";glow="#FF3333"}
-    else if(o.type==="teleport"){c0="#0a0a12";c1="#1a1a28";wing="#12121a";glow="#AA66FF"}
-    else if(o.type==="drone"){c0="#0a1520";c1="#1a3040";wing="#0e2030";glow="#66DDFF"}
-    else if(o.type==="bomber"){c0="#1a0a00";c1="#3a2010";wing="#221508";glow="#FF8844"}
-    else if(o.type==="armored"){c0="#1a1a1a";c1="#555";wing="#2a2a2a";glow="#AABBCC"}
-    else if(o.type==="strafer"){c0="#1a1000";c1="#3a2800";wing="#221800";glow="#FFAA00"}
-    else if(o.type==="missile_ship"){c0="#150505";c1="#3a1515";wing="#200808";glow="#FFCD00"}
-    else if(o.type==="bigship"){c0="#050505";c1="#222";wing="#0e0e0e";glow="#CE1126"}
-    else{c0="#0a0a0a";c1="#2a2a2a";wing="#151515";glow="#CE1126"}
+    } else {
+      /* Todas las naves enemigas: cuerpo negro + acentos rojos */
+      c0="#050505"; c1="#1a1a1a"; wing="#0c0c0c"; glow="#CE1126";
+      if(o.type==="kamikaze"){c0="#0a0000";c1="#2a0808";wing="#120404";glow="#FF2222"}
+      else if(o.type==="bigship"){c0="#000";c1="#181818";wing="#0a0a0a";glow="#FF3333"}
+      else if(o.type==="sniper"){c0="#080808";c1="#222";wing="#111";glow="#FF4444"}
+    }
     if(!_hwE){
     ctx.fillStyle="rgba(0,0,0,.25)";ctx.beginPath();ctx.ellipse(0,s*.95,s*.55,s*.12,0,0,Math.PI*2);ctx.fill();
     const bodyG=ctx.createLinearGradient(-s*.6,0,s*.6,0);bodyG.addColorStop(0,c0);bodyG.addColorStop(.5,c1);bodyG.addColorStop(1,c0);
@@ -8328,25 +8323,25 @@ function drawObstacle(o){
       /* hexágono / mini drone */
       ctx.beginPath();
       for(let k=0;k<6;k++){const a=-Math.PI/2+k*Math.PI/3;const px=Math.cos(a)*s*.55,py=Math.sin(a)*s*.55;k?ctx.lineTo(px,py):ctx.moveTo(px,py)}
-      ctx.closePath();ctx.fillStyle=bodyG;ctx.fill();ctx.strokeStyle="rgba(100,220,255,.7)";ctx.lineWidth=1.2;ctx.stroke();
-      ctx.fillStyle="#66DDFF";ctx.beginPath();ctx.arc(0,0,s*.18,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle="rgba(100,220,255,.4)";ctx.beginPath();ctx.arc(0,0,s*.75,0,Math.PI*2);ctx.stroke();
+      ctx.closePath();ctx.fillStyle=bodyG;ctx.fill();ctx.strokeStyle="rgba(206,17,38,.75)";ctx.lineWidth=1.2;ctx.stroke();
+      ctx.fillStyle="#CE1126";ctx.beginPath();ctx.arc(0,0,s*.18,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle="rgba(206,17,38,.4)";ctx.beginPath();ctx.arc(0,0,s*.75,0,Math.PI*2);ctx.stroke();
     } else if(o.type==="turret"){
       /* base + cañón */
       ctx.fillStyle=bodyG;
       ctx.beginPath();ctx.rect(-s*.55,-s*.25,s*1.1,s*.7);ctx.fill();
-      ctx.strokeStyle="rgba(255,170,60,.6)";ctx.lineWidth=1.2;ctx.stroke();
-      ctx.fillStyle="#222";ctx.beginPath();ctx.arc(0,s*.1,s*.35,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle="rgba(206,17,38,.7)";ctx.lineWidth=1.2;ctx.stroke();
+      ctx.fillStyle="#111";ctx.beginPath();ctx.arc(0,s*.1,s*.35,0,Math.PI*2);ctx.fill();
       const ang=Math.atan2(player.y-(o.y+o.size/2),player.x-(o.x+o.size/2));
       ctx.save();ctx.rotate(ang);
-      ctx.fillStyle="#FFAA44";ctx.fillRect(0,-s*.1,s*.9,s*.2);
+      ctx.fillStyle="#CE1126";ctx.fillRect(0,-s*.1,s*.9,s*.2);
       ctx.fillStyle="#fff";ctx.fillRect(s*.7,-s*.06,s*.2,s*.12);
       ctx.restore();
       ctx.fillStyle="#CE1126";ctx.beginPath();ctx.arc(0,s*.1,s*.12,0,Math.PI*2);ctx.fill();
     } else if(o.type==="bomber"){
       ctx.beginPath();ctx.moveTo(0,-s*.55);ctx.lineTo(s*.55,s*.1);ctx.lineTo(s*.4,s*.7);ctx.lineTo(0,s*.5);ctx.lineTo(-s*.4,s*.7);ctx.lineTo(-s*.55,s*.1);ctx.closePath();
-      ctx.fillStyle=bodyG;ctx.fill();ctx.strokeStyle="rgba(255,140,40,.65)";ctx.lineWidth=1.2;ctx.stroke();
-      ctx.fillStyle="#FF8844";ctx.fillRect(-s*.15,s*.15,s*.3,s*.35);
+      ctx.fillStyle=bodyG;ctx.fill();ctx.strokeStyle="rgba(206,17,38,.7)";ctx.lineWidth=1.2;ctx.stroke();
+      ctx.fillStyle="#CE1126";ctx.fillRect(-s*.15,s*.15,s*.3,s*.35);
       ctx.fillStyle="#CE1126";ctx.beginPath();ctx.ellipse(0,-s*.15,s*.14,s*.18,0,0,Math.PI*2);ctx.fill();
     } else if(o.type==="armored"){
       ctx.beginPath();ctx.moveTo(0,-s*.6);ctx.lineTo(s*.55,-s*.1);ctx.lineTo(s*.6,s*.55);ctx.lineTo(s*.2,s*.8);ctx.lineTo(-s*.2,s*.8);ctx.lineTo(-s*.6,s*.55);ctx.lineTo(-s*.55,-s*.1);ctx.closePath();
@@ -8356,12 +8351,12 @@ function drawObstacle(o){
     } else if(o.type==="strafer"){
       ctx.beginPath();ctx.moveTo(0,-s*.5);ctx.lineTo(s*.3,-s*.1);ctx.lineTo(s*1.15,s*.25);ctx.lineTo(s*.35,s*.35);ctx.lineTo(0,s*.65);
       ctx.lineTo(-s*.35,s*.35);ctx.lineTo(-s*1.15,s*.25);ctx.lineTo(-s*.3,-s*.1);ctx.closePath();
-      ctx.fillStyle=bodyG;ctx.fill();ctx.strokeStyle="rgba(255,180,0,.6)";ctx.lineWidth=1.2;ctx.stroke();
-      ctx.fillStyle="#FFAA00";ctx.beginPath();ctx.ellipse(0,-s*.15,s*.1,s*.14,0,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=bodyG;ctx.fill();ctx.strokeStyle="rgba(206,17,38,.7)";ctx.lineWidth=1.2;ctx.stroke();
+      ctx.fillStyle="#CE1126";ctx.beginPath();ctx.ellipse(0,-s*.15,s*.1,s*.14,0,0,Math.PI*2);ctx.fill();
     } else if(o.type==="missile_ship"){
       ctx.beginPath();ctx.moveTo(0,-s*.85);ctx.lineTo(s*.22,-s*.1);ctx.lineTo(s*.35,s*.55);ctx.lineTo(0,s*.35);ctx.lineTo(-s*.35,s*.55);ctx.lineTo(-s*.22,-s*.1);ctx.closePath();
-      ctx.fillStyle=bodyG;ctx.fill();ctx.strokeStyle="rgba(255,100,40,.7)";ctx.lineWidth=1.2;ctx.stroke();
-      ctx.fillStyle="#FFCD00";ctx.fillRect(-s*.08,-s*.3,s*.16,s*.5);
+      ctx.fillStyle=bodyG;ctx.fill();ctx.strokeStyle="rgba(206,17,38,.75)";ctx.lineWidth=1.2;ctx.stroke();
+      ctx.fillStyle="#CE1126";ctx.fillRect(-s*.08,-s*.3,s*.16,s*.5);
       ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(0,-s*.55,s*.08,0,Math.PI*2);ctx.fill();
     } else {
       ctx.beginPath();ctx.moveTo(0,s*.85);ctx.lineTo(s*.5,-s*.15);ctx.lineTo(s*.28,-s*.7);ctx.lineTo(-s*.28,-s*.7);ctx.lineTo(-s*.5,-s*.15);ctx.closePath();
@@ -8451,10 +8446,12 @@ function drawBullets(){
       let bounced=false;
       if(b.x<4){b.x=4;if(b.vx!=null)b.vx=Math.abs(b.vx||3);else b.vx=3*getSpeedScale();bounced=true}
       if(b.x>canvas.width-4){b.x=canvas.width-4;if(b.vx!=null)b.vx=-Math.abs(b.vx||3);else b.vx=-3*getSpeedScale();bounced=true}
+      /* Solo rebotar en el techo si el poder de rebote está activo; si no, dejan seguir hacia arriba */
       if(b.y<4){b.y=4;if(b.vy!=null)b.vy=Math.abs(b.vy||b.speed||8);else{b.vy=(b.speed||8);b.speed=0}bounced=true}
       if(bounced){b._bounces=(b._bounces||0)+1;if(b._bounces>4){bullets.splice(i,1);continue}}
     }
-    if(b.y<-120||b.y>canvas.height+40||b.x<-40||b.x>canvas.width+40){bullets.splice(i,1);continue}
+    /* Balas del jugador: recorren todo el alto hasta salir por arriba (no se pierden a mitad) */
+    if(b.y<-canvas.height*0.35||b.y>canvas.height+60||b.x<-60||b.x>canvas.width+60){bullets.splice(i,1);continue}
     for(let j=obstacles.length-1;j>=0;j--){
       const o=obstacles[j];
       if(!o||o.__techDestroyed)continue;
