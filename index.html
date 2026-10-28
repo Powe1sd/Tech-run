@@ -7,13 +7,10 @@
 <link rel="icon" href="logo-no-background (2).png" type="image/x-icon">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="icon" href="nave.png" type="image/x-icon">
-    
+<link rel="icon" href="nave.png" type="image/x-icon">   
 <button onclick="alert('Brahyan')" class="boton-foto">
   <img src="yo.jpeg" alt="Brahyan" class="foto-perfil">
 </button>
-
-
 
 <style>
 
@@ -55,6 +52,14 @@
     height: 55px;
     border-width: 2px;
   }
+}
+
+/* Foto del icono: solo en menú de inicio, nunca durante la partida */
+.tech-game.is-playing ~ .boton-foto,
+body:has(.tech-game.is-playing) .boton-foto {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 
