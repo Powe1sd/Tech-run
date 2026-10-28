@@ -5606,6 +5606,30 @@ function getSpeedScale(){
   const s=h/400;
   return Math.min(1.25,Math.max(0.85,s));
 }
+/* Margen inferior: deja visible cuerpo + estela/motor de la nave dentro del marco del juego.
+   Los meteoros, poderes y balas siguen usando todo el alto del canvas (hasta canvas.height). */
+function getPlayerBottomPad(){
+  const s=(typeof player!=="undefined"&&player&&player.size)?player.size:14;
+  const h=(canvas&&canvas.height)?canvas.height:400;
+  /* Cuerpo+alas ~1.0s, estela/motor ~1.2s, aura/escudo ~1.0s + holgura del marco */
+  return Math.max(s*5.2, 78) + Math.max(18, Math.floor(h*0.02));
+}
+function getPlayerTopPad(){
+  const s=(typeof player!=="undefined"&&player&&player.size)?player.size:14;
+  return Math.max(s*2.0, 28);
+}
+function clampPlayerToArena(){
+  if(typeof player==="undefined"||!player||!canvas)return;
+  const m=Math.max(player.size||12, 8);
+  const top=getPlayerTopPad();
+  const bot=getPlayerBottomPad();
+  player.x=Math.max(m, Math.min(canvas.width-m, player.x));
+  player.y=Math.max(top, Math.min(canvas.height-bot, player.y));
+  if(typeof mouse!=="undefined"&&mouse){
+    mouse.x=Math.max(m, Math.min(canvas.width-m, mouse.x));
+    mouse.y=Math.max(top, Math.min(canvas.height-bot, mouse.y));
+  }
+}
 function resizeCanvas(){
   const r=canvas.getBoundingClientRect();
   const cssW=Math.max(1,Math.floor(r.width));
@@ -5666,12 +5690,15 @@ let canvasShootId=null, fireTouchId=null;
 function setAimFromTouch(t){
   const r=canvas.getBoundingClientRect();
   const scaleX=canvas.width/Math.max(1,r.width), scaleY=canvas.height/Math.max(1,r.height);
-  mouse.x=(t.clientX-r.left)*scaleX;
+  const m=Math.max(player.size||12,8);
+  mouse.x=Math.max(m, Math.min(canvas.width-m, (t.clientX-r.left)*scaleX));
   /* Nave por encima del dedo para que no la tape */
   const fingerY=(t.clientY-r.top)*scaleY;
   /* ~2.5–3 cm por encima del dedo para que no tape la nave */
   const offset=Math.max(110, player.size*4.5 + canvas.height*0.06);
-  mouse.y=fingerY-offset;
+  const top=getPlayerTopPad();
+  const bot=getPlayerBottomPad();
+  mouse.y=Math.max(top, Math.min(canvas.height-bot, fingerY-offset));
 }
 canvas.addEventListener("touchstart",e=>{
   try{
@@ -5729,10 +5756,11 @@ canvas.addEventListener("touchcancel",e=>{canvasShootId=null;if(fireTouchId===nu
     let v=(clientY-r.top)/Math.max(1,r.height);
     if(u<0)u=0;if(u>1)u=1;if(v<0)v=0;if(v>1)v=1;
     const m=player.size*1.2;
-    const bottomPad=Math.max(player.size*4.2,56);
+    const topPad=getPlayerTopPad();
+    const bottomPad=getPlayerBottomPad();
     mouse.x=m+u*(canvas.width-m*2);
-    /* Y: deja margen inferior para que la nave no se oculte */
-    mouse.y=m*2.0+v*(canvas.height-bottomPad-m*2.0);
+    /* Y: margen superior e inferior para ver la nave completa (cuerpo + estela) */
+    mouse.y=topPad+v*Math.max(1, canvas.height-bottomPad-topPad);
     stickActive=true;
     touchDriving=true;
   }
@@ -7318,7 +7346,7 @@ function doDash(){
   const dist=88*((typeof getScale==="function")?getScale():1);
   const ox=player.x,oy=player.y;
   player.x=Math.max(player.size,Math.min(canvas.width-player.size,player.x+dx*dist));
-  player.y=Math.max(player.size*2.0,Math.min(canvas.height-player.size*4.2,player.y+dy*dist));
+  player.y=Math.max(getPlayerTopPad(),Math.min(canvas.height-getPlayerBottomPad(),player.y+dy*dist));
   mouse.x=player.x;mouse.y=player.y;
   dashCd=90; /* 1.5s cooldown */
   dashInvuln=28; /* invulnerable breve */
@@ -9474,7 +9502,7 @@ const smooth=_ps3Slow?0.12:Math.min(0.82,baseSmooth*Math.max(1,Math.min(1.6,(sti
 const _psb=(typeof playerSpeedBonus==='function')?playerSpeedBonus():1;player.x+=(mouse.x-player.x)*smooth*_psb;player.y+=(mouse.y-player.y)*smooth*_psb;
 /* Solo al SOLTAR (ni mover ni disparar): retrocede */
 if(!controlling){
-  const bottomPad=Math.max(player.size*4.2,56);
+  const bottomPad=getPlayerBottomPad();
   const room=Math.max(0,(canvas.height-bottomPad)-player.y);
   const drift=1.35*getSpeedScale()*(overdrive>0?1.4:1);
   /* No empujar la nave fuera del margen inferior visible */
@@ -9486,9 +9514,8 @@ if(!controlling){
 }
 if(stickActive)applyGravity(player,player.x,player.y,0.08);
 else applyGravity(player,player.x,player.y,0.35);
-const m=player.size;const bottomPad=Math.max(m*4.2,56);player.x=Math.max(m,Math.min(canvas.width-m,player.x));player.y=Math.max(m*2.0,Math.min(canvas.height-bottomPad,player.y));
-/* Al soltar el control, la nave nunca puede quedar parcialmente fuera del cuadro. */
-mouse.y=Math.max(m*2.0,Math.min(canvas.height-bottomPad,mouse.y));
+/* Nave siempre entera dentro del marco; meteoros/poderes/balas usan todo el canvas */
+clampPlayerToArena();
 
 // spawn meteors by level
 if(phase==="meteors"){
@@ -9702,7 +9729,7 @@ keys.up=keys.down=keys.left=keys.right=false;
 if(scoreElement)scoreElement.textContent="0";
 record=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;if(recordElement)recordElement.textContent=record;
 updateLivesUI();
-player.x=canvas.width/2;player.y=Math.min(canvas.height*0.50,canvas.height-player.size*4.2);mouse.x=player.x;mouse.y=player.y;gameRunning=true;
+player.x=canvas.width/2;player.y=Math.min(canvas.height*0.50,canvas.height-getPlayerBottomPad());mouse.x=player.x;mouse.y=player.y;gameRunning=true;
 combo=0;comboTimer=0;comboMult=1;feverMode=0;feverAnnounced=false;supplyCrates=[];lastSupplyDrop=performance.now();damageFlash=0;introTimer=36;screenShake=0;hitSparks=[];
 const rec=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;
 ammo=100+(rec>=30?20:0)+Math.min(50,(upgAmmo||0)*12);lives=1+(rec>=60?1:0)+Math.min(2,upgLives||0);updateLivesUI();
@@ -14951,5 +14978,22 @@ create policy "visitas_update_all" on public.visitas_tech_run for update to anon
   #gameOverPanel, #pausePanel { max-height: 88% !important; }
 }
 /* Evita que el arte de la nave y su estela queden recortados por abajo. */
-#gameCanvas { display:block; }
+#gameCanvas {
+  display:block !important;
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:100% !important;
+  max-height:100% !important;
+  box-sizing:border-box !important;
+}
+.tech-game {
+  overflow:hidden !important;
+  isolation:isolate;
+}
+/* El área jugable ocupa todo el marco; no recortar el borde inferior del canvas */
+.tech-game.is-playing #gameCanvas {
+  clip-path: none !important;
+}
 </style>
