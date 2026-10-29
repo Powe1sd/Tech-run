@@ -12444,7 +12444,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
       if(st0){st0.textContent='🌐 Sin key de Supabase';st0.style.color='#f88';}
       return null;
     }
-    var sc = Math.max(0, Math.min(32767, Math.floor(Number(entry && entry.score) || 0)));
+    var sc = Math.max(0, Math.min(999999999, Math.floor(Number(entry && entry.score) || 0)));
     var tipo = (entry && entry.shipType) ? String(entry.shipType) : (typeof window.techShipTypeLabel==='function' ? window.techShipTypeLabel() : '');
     var nick = String((entry && entry.ship) || '').trim().slice(0, 10);
     var st = document.getElementById('onlineRankStatus');
@@ -12492,22 +12492,35 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
         }
         var patchUrl = new URL(SUPABASE_REST + '/' + TABLE);
         patchUrl.searchParams.set('id','eq.'+same.id);
+        var writeH = Object.assign({}, headers(), {'Content-Type':'application/json','Prefer':'return=representation'});
+        try{
+          var tok = (window.techAuthAccessToken && String(window.techAuthAccessToken)) || '';
+          if(!tok){ var ss=JSON.parse(localStorage.getItem('techRunAuthSessionV1')||'null'); if(ss&&ss.access_token) tok=String(ss.access_token); }
+          if(tok) writeH['Authorization'] = 'Bearer ' + tok;
+        }catch(e){}
         var patchRes = await fetch(patchUrl.toString(), {
           method:'PATCH',
-          headers:Object.assign({}, headers(), {'Content-Type':'application/json','Prefer':'return=representation'}),
+          headers:writeH,
           body:JSON.stringify({record:sc, 'nombre-nave':nave})
         });
         var patchText = await patchRes.text();
         var patchData=null; try{patchData=patchText?JSON.parse(patchText):null}catch(e){patchData=patchText}
         if(!patchRes.ok) throw new Error((patchData && (patchData.message||patchData.error)) || ('HTTP '+patchRes.status));
         if(st){st.textContent='🏆 Récord actualizado: '+nave+' — '+sc+' pts. Una sola fila en el ranking.';st.style.color='#6f6';}
+        try{if(window.techInvalidateOnlineRankCache)window.techInvalidateOnlineRankCache();}catch(e){}
         return patchData;
       }
       var body = { record: sc };
       body['nombre-nave'] = nave;
+      var writeH2 = Object.assign({}, headers(), { 'Content-Type': 'application/json', 'Prefer': 'return=representation' });
+      try{
+        var tok2 = (window.techAuthAccessToken && String(window.techAuthAccessToken)) || '';
+        if(!tok2){ var ss2=JSON.parse(localStorage.getItem('techRunAuthSessionV1')||'null'); if(ss2&&ss2.access_token) tok2=String(ss2.access_token); }
+        if(tok2) writeH2['Authorization'] = 'Bearer ' + tok2;
+      }catch(e){}
       var res = await fetch(SUPABASE_REST + '/' + TABLE, {
         method: 'POST',
-        headers: Object.assign({}, headers(), { 'Content-Type': 'application/json', 'Prefer': 'return=representation' }),
+        headers: writeH2,
         body: JSON.stringify(body)
       });
       var text = await res.text();
@@ -12520,6 +12533,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
         return null;
       }
       if(st){ st.textContent = '🌐 Ranking online: ¡'+nave+' — '+sc+' pts subido!'; st.style.color='#6f6'; }
+      try{if(window.techInvalidateOnlineRankCache)window.techInvalidateOnlineRankCache();}catch(e){}
       return data;
     }catch(err){
       console.error('[Ranking] Red', err);
@@ -12530,27 +12544,30 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
   };
 
   window.techFetchOnlineTop = async function(limit){
-    /* Sin límite: descarga TODOS los registros por páginas para superar el límite
-       de filas que Supabase devuelve en una sola petición. Con limit explícito,
-       conserva el comportamiento de los TOP locales (por ejemplo TOP 5/15). */
+    /* Siempre ordena de MAYOR a MENOR (record desc).
+       Sin filtro gte.30 en la API para que coincida con lo que hay en Supabase.
+       Pagina hasta traer todos (o el límite pedido). Cache-bust evita datos viejos. */
     const requestedLimit = (limit == null || limit === '') ? Infinity : Math.max(1, Math.floor(Number(limit) || 1));
     if(!hasKey()) throw new Error('Falta publishable key válida');
     const pageSize = 1000;
     const allRows = [];
     let offset = 0;
+    const bust = Date.now();
     while(allRows.length < requestedLimit){
       const take = Math.min(pageSize, requestedLimit - allRows.length);
       const url = SUPABASE_REST + '/' + TABLE
         + '?select=id,created_at,record,nombre-nave'
-        + '&record=gte.30'
-        + '&order=record.' + (requestedLimit === Infinity ? 'asc' : 'desc') + '.nullslast'
+        + '&order=record.desc.nullslast'
         + '&limit=' + take
-        + '&offset=' + offset;
+        + '&offset=' + offset
+        + '&_=' + bust;
       const pageHeaders = Object.assign({}, headers(), {
         'Range-Unit': 'items',
-        'Range': offset + '-' + (offset + take - 1)
+        'Range': offset + '-' + (offset + take - 1),
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
       });
-      const res = await fetch(url, { method: 'GET', headers: pageHeaders });
+      const res = await fetch(url, { method: 'GET', headers: pageHeaders, cache: 'no-store' });
       const text = await res.text();
       let data;
       try{ data = text ? JSON.parse(text) : []; }catch(e){ data = []; }
@@ -12562,10 +12579,28 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
       allRows.push(...data);
       if(data.length < take) break;
       offset += data.length;
+      if(offset > 50000) break;
     }
-    // La API se consulta desde 30 puntos hacia arriba; ordenar aquí garantiza el TOP descendente.
-    allRows.sort(function(a,b){ return (Number(b.record)||0) - (Number(a.record)||0); });
+    allRows.sort(function(a,b){
+      const diff = (Number(b.record)||0) - (Number(a.record)||0);
+      if(diff !== 0) return diff;
+      const tb = Date.parse(b.created_at||0)||0;
+      const ta = Date.parse(a.created_at||0)||0;
+      return tb - ta;
+    });
     return requestedLimit === Infinity ? allRows : allRows.slice(0, requestedLimit);
+  };
+
+  window.techInvalidateOnlineRankCache = function(){
+    try{
+      if(typeof window.__techOnlineRankForceRefresh === 'function') window.__techOnlineRankForceRefresh();
+    }catch(e){}
+    try{
+      const p = document.getElementById('onlineRankingPanel');
+      if(p && p.style.display !== 'none' && typeof window.__techOnlineRankReloadList === 'function'){
+        window.__techOnlineRankReloadList();
+      }
+    }catch(e){}
   };
 
   function ensurePanel(){
@@ -12607,14 +12642,17 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     try{
       const fetchedRows = await window.techFetchOnlineTop();
       const seenUsers = new Set();
-      const rows = fetchedRows.filter(function(r){
+      const rows = [];
+      (fetchedRows||[]).forEach(function(r){
         const sc = Number(r.record != null ? r.record : 0) || 0;
-        if(sc < 30) return false;
         const raw = r['nombre-nave'] != null ? r['nombre-nave'] : (r.nombre_nave != null ? r.nombre_nave : '');
         const user = String(raw).split(' · ')[0].trim().toLocaleLowerCase();
-        if(!user || seenUsers.has(user)) return false;
-        seenUsers.add(user); return true;
+        if(!user) return;
+        if(seenUsers.has(user)) return;
+        seenUsers.add(user);
+        rows.push(r);
       });
+      rows.sort(function(a,b){ return (Number(b.record)||0) - (Number(a.record)||0); });
       if(!rows.length){
         box.innerHTML = '<p style="color:#fa8"><b>0 filas visibles con la API pública.</b></p>'
           + '<p style="color:#9ab;font-size:11px;margin-top:8px">En Table Editor sí hay datos, pero <b>RLS</b> los oculta.<br>'
@@ -12664,6 +12702,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
       btn.__onlineBound = true;
     }
   }
+  window.__techOnlineRankReloadList = loadList;
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
   else wire();
   setInterval(wire, 2000);
@@ -12677,7 +12716,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
   /* Ranking flotante estilo Slither.io sobre el mapa (modo 🌐 Online) */
   var cache = [];
   var lastFetch = 0;
-  var fetchEvery = 12000; /* ms */
+  var fetchEvery = 5000; /* ms: refresco más frecuente para coincidir con Supabase */
   var fetching = false;
   var lastError = '';
   var myGhost = null; /* {name, score} del jugador local en partida */
@@ -12707,21 +12746,19 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     if(typeof window.techFetchOnlineTop!=='function') return;
     fetching = true;
     try{
-      var rows = await window.techFetchOnlineTop(15);
+      var rows = await window.techFetchOnlineTop(50);
       var seenUsers = new Set();
-      cache = (rows||[]).filter(function(r){
+      cache = [];
+      (rows||[]).forEach(function(r,i){
         var sc = Number(r.record!=null?r.record:0)||0;
-        if(sc < 30) return false;
         var raw = r['nombre-nave']!=null?r['nombre-nave']:(r.nombre_nave!=null?r.nombre_nave:null);
         var user = String(raw||'').split(' · ')[0].trim().toLocaleLowerCase();
-        if(!user || seenUsers.has(user)) return false;
-        seenUsers.add(user); return true;
-      }).map(function(r,i){
-        var sc = Number(r.record!=null?r.record:0)||0;
-        var raw = r['nombre-nave']!=null?r['nombre-nave']:(r.nombre_nave!=null?r.nombre_nave:null);
+        if(!user || seenUsers.has(user)) return;
+        seenUsers.add(user);
         var name = (raw!=null&&String(raw).trim()!=='')?String(raw):('Jugador '+(i+1));
-        return {name:name, score:sc, id:r.id};
+        cache.push({name:name, score:sc, id:r.id});
       });
+      cache.sort(function(a,b){ return b.score - a.score; });
       lastError = '';
       lastFetch = Date.now();
     }catch(err){
@@ -12735,6 +12772,11 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     if(!onlineActive()) return;
     if(Date.now()-lastFetch > fetchEvery) refresh();
   }
+
+  window.__techOnlineRankForceRefresh = function(){
+    lastFetch = 0;
+    refresh();
+  };
 
   function buildBoard(){
     var meSc = myScore();
