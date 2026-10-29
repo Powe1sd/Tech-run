@@ -16050,6 +16050,302 @@ body.tech-playing .game-top {
 })();
 </script>
 
+
+<style id="tech-ui-pro-v1">
+/* ===== TECH RUN — interfaz pro / elegante / futurista ===== */
+:root{
+  --tr-gold:#FFCD00;
+  --tr-cyan:#5de5ff;
+  --tr-blue:#0a7cff;
+  --tr-red:#CE1126;
+  --tr-panel:rgba(6,12,28,.92);
+  --tr-panel-2:rgba(10,22,48,.88);
+  --tr-line:rgba(93,229,255,.28);
+  --tr-line-gold:rgba(255,205,0,.35);
+  --tr-text:#e8f1ff;
+  --tr-muted:#8fa3bd;
+  --tr-radius:16px;
+  --tr-font-display:'Orbitron',system-ui,sans-serif;
+  --tr-font-mono:'Share Tech Mono',ui-monospace,monospace;
+}
+
+/* Contenedor del juego */
+.tech-game-section{
+  max-width:1180px !important;
+  margin-left:auto !important;
+  margin-right:auto !important;
+}
+.tech-game{
+  border:1px solid rgba(93,229,255,.22) !important;
+  box-shadow:
+    0 0 0 1px rgba(255,205,0,.08),
+    0 20px 50px rgba(0,0,0,.55),
+    inset 0 1px 0 rgba(255,255,255,.04) !important;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,120,255,.18), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, rgba(206,17,38,.08), transparent 50%),
+    #030712 !important;
+  border-radius:18px !important;
+}
+
+/* HUD superior */
+.game-top{
+  background:linear-gradient(180deg, rgba(4,10,24,.72), rgba(4,10,24,0)) !important;
+  border:none !important;
+  padding:8px 10px 16px !important;
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+.game-title{
+  font-family:var(--tr-font-display) !important;
+  letter-spacing:2.5px !important;
+  color:#fff !important;
+  text-shadow:0 0 18px rgba(93,229,255,.35) !important;
+}
+.game-title small{
+  color:var(--tr-muted) !important;
+  letter-spacing:1.5px !important;
+  font-weight:500 !important;
+}
+.hud-stat{
+  background:rgba(8,16,36,.55) !important;
+  border:1px solid rgba(93,229,255,.18) !important;
+  border-radius:12px !important;
+  padding:6px 10px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+.hud-stat strong{
+  color:#fff !important;
+  font-family:var(--tr-font-display) !important;
+}
+.hud-label{ color:var(--tr-muted) !important; letter-spacing:.8px !important; }
+
+/* Paneles (inicio, pausa, game over, etc.) */
+.game-panel,
+#startPanel,
+#gameOverPanel,
+#configPanel,
+#pausePanel{
+  background:
+    linear-gradient(155deg, rgba(12,24,52,.94) 0%, rgba(5,10,24,.96) 55%, rgba(8,14,30,.97) 100%) !important;
+  border:1px solid var(--tr-line) !important;
+  border-radius:20px !important;
+  box-shadow:
+    0 0 0 1px rgba(255,205,0,.1),
+    0 24px 60px rgba(0,0,0,.6),
+    inset 0 1px 0 rgba(255,255,255,.06) !important;
+  backdrop-filter:blur(14px) !important;
+  -webkit-backdrop-filter:blur(14px) !important;
+  color:var(--tr-text) !important;
+}
+.game-panel h2,
+#startPanel h2{
+  font-family:var(--tr-font-display) !important;
+  color:#fff !important;
+  letter-spacing:2px !important;
+  text-shadow:0 0 24px rgba(93,229,255,.25) !important;
+  border-bottom:1px solid rgba(93,229,255,.12);
+  padding-bottom:10px;
+  margin-bottom:14px !important;
+}
+.game-panel h3,
+#startExtras h3{
+  font-family:var(--tr-font-display) !important;
+  color:var(--tr-gold) !important;
+  font-size:12px !important;
+  letter-spacing:1.2px !important;
+  border-bottom:1px solid rgba(255,205,0,.18) !important;
+  padding-bottom:7px !important;
+  margin:16px 0 10px !important;
+  text-transform:uppercase !important;
+}
+.game-panel p,
+.game-panel small,
+#startPanel small{
+  color:var(--tr-muted) !important;
+  font-family:var(--tr-font-mono) !important;
+}
+
+/* Botones */
+.game-btn,
+#startGame,
+#openTechAccount,
+#techStickyStartBtn,
+button.game-btn{
+  font-family:var(--tr-font-display) !important;
+  letter-spacing:.6px !important;
+  border-radius:12px !important;
+  border:1px solid rgba(255,255,255,.2) !important;
+  background:linear-gradient(160deg, rgba(20,48,96,.95), rgba(8,22,52,.95)) !important;
+  color:#fff !important;
+  box-shadow:
+    0 4px 14px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.1) !important;
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease, filter .15s ease !important;
+}
+.game-btn:hover,
+#startGame:hover,
+#openTechAccount:hover{
+  border-color:rgba(93,229,255,.55) !important;
+  box-shadow:0 6px 20px rgba(0,120,255,.25), inset 0 1px 0 rgba(255,255,255,.14) !important;
+  filter:brightness(1.06);
+}
+.game-btn:active{ transform:scale(.98) !important; }
+.game-btn-blue,
+#btnLoadSave,
+#techStickyStartBtn{
+  background:linear-gradient(160deg, #0a6ad4, #004a9a) !important;
+  border-color:rgba(93,229,255,.45) !important;
+}
+#startGame{
+  background:linear-gradient(160deg, #12b5e8, #0a6ad4 45%, #003f8a) !important;
+  border-color:rgba(160,230,255,.4) !important;
+  font-weight:800 !important;
+}
+.diff-btns button{
+  font-family:var(--tr-font-mono) !important;
+  border-radius:10px !important;
+  border:1px solid rgba(93,229,255,.2) !important;
+  background:rgba(10,22,48,.75) !important;
+  color:var(--tr-text) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+  transition:border-color .15s, background .15s, color .15s !important;
+}
+.diff-btns button.active,
+.diff-btns button:hover{
+  border-color:rgba(255,205,0,.55) !important;
+  background:linear-gradient(160deg, rgba(255,205,0,.18), rgba(0,80,160,.25)) !important;
+  color:#fff !important;
+  box-shadow:0 0 12px rgba(255,205,0,.15) !important;
+}
+
+/* Inputs */
+.game-panel input,
+.game-panel select,
+#startExtras input,
+#startExtras select,
+#configPanel input,
+#configPanel select{
+  background:rgba(4,12,28,.9) !important;
+  border:1px solid rgba(93,229,255,.22) !important;
+  border-radius:10px !important;
+  color:#fff !important;
+  font-family:var(--tr-font-mono) !important;
+}
+.game-panel input:focus,
+.game-panel select:focus{
+  outline:none !important;
+  border-color:rgba(255,205,0,.55) !important;
+  box-shadow:0 0 0 2px rgba(255,205,0,.12) !important;
+}
+
+/* Estadísticas */
+#techStatisticsPanel{
+  background:
+    radial-gradient(circle at top right, rgba(0,140,220,.2), transparent 40%),
+    linear-gradient(150deg, rgba(6,14,32,.98), rgba(8,18,40,.98)) !important;
+  border:1px solid rgba(93,229,255,.35) !important;
+  border-radius:20px !important;
+  box-shadow:0 24px 60px rgba(0,0,0,.55) !important;
+}
+.tech-stat-card{
+  background:rgba(10,24,52,.8) !important;
+  border:1px solid rgba(93,229,255,.16) !important;
+  border-radius:14px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+.tech-stat-card strong{ color:#fff !important; }
+.tech-stat-section{
+  border:1px solid rgba(93,229,255,.14) !important;
+  border-radius:14px !important;
+  background:rgba(6,16,36,.55) !important;
+}
+.tech-stat-action,
+.tech-stat-close{
+  border-radius:10px !important;
+  border:1px solid rgba(93,229,255,.3) !important;
+  background:rgba(12,28,56,.9) !important;
+  color:#fff !important;
+}
+
+/* Ranking online panel */
+#onlineRankingPanel{
+  background:linear-gradient(155deg, rgba(8,28,40,.96), rgba(5,12,24,.97)) !important;
+  border:1px solid rgba(93,255,176,.28) !important;
+  border-radius:20px !important;
+}
+
+/* Auth modal */
+#techAuthModal .ta-card,
+.ta-card{
+  border-radius:18px !important;
+  border:1px solid rgba(93,229,255,.3) !important;
+  box-shadow:0 20px 50px rgba(0,0,0,.55) !important;
+}
+
+/* Touch controls — más limpios */
+.touch-move-pad,
+.touch-fire,
+.touch-util,
+.touch-special{
+  box-shadow:0 6px 18px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.12) !important;
+  border-width:1.5px !important;
+}
+.touch-fire{
+  background:radial-gradient(circle at 35% 30%, #ff6b7a, #CE1126 58%, #6a0010) !important;
+  border-color:rgba(255,205,0,.4) !important;
+}
+
+/* Bolita atrás */
+#techBackOrb{
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.4),
+    0 0 18px rgba(255,205,0,.55),
+    0 8px 20px rgba(0,0,0,.45) !important;
+}
+
+/* Sticky iniciar */
+#techStickyStartBtn{
+  border-radius:999px !important;
+  letter-spacing:1px !important;
+  box-shadow:0 8px 24px rgba(0,80,180,.45), 0 0 16px rgba(93,229,255,.25) !important;
+}
+
+/* Scrollbars elegantes */
+.game-panel::-webkit-scrollbar,
+#startPanel::-webkit-scrollbar,
+#techStatisticsPanel::-webkit-scrollbar{
+  width:5px !important;
+}
+.game-panel::-webkit-scrollbar-thumb,
+#startPanel::-webkit-scrollbar-thumb,
+#techStatisticsPanel::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg, var(--tr-cyan), var(--tr-gold)) !important;
+  border-radius:8px !important;
+}
+
+/* Móvil: menos blur (rendimiento) */
+@media (max-width:1100px), (pointer:coarse){
+  .game-panel,
+  #startPanel,
+  #gameOverPanel,
+  #configPanel,
+  #pausePanel,
+  .game-top{
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+  .tech-game{
+    box-shadow:0 12px 32px rgba(0,0,0,.5) !important;
+  }
+}
+
+/* Partida: HUD más discreto */
+body.tech-playing .game-top{
+  background:linear-gradient(180deg, rgba(0,0,0,.35), transparent) !important;
+}
+</style>
+
 </body>
 </html>
 <style id="tech-run-desktop-large-final">
