@@ -5642,12 +5642,25 @@ function clampPlayerToArena(){
     mouse.y=Math.max(top, Math.min(canvas.height-bot, mouse.y));
   }
 }
-function resizeCanvas(){
+let _lastCanvasCssW=0,_lastCanvasCssH=0,_resizeLockUntil=0;
+function resizeCanvas(force){
+  if(!canvas) return;
+  const now=performance.now();
+  /* Durante partida en móvil: no redimensionar por la barra del navegador (evita que el mapa "salte") */
+  const mobile=isMobile();
+  if(!force && mobile && typeof gameRunning!=='undefined' && gameRunning && now<_resizeLockUntil){
+    return;
+  }
   const r=canvas.getBoundingClientRect();
   const cssW=Math.max(1,Math.floor(r.width));
   const cssH=Math.max(1,Math.floor(r.height));
-  /* HD real: buffer = CSS × devicePixelRatio (nunca por debajo de 1×) */
-  const mobile=isMobile();
+  /* Ignorar cambios mínimos (<3%) en móvil para que el mapa no se mueva */
+  if(!force && mobile && _lastCanvasCssW>0){
+    const dw=Math.abs(cssW-_lastCanvasCssW)/_lastCanvasCssW;
+    const dh=Math.abs(cssH-_lastCanvasCssH)/Math.max(1,_lastCanvasCssH);
+    if(dw<0.03 && dh<0.03) return;
+    if(typeof gameRunning!=='undefined' && gameRunning && dw<0.08 && dh<0.08) return;
+  }
   let dpr=window.devicePixelRatio||1;
   if(mobile){
     dpr=1;
@@ -5660,21 +5673,32 @@ function resizeCanvas(){
     canvas.width=w;
     canvas.height=h;
   }
-  /* CSS exacto → el navegador no reescala con blur */
   canvas.style.width=cssW+"px";
   canvas.style.height=cssH+"px";
+  _lastCanvasCssW=cssW; _lastCanvasCssH=cssH;
   try{
-    /* En bajo consumo: menos calidad de suavizado = más FPS */
-    ctx.imageSmoothingEnabled=true;
-    ctx.imageSmoothingQuality=(typeof lowPower!=="undefined"&&lowPower)?"low":"high";
+    ctx.imageSmoothingEnabled=!mobile;
+    if(!mobile) ctx.imageSmoothingQuality=(typeof lowPower!=="undefined"&&lowPower)?"low":"high";
   }catch(e){}
-  /* Tamaño de nave según distancia de pantalla (cerca / estándar / lejos) */
   const baseShip=12.1*((typeof getViewMult==="function")?getViewMult():1);
   player.size=Math.max(9,Math.min(22,baseShip*Math.min(1.15,(canvas.clientWidth||400)/400*((canvas.clientWidth>0)?(canvas.width/canvas.clientWidth):1))));
   if(!gameRunning){player.x=canvas.width/2;player.y=canvas.height/2;mouse.x=player.x;mouse.y=player.y}
-  initStars()
+  else { try{ clampPlayerToArena(); }catch(e){} }
+  if(!mobile || !gameRunning) initStars();
 }
-window.addEventListener("resize",resizeCanvas);resizeCanvas();
+function _onResizeDebounced(){
+  try{
+    if(typeof isMobile==='function'&&isMobile()&&typeof gameRunning!=='undefined'&&gameRunning){
+      _resizeLockUntil=performance.now()+900;
+      return; /* no mover el mapa en plena partida */
+    }
+  }catch(e){}
+  clearTimeout(window.__techResizeT);
+  window.__techResizeT=setTimeout(function(){ try{ resizeCanvas(); }catch(e){} }, 120);
+}
+window.addEventListener("resize",_onResizeDebounced,{passive:true});
+try{ window.visualViewport && window.visualViewport.addEventListener("resize",_onResizeDebounced,{passive:true}); }catch(e){}
+resizeCanvas(true);
 
 canvas.addEventListener("mousemove",e=>{
   const r=canvas.getBoundingClientRect();
@@ -6404,7 +6428,7 @@ function enemyShoot(o){
   }
 }
 
-function triggerShake(amt){if(typeof isMobile==="function"&&isMobile())return;screenShake=Math.max(screenShake,amt||8)}
+function triggerShake(amt){ /* desactivado: el mapa no se mueve */ screenShake=0; }
 function addHitSpark(x,y,col){
   if(isMobile())return; /* chispas solo PC: menos carga */
   if(hitSparks.length>16)return;
@@ -9539,12 +9563,9 @@ try{
   ctx.imageSmoothingEnabled=false;
   if(!_isMobLoop){ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality=(typeof lowPower!=="undefined"&&lowPower)?"low":"medium"}
 }catch(e){}
-/* Temblor solo en PC (en móvil cuesta FPS y mareo) */
-if(screenShake>0&&!_isMobLoop){
-  const sx=(Math.random()-.5)*screenShake, sy=(Math.random()-.5)*screenShake;
-  ctx.save();ctx.translate(sx,sy);
-  screenShake*=0.82;if(screenShake<0.4)screenShake=0;
-} else { screenShake=0; ctx.save(); }
+/* Sin temblor de cámara: el mapa se queda fijo (también en PC reduce mareo) */
+screenShake=0;
+ctx.save();
 drawSpaceBG();
 /* mob-no-shadow: las GPUs móviles odian shadowBlur */
 if(_isMobLoop||(typeof lowPower!=="undefined"&&lowPower)){try{ctx.shadowBlur=0;ctx.shadowColor="transparent"}catch(e){}}
@@ -15959,6 +15980,68 @@ create policy "visitas_update_all" on public.visitas_tech_run for update to anon
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bind);
   else bind();
+})();
+</script>
+
+
+<style id="tech-map-lock-perf">
+/* Mapa fijo y más fluido en móvil */
+html.tech-playing, body.tech-playing {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+  height: 100% !important;
+  position: relative !important;
+}
+body.tech-playing .tech-game-section {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  max-height: 100dvh !important;
+}
+body.tech-playing .tech-game {
+  position: relative !important;
+  transform: none !important;
+  overflow: hidden !important;
+  contain: strict !important;
+  touch-action: none !important;
+}
+body.tech-playing #gameCanvas {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform: translateZ(0) !important;
+  -webkit-transform: translateZ(0) !important;
+  touch-action: none !important;
+  image-rendering: auto !important;
+}
+body.tech-playing .game-top {
+  transform: none !important;
+}
+@media (max-width:1100px), (pointer:coarse) {
+  body.tech-playing .tech-game {
+    height: min(78dvh, 640px) !important;
+    min-height: 360px !important;
+    border-radius: 14px !important;
+  }
+}
+</style>
+<script id="tech-map-lock-js">
+(function(){
+  function syncPlayingClass(){
+    try{
+      var playing=!!(typeof gameRunning!=='undefined'&&gameRunning&&!(typeof gamePaused!=='undefined'&&gamePaused));
+      document.documentElement.classList.toggle('tech-playing', playing);
+      document.body.classList.toggle('tech-playing', playing);
+      document.body.classList.toggle('game-active', playing);
+      if(playing){
+        try{ screenShake=0; }catch(e){}
+      }
+    }catch(e){}
+  }
+  setInterval(syncPlayingClass, 400);
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', syncPlayingClass);
+  else syncPlayingClass();
 })();
 </script>
 
