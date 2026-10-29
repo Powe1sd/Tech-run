@@ -12657,7 +12657,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
           + '</pre>';
         return;
       }
-      box.innerHTML = '<p style="color:#9ab;font-size:11px;margin:0 0 8px;text-align:center">'+rows.length+' registro'+(rows.length===1?'':'s')+' · mayor a menor</p>'
+      box.innerHTML = '<p style="color:#9ab;font-size:11px;margin:0 0 8px;text-align:center">Ranking</p>'
         + rows.map(function(r, i){
         const sc = Number(r.record != null ? r.record : 0) || 0;
         const rawNave = r['nombre-nave'] != null ? r['nombre-nave'] : (r.nombre_nave != null ? r.nombre_nave : null);
