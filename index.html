@@ -5349,11 +5349,9 @@ if(startPanel&&!document.getElementById("startExtras")){
     <h3>TOP: ${rank}</h3>
     <p style="font-size:9px;opacity:.8">${ach}</p>
     <p style="color:#888;font-size:10px;margin:8px 0 4px">Ajustes en ⚙ Config (arriba a la izquierda).</p>
-    <div id="guestDataNotice" style="margin:10px 0 6px;padding:12px;border:1px solid ${loggedForNotice?'rgba(93,255,176,.4)':'rgba(255,205,0,.55)'};border-radius:12px;background:${loggedForNotice?'rgba(0,90,55,.2)':'rgba(80,55,0,.22)'};text-align:center;line-height:1.5;font-family:Arial,sans-serif">
-      ${loggedForNotice
-        ? '<strong style="display:block;color:#5dffb0;font-size:12px;margin-bottom:4px">✅ Sesión iniciada</strong><span style="display:block;font-size:11px;color:#e5f5ff">Tu progreso está vinculado a tu cuenta.</span><button type="button" id="guestAccountCta" class="game-btn" style="margin-top:9px;padding:8px 12px;width:100%;border-color:#ff5268;color:#fff;background:linear-gradient(135deg,#7b1020,#ce1126)">🚪 Salir</button>'
-        : '<strong style="display:block;color:#ffda55;font-size:12px;margin-bottom:4px">👤 Estás jugando como invitado</strong><span style="display:block;font-size:11px;color:#fff">Tus datos no se guardan de forma permanente. Inicia sesión para vincular tu progreso a tu cuenta.</span><button type="button" id="guestAccountCta" class="game-btn" style="margin-top:9px;padding:8px 12px;width:100%;border-color:#5de5ff;color:#fff;background:linear-gradient(135deg,#142b52,#087c9d)">🔐 Iniciar sesión / Crear cuenta</button>'}
-    </div>
+        ${loggedForNotice ? `<div id="guestDataNotice" style="margin:10px 0 6px;padding:12px;border:1px solid rgba(93,255,176,.4);border-radius:12px;background:rgba(0,90,55,.2);text-align:center;line-height:1.5;font-family:Arial,sans-serif">
+      <button type="button" id="guestAccountCta" class="game-btn" style="margin:0;padding:10px 12px;width:100%;border-color:#ff5268;color:#fff;background:linear-gradient(135deg,#7b1020,#ce1126)">🚪 Salir</button>
+    </div>` : `<div id="guestDataNotice" style="display:none"></div>`}
     <button class="game-btn game-btn-blue" id="btnLoadSave" style="margin-top:6px;width:100%;padding:8px">💾 Continuar partida</button>
     `;
     box.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{difficulty=b.getAttribute("data-d");lsSet("techDiff",difficulty);renderStart()});
