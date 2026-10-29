@@ -5481,6 +5481,8 @@ if(startPanel&&!document.getElementById("startExtras")){
   }
   window.techRefreshStartMenu = renderStart;
   renderStart();
+  try{ if(startPanel) startPanel.scrollTop = 0; }catch(e){}
+
   const btn=document.getElementById("startGame");
   if(btn&&btn.parentNode===startPanel){
     /* Opciones justo debajo del botón INICIAR */
@@ -14990,6 +14992,236 @@ create policy "visitas_update_all" on public.visitas_tech_run for update to anon
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initProgrammerModal);else initProgrammerModal();
 })();
 </script>
+
+<style id="tech-start-menu-layout-fix">
+/* Menú inicio: menos apeñuscado, mejor en pantallas grandes */
+#startPanel.game-panel{
+  display:flex !important;
+  flex-direction:column !important;
+  align-items:stretch !important;
+  gap:12px !important;
+  box-sizing:border-box !important;
+  overflow-x:hidden !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch;
+  text-align:center;
+}
+#startPanel > h2{
+  margin:0 0 2px !important;
+  line-height:1.15 !important;
+}
+#startPanel > small{
+  display:block !important;
+  margin:0 0 6px !important;
+  opacity:.9;
+  line-height:1.45 !important;
+}
+/* Fila principal: Iniciar + Cuenta */
+#startPanel > #startGame,
+#startPanel > #openTechAccount{
+  width:100% !important;
+  max-width:100% !important;
+  min-height:48px !important;
+  margin:0 !important;
+  box-sizing:border-box !important;
+}
+#startPanel > #startGame{
+  order:1;
+}
+#startPanel > #openTechAccount{
+  order:2;
+}
+#startPanel > #startExtras{
+  order:3;
+  margin-top:4px !important;
+  width:100% !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+  text-align:left !important;
+}
+#startExtras.extra-panel,
+#startPanel #startExtras{
+  max-height:none !important;
+  overflow:visible !important;
+  padding:4px 2px 12px !important;
+}
+#startExtras h3{
+  margin:18px 0 10px !important;
+  padding-bottom:8px !important;
+  font-size:13px !important;
+  letter-spacing:.6px !important;
+}
+#startExtras h3:first-child{ margin-top:8px !important; }
+#startExtras .diff-btns{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  justify-content:center !important;
+  gap:10px !important;
+  margin:8px 0 14px !important;
+}
+#startExtras .diff-btns button{
+  padding:11px 14px !important;
+  min-height:42px !important;
+  font-size:12px !important;
+  border-radius:12px !important;
+  flex:1 1 auto !important;
+  min-width:min(140px, 46%) !important;
+  max-width:100% !important;
+}
+#startExtras p{
+  margin:6px 0 10px !important;
+  line-height:1.5 !important;
+}
+#startExtras .game-btn{
+  width:100% !important;
+  max-width:100% !important;
+  min-height:46px !important;
+  margin:8px 0 !important;
+  padding:12px 16px !important;
+  box-sizing:border-box !important;
+}
+#startExtras #btnLoadSave{
+  min-height:52px !important;
+  font-size:15px !important;
+  margin-top:14px !important;
+  margin-bottom:10px !important;
+  border-radius:14px !important;
+}
+#startExtras #startInGameActions{
+  margin-top:16px !important;
+  padding-top:16px !important;
+}
+#startExtras #startInGameActions .game-btn{
+  min-height:48px !important;
+}
+#startExtras #guestDataNotice{
+  margin:14px 0 8px !important;
+  padding:14px !important;
+}
+#startExtras input,
+#startExtras select{
+  min-height:44px !important;
+  padding:10px 12px !important;
+  margin:6px 0 10px !important;
+  width:100% !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+
+/* Desktop / pantalla grande: más ancho y aire */
+@media (min-width: 1101px) and (pointer: fine){
+  .tech-game-section{
+    padding:12px clamp(20px,2.5vw,48px) !important;
+  }
+  .tech-game{
+    height:min(90vh, 1100px) !important;
+    min-height:640px !important;
+  }
+  #startPanel.game-panel{
+    width:min(880px, 82vw) !important;
+    max-width:82vw !important;
+    min-width:min(640px, 90vw) !important;
+    max-height:min(86vh, 900px) !important;
+    padding:32px 36px 28px !important;
+    top:50% !important;
+    gap:14px !important;
+    border-radius:24px !important;
+  }
+  /* Iniciar y Cuenta en dos columnas */
+  #startPanel{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    align-items:start !important;
+    column-gap:14px !important;
+    row-gap:12px !important;
+  }
+  #startPanel > h2,
+  #startPanel > small,
+  #startPanel > #startExtras{
+    grid-column:1 / -1 !important;
+  }
+  #startPanel > #startGame{
+    grid-column:1 / 2 !important;
+    order:unset !important;
+  }
+  #startPanel > #openTechAccount{
+    grid-column:2 / 3 !important;
+    order:unset !important;
+  }
+  #startPanel > h2{
+    font-size:clamp(28px, 2.4vw, 40px) !important;
+  }
+  #startPanel > small{
+    font-size:15px !important;
+    margin-bottom:4px !important;
+  }
+  #startPanel > #startGame,
+  #startPanel > #openTechAccount{
+    min-height:54px !important;
+    font-size:16px !important;
+    border-radius:14px !important;
+  }
+  #startExtras .diff-btns button{
+    min-width:calc(25% - 10px) !important;
+    flex:1 1 calc(25% - 10px) !important;
+    font-size:13px !important;
+    padding:12px 14px !important;
+  }
+  #startExtras h3{
+    font-size:14px !important;
+    margin:20px 0 12px !important;
+  }
+  #startExtras #btnLoadSave{
+    min-height:56px !important;
+    font-size:16px !important;
+  }
+}
+
+/* Tablet */
+@media (min-width: 701px) and (max-width: 1100px){
+  #startPanel.game-panel{
+    width:min(720px, 92vw) !important;
+    max-height:88vh !important;
+    padding:24px 22px !important;
+    gap:12px !important;
+  }
+  #startPanel{
+    display:grid !important;
+    grid-template-columns:1fr 1fr !important;
+    column-gap:12px !important;
+    row-gap:10px !important;
+  }
+  #startPanel > h2,
+  #startPanel > small,
+  #startPanel > #startExtras{ grid-column:1 / -1 !important; }
+  #startPanel > #startGame{ grid-column:1 / 2 !important; }
+  #startPanel > #openTechAccount{ grid-column:2 / 3 !important; }
+}
+
+/* Móvil: una columna, botones cómodos al tacto */
+@media (max-width: 700px), (pointer: coarse){
+  #startPanel.game-panel{
+    width:min(94vw, 420px) !important;
+    max-height:88vh !important;
+    padding:16px 14px 20px !important;
+    gap:10px !important;
+  }
+  #startPanel{
+    display:flex !important;
+    flex-direction:column !important;
+  }
+  #startPanel > #startGame,
+  #startPanel > #openTechAccount{
+    width:100% !important;
+    min-height:48px !important;
+  }
+  #startExtras .diff-btns button{
+    min-width:calc(50% - 8px) !important;
+    flex:1 1 calc(50% - 8px) !important;
+  }
+}
+</style>
+
 </body>
 </html>
 <style id="tech-run-desktop-large-final">
