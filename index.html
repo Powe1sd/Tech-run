@@ -8071,12 +8071,13 @@ function drawShipPreview(){
 
 
 function drawPlayer(){
-  /* Estela */
-  if(!lowPower){
+  /* Posición dibujada estable (evita temblor del triángulo/nave por subpíxeles) */
+  const _dx=Math.round(player.x), _dy=Math.round(player.y);
+  if(!lowPower && !(typeof isMobile==='function'&&isMobile())){
     ctx.fillStyle="rgba(255,255,255,0.15)";
-    ctx.beginPath();ctx.ellipse(player.x,player.y+player.size*0.9,player.size*0.35,player.size*0.5,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.ellipse(_dx,_dy+player.size*0.9,player.size*0.35,player.size*0.5,0,0,Math.PI*2);ctx.fill();
   }
-  ctx.save();ctx.translate(player.x,player.y);
+  ctx.save();ctx.translate(_dx,_dy);
   if(bounceShield>0){
     const br=player.size*1.8;
     ctx.strokeStyle=`rgba(170,255,255,${0.35+0.25*Math.sin(performance.now()/120)})`;
@@ -8933,13 +8934,17 @@ function drawMinimap(){
         ctx.fillRect(px(b.x)-0.5,py(b.y)-0.5,1.5,1.5);
       }
     }
-    /* jugador */
-    const jx=px(player.x), jy=py(player.y);
+    /* jugador — coordenadas enteras para que el triángulo no tiemble */
+    if(typeof window.__mapTriX!=='number'){ window.__mapTriX=px(player.x); window.__mapTriY=py(player.y); }
+    const _tjx=px(player.x), _tjy=py(player.y);
+    window.__mapTriX += (_tjx-window.__mapTriX)*0.22;
+    window.__mapTriY += (_tjy-window.__mapTriY)*0.22;
+    const jx=Math.round(window.__mapTriX), jy=Math.round(window.__mapTriY);
     ctx.fillStyle="#00E5FF";
     ctx.beginPath();
-    ctx.moveTo(jx,jy-4);ctx.lineTo(jx+3,jy+3);ctx.lineTo(jx-3,jy+3);
+    ctx.moveTo(jx,jy-4);ctx.lineTo(jx+3.5,jy+3.5);ctx.lineTo(jx-3.5,jy+3.5);
     ctx.closePath();ctx.fill();
-    ctx.strokeStyle="rgba(0,230,255,.5)";ctx.lineWidth=1;
+    ctx.strokeStyle="rgba(0,230,255,.45)";ctx.lineWidth=1;
     ctx.beginPath();ctx.arc(jx,jy,6,0,Math.PI*2);ctx.stroke();
     /* leyenda mini */
     if(!mob){
