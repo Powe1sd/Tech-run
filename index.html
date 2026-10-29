@@ -16401,7 +16401,7 @@ body.tech-playing .game-top{
 #startExtras[data-tab="extra"] .tab-nave{display:none!important}
 
 @media (min-width:901px) and (pointer:fine){
-  #startMobileTabs{display:none!important}
+  #startMobileTabs{display:flex!important}
   #startExtras .tab-play,
   #startExtras .tab-nave,
   #startExtras .tab-extra{display:contents!important}
@@ -16429,8 +16429,8 @@ body.tech-playing .game-top{
       if(v==='high'||v==='alto') return 'high';
       if(v==='medium'||v==='medio') return 'medium';
     }catch(e){}
-    /* por defecto: móvil=bajo, PC=medio */
-    return isMob()?'low':'medium';
+    /* Por defecto: calidad gráfica más alta en todos los dispositivos */
+    return 'high';
   }
 
   function applyGfx(level, persist){
@@ -16671,8 +16671,8 @@ body.tech-playing .game-top{
     var tabs=ensureTabs();
     var mob=isMob();
     if(tabs){
-      if(mob) tabs.classList.add('is-on');
-      else tabs.classList.remove('is-on');
+      /* Mostrar las tres pestañas tanto en móvil como en PC */
+      tabs.classList.add('is-on');
     }
     var box=document.getElementById('startExtras');
     if(!box) return;
