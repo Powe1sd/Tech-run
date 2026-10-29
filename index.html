@@ -12737,16 +12737,17 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     if(typeof window.techFetchOnlineTop!=='function') return;
     fetching = true;
     try{
-      var rows = await window.techFetchOnlineTop(50);
-      var seenUsers = new Set();
+      /* TODOS los registros del ranking (sin límite ni agrupar por usuario) */
+      var rows = await window.techFetchOnlineTop();
       cache = [];
       (rows||[]).forEach(function(r,i){
         var sc = Number(r.record!=null?r.record:0)||0;
         var raw = r['nombre-nave']!=null?r['nombre-nave']:(r.nombre_nave!=null?r.nombre_nave:null);
-        var user = String(raw||'').split(' · ')[0].trim().toLocaleLowerCase();
-        if(!user || seenUsers.has(user)) return;
-        seenUsers.add(user);
-        var name = (raw!=null&&String(raw).trim()!=='')?String(raw):('Jugador '+(i+1));
+        if(raw==null || String(raw).trim()===''){
+          if(r.id==null) return;
+          raw = 'Nave #'+r.id;
+        }
+        var name = String(raw);
         cache.push({name:name, score:sc, id:r.id});
       });
       cache.sort(function(a,b){ return b.score - a.score; });
@@ -12773,26 +12774,23 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     var meSc = myScore();
     var meNm = myName() + ' [TÚ]';
     var list = cache.slice();
-    /* Insertar / actualizar fantasma del jugador local */
-    var inserted = false;
-    for(var i=0;i<list.length;i++){
-      if(list[i].__self){ list[i].score=meSc; list[i].name=meNm; inserted=true; break; }
-    }
-    if(!inserted){
+    /* Fantasma local solo si aún no hay fila tuya en el ranking cargado */
+    var myNick = String((typeof shipName!=='undefined'&&shipName)?shipName:'').trim().toLocaleLowerCase();
+    var hasMe = myNick && list.some(function(x){
+      return String(x.name||'').split(' · ')[0].trim().toLocaleLowerCase() === myNick;
+    });
+    if(!hasMe){
       list.push({name:meNm, score:meSc, __self:true});
-    }
-    list.sort(function(a,b){return b.score-a.score});
-    /* limitar a top 10 visibles, asegurando que "tú" aparezca */
-    var top = list.slice(0,10);
-    var meIn = top.some(function(x){return x.__self});
-    if(!meIn){
-      var rank = list.findIndex(function(x){return x.__self});
-      if(rank>=0){
-        top = list.slice(0,9);
-        top.push(list[rank]);
+    } else {
+      /* actualizar puntuación en vivo de tu fila más cercana por nombre */
+      for(var i=0;i<list.length;i++){
+        var n0 = String(list[i].name||'').split(' · ')[0].trim().toLocaleLowerCase();
+        if(n0 === myNick){ list[i] = Object.assign({}, list[i], {score: Math.max(list[i].score||0, meSc), __self:true, name: meNm}); break; }
       }
     }
-    return {rows:top, myRank: list.findIndex(function(x){return x.__self})+1, total:list.length};
+    list.sort(function(a,b){return b.score-a.score});
+    /* Mostrar TODOS los registros en el ranking del juego */
+    return {rows:list, myRank: list.findIndex(function(x){return x.__self})+1, total:list.length};
   }
 
   function truncate(s,n){
@@ -12811,14 +12809,24 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     var P = (typeof px==='function')?px:function(n){return n};
     var board = buildBoard();
     var rows = board.rows;
-    var rowH = P(mob?12:14);
-    var padX = P(8);
-    var padY = P(6);
-    var titleH = P(mob?14:16);
-    var w = P(mob?130:168);
-    var h = titleH + padY*2 + rows.length*rowH + P(16);
-    var x = P(mob?6:10);
-    var y = P(mob?30:34);
+    var rowH = P(mob?10:11);
+    var padX = P(6);
+    var padY = P(4);
+    var titleH = P(mob?12:14);
+    var w = P(mob?140:180);
+    var maxH = Math.max(P(120), (canvas.height||400) * 0.72);
+    var needH = titleH + padY*2 + rows.length*rowH + P(14);
+    var h = Math.min(needH, maxH);
+    var x = P(mob?4:8);
+    var y = P(mob?28:32);
+    /* scroll interno si hay más filas de las que caben */
+    var maxRows = Math.max(1, Math.floor((h - titleH - padY*2 - P(14)) / rowH));
+    var startIdx = 0;
+    if(rows.length > maxRows){
+      var meIdx = board.myRank > 0 ? board.myRank - 1 : 0;
+      startIdx = Math.max(0, Math.min(meIdx - Math.floor(maxRows/3), rows.length - maxRows));
+    }
+    var visible = rows.slice(startIdx, startIdx + maxRows);
     try{window.__hudHit.rank={x:x,y:y,w:w,h:h}}catch(e){}
 
     ctx.save();
@@ -12839,22 +12847,20 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
       ctx.strokeRect(x,y,w,h);
     }
 
-    /* título */
+    /* título: total de registros */
     ctx.font = 'bold '+P(mob?9:10)+'px Orbitron,sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#FFCD00';
-    ctx.fillText('🏆 TOP ONLINE', x+padX, y+padY+titleH*0.45);
+    ctx.fillText('🏆 RANKING · '+board.total, x+padX, y+padY+titleH*0.45);
 
-    /* filas */
+    /* filas: todos los registros (ventana si no caben en pantalla) */
     var baseY = y + padY + titleH;
-    for(var i=0;i<rows.length;i++){
-      var r = rows[i];
+    for(var i=0;i<visible.length;i++){
+      var r = visible[i];
       var ry = baseY + i*rowH + rowH*0.55;
       var isSelf = !!r.__self;
-      var rank = i+1;
-      /* si es el fantasma fuera del top real, mostrar rank real */
-      if(isSelf && board.myRank>10) rank = board.myRank;
+      var rank = startIdx + i + 1;
 
       if(isSelf){
         ctx.fillStyle = 'rgba(255,205,0,0.18)';
