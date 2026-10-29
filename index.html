@@ -12641,16 +12641,10 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     box.innerHTML = '<p style="color:#8cf">Cargando récords…</p>';
     try{
       const fetchedRows = await window.techFetchOnlineTop();
-      const seenUsers = new Set();
-      const rows = [];
-      (fetchedRows||[]).forEach(function(r){
-        const sc = Number(r.record != null ? r.record : 0) || 0;
+      /* TODOS los registros de Supabase, sin agrupar por usuario */
+      const rows = (fetchedRows||[]).slice().filter(function(r){
         const raw = r['nombre-nave'] != null ? r['nombre-nave'] : (r.nombre_nave != null ? r.nombre_nave : '');
-        const user = String(raw).split(' · ')[0].trim().toLocaleLowerCase();
-        if(!user) return;
-        if(seenUsers.has(user)) return;
-        seenUsers.add(user);
-        rows.push(r);
+        return String(raw||'').trim() !== '' || r.id != null;
       });
       rows.sort(function(a,b){ return (Number(b.record)||0) - (Number(a.record)||0); });
       if(!rows.length){
@@ -12667,17 +12661,14 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
           + '</pre>';
         return;
       }
-      box.innerHTML = rows.map(function(r, i){
+      box.innerHTML = '<p style="color:#9ab;font-size:11px;margin:0 0 8px;text-align:center">'+rows.length+' registro'+(rows.length===1?'':'s')+' · mayor a menor</p>'
+        + rows.map(function(r, i){
         const sc = Number(r.record != null ? r.record : 0) || 0;
         const rawNave = r['nombre-nave'] != null ? r['nombre-nave'] : (r.nombre_nave != null ? r.nombre_nave : null);
         const nave = (rawNave != null && String(rawNave).trim() !== '') ? String(rawNave) : ('Nave #' + (r.id != null ? r.id : (i+1)));
-        let fecha = '';
-        try{ if(r.created_at) fecha = new Date(r.created_at).toLocaleString('es-CO'); }catch(e){}
         const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':((i+1)+'.');
         return '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">'
-          + '<span><b style="color:#5de5ff">'+medal+'</b> '+nave.replace(/</g,'&lt;')
-          + (fecha ? '<br><small style="color:#889">'+fecha+'</small>' : '')
-          + '</span>'
+          + '<span><b style="color:#5de5ff">'+medal+'</b> '+nave.replace(/</g,'&lt;')+'</span>'
           + '<b style="color:#FFCD00;white-space:nowrap">'+sc.toLocaleString('es-CO')+' pts</b></div>';
       }).join('');
     }catch(err){
