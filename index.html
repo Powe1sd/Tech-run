@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" href="nave.png" type="image/x-icon">   
-<button onclick="alert('Brahyan')" class="boton-foto">
+<button type="button" onclick="openProgrammerModal()" class="boton-foto" aria-label="Ver perfil del programador">
   <img src="yo.jpeg" alt="Brahyan" class="foto-perfil">
 </button>
 
@@ -1362,6 +1362,15 @@ body:has(.tech-game.is-playing) #techAccountExit{
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Modal de perfil del programador: foto ampliada y bordes blancos/rojos */
+#programmerProfileModal{position:fixed;inset:0;z-index:1000000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.88);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+#programmerProfileModal.is-open{display:flex}
+#programmerProfileModal .programmer-profile-card{position:relative;width:min(430px,92vw);padding:18px 18px 22px;text-align:center;background:linear-gradient(160deg,#090d18,#16070b);border:3px solid #fff;border-radius:22px;box-shadow:0 0 0 3px #CE1126,0 0 28px rgba(206,17,38,.65),0 18px 60px rgba(0,0,0,.8)}
+#programmerProfileModal .programmer-profile-photo{display:block;width:min(320px,75vw);height:min(320px,75vw);max-height:55vh;object-fit:cover;object-position:center;margin:0 auto 18px;border:5px solid #fff;outline:4px solid #CE1126;border-radius:18px;box-shadow:0 0 0 2px #fff,0 0 24px rgba(206,17,38,.6)}
+#programmerProfileModal .programmer-profile-title{margin:8px 0 0;color:#fff!important;-webkit-text-fill-color:#fff!important;font-family:'Orbitron',sans-serif;font-weight:800;font-size:clamp(17px,4vw,23px);letter-spacing:1.5px;text-shadow:0 0 12px rgba(206,17,38,.8)}
+#programmerProfileModal .programmer-profile-close{position:absolute;top:8px;right:8px;width:38px;height:38px;border:2px solid #fff;border-radius:50%;background:#CE1126;color:#fff;font-size:24px;line-height:1;cursor:pointer;z-index:2}
+@media(max-width:600px){#programmerProfileModal{padding:12px}#programmerProfileModal .programmer-profile-card{padding:16px 12px 20px}}
 </style>
 
 <style id="tech-statistics-styles">
@@ -5342,7 +5351,7 @@ if(startPanel&&!document.getElementById("startExtras")){
     <p style="color:#888;font-size:10px;margin:8px 0 4px">Ajustes en ⚙ Config (arriba a la izquierda).</p>
     <div id="guestDataNotice" style="margin:10px 0 6px;padding:12px;border:1px solid ${loggedForNotice?'rgba(93,255,176,.4)':'rgba(255,205,0,.55)'};border-radius:12px;background:${loggedForNotice?'rgba(0,90,55,.2)':'rgba(80,55,0,.22)'};text-align:center;line-height:1.5;font-family:Arial,sans-serif">
       ${loggedForNotice
-        ? '<strong style="display:block;color:#5dffb0;font-size:12px;margin-bottom:4px">✅ Sesión iniciada</strong><span style="font-size:11px;color:#e5f5ff">Tus estadísticas y progreso están vinculados a tu usuario.</span>'
+        ? '<strong style="display:block;color:#5dffb0;font-size:12px;margin-bottom:4px">✅ Sesión iniciada</strong><span style="display:block;font-size:11px;color:#e5f5ff">Tu progreso está vinculado a tu cuenta.</span><button type="button" id="guestAccountCta" class="game-btn" style="margin-top:9px;padding:8px 12px;width:100%;border-color:#ff5268;color:#fff;background:linear-gradient(135deg,#7b1020,#ce1126)">🚪 Salir</button>'
         : '<strong style="display:block;color:#ffda55;font-size:12px;margin-bottom:4px">👤 Estás jugando como invitado</strong><span style="display:block;font-size:11px;color:#fff">Tus datos no se guardan de forma permanente. Inicia sesión para vincular tu progreso a tu cuenta.</span><button type="button" id="guestAccountCta" class="game-btn" style="margin-top:9px;padding:8px 12px;width:100%;border-color:#5de5ff;color:#fff;background:linear-gradient(135deg,#142b52,#087c9d)">🔐 Iniciar sesión / Crear cuenta</button>'}
     </div>
     <button class="game-btn game-btn-blue" id="btnLoadSave" style="margin-top:6px;width:100%;padding:8px">💾 Continuar partida</button>
@@ -5447,7 +5456,7 @@ if(startPanel&&!document.getElementById("startExtras")){
       currentWeapon=w;lsSet("techWeapon",w);renderStart();
     });
     const bms=box.querySelector("#btnManualStart");if(bms)bms.onclick=()=>showUserManual();
-    const guestAccountCta=box.querySelector("#guestAccountCta");if(guestAccountCta)guestAccountCta.onclick=()=>{const accountButton=document.getElementById("openTechAccount");if(accountButton)accountButton.click();};
+    const guestAccountCta=box.querySelector("#guestAccountCta");if(guestAccountCta)guestAccountCta.onclick=()=>{if(loggedForNotice){const exitButton=document.getElementById("techAccountExit");if(exitButton)exitButton.click();else{const logoutButton=document.getElementById("taLogout");if(logoutButton)logoutButton.click();else{const accountButton=document.getElementById("openTechAccount");if(accountButton)accountButton.click();}}}else{const accountButton=document.getElementById("openTechAccount");if(accountButton)accountButton.click();}};
     const bgc=box.querySelector("#btnGameCredits");
     const gcb=box.querySelector("#gameCreditsBox");
     if(bgc&&gcb){
@@ -5472,6 +5481,7 @@ if(startPanel&&!document.getElementById("startExtras")){
       if(scoreElement)scoreElement.textContent=score;updateLivesUI();
     };
   }
+  window.techRefreshStartMenu = renderStart;
   renderStart();
   const btn=document.getElementById("startGame");
   if(btn&&btn.parentNode===startPanel){
@@ -13506,7 +13516,9 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
      if(!nick){status('Esta cuenta no tiene nombre de usuario. Contacta con el administrador.');return;}
      const input=$('shipNameInput');if(input)input.value=nick;
      try{localStorage.setItem('techShipName',nick);}catch(e){}
-     status('Sesión iniciada. Bienvenido, '+nick+'.',true);setTimeout(close,900);
+     status('Sesión iniciada. Bienvenido, '+nick+'.',true);
+     try{if(typeof window.techRefreshStartMenu==='function')window.techRefreshStartMenu();}catch(e){console.warn('[TECH RUN] No se pudo actualizar el menú',e);}
+     setTimeout(close,900);
    }catch(e){console.error('[TECH RUN Auth] login',e);status('No se pudo iniciar sesión. Revisa el correo, la contraseña y confirma el correo si te lo pide. '+e.message);}
  }
  async function sendCode(){
@@ -13539,6 +13551,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
    try{var sp=document.getElementById('startPanel');if(sp)sp.style.setProperty('display','block','important');}catch(e){}
    try{var game=document.querySelector('.tech-game');if(game)game.classList.remove('is-playing');}catch(e){}
    mode='home';modal.style.display='flex';setMode('home');status('Sesión cerrada. Inicia sesión o crea una cuenta para continuar.',true);
+   try{if(typeof window.techRefreshStartMenu==='function')window.techRefreshStartMenu();}catch(e){console.warn('[TECH RUN] No se pudo actualizar el menú',e);}
    if(window.techNotify)window.techNotify('Sesión cerrada. Inicia sesión para continuar.','success','Sesión cerrada');
  }
  function updateAccountUI(){
@@ -14909,6 +14922,39 @@ create policy "visitas_update_all" on public.visitas_tech_run for update to anon
 })();
 </script>
 
+<script id="programmer-profile-modal-script">
+(function(){
+  function initProgrammerModal(){
+    if(document.getElementById('programmerProfileModal'))return;
+    var modal=document.createElement('div');
+    modal.id='programmerProfileModal';
+    modal.setAttribute('role','dialog');
+    modal.setAttribute('aria-modal','true');
+    modal.setAttribute('aria-label','Perfil del programador de software');
+    modal.innerHTML='<div class="programmer-profile-card"><button type="button" class="programmer-profile-close" aria-label="Cerrar">×</button><img class="programmer-profile-photo" src="yo.jpeg" alt="Brahyan, programador de software"><h2 class="programmer-profile-title">PROGRAMADOR DE SOFTWARE</h2></div>';
+    document.body.appendChild(modal);
+    modal.addEventListener('click',function(event){if(event.target===modal)closeProgrammerModal();});
+    modal.querySelector('.programmer-profile-close').addEventListener('click',closeProgrammerModal);
+    document.addEventListener('keydown',function(event){if(event.key==='Escape')closeProgrammerModal();});
+  }
+  window.openProgrammerModal=function(){
+    initProgrammerModal();
+    var modal=document.getElementById('programmerProfileModal');
+    var source=document.querySelector('.foto-perfil');
+    var photo=modal.querySelector('.programmer-profile-photo');
+    if(source&&source.getAttribute('src'))photo.setAttribute('src',source.getAttribute('src'));
+    modal.classList.add('is-open');
+    document.body.style.overflow='hidden';
+    modal.querySelector('.programmer-profile-close').focus();
+  };
+  window.closeProgrammerModal=function(){
+    var modal=document.getElementById('programmerProfileModal');
+    if(modal)modal.classList.remove('is-open');
+    document.body.style.overflow='';
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initProgrammerModal);else initProgrammerModal();
+})();
+</script>
 </body>
 </html>
 <style id="tech-run-desktop-large-final">
