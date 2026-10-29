@@ -12552,15 +12552,13 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     const pageSize = 1000;
     const allRows = [];
     let offset = 0;
-    const bust = Date.now();
     while(allRows.length < requestedLimit){
       const take = Math.min(pageSize, requestedLimit - allRows.length);
       const url = SUPABASE_REST + '/' + TABLE
         + '?select=id,created_at,record,nombre-nave'
         + '&order=record.desc.nullslast'
         + '&limit=' + take
-        + '&offset=' + offset
-        + '&_=' + bust;
+        + '&offset=' + offset;
       const pageHeaders = Object.assign({}, headers(), {
         'Range-Unit': 'items',
         'Range': offset + '-' + (offset + take - 1),
