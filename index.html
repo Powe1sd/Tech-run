@@ -15818,6 +15818,150 @@ create policy "visitas_update_all" on public.visitas_tech_run for update to anon
 })();
 </script>
 
+
+
+<style id="tech-sticky-start-btn">
+#techStickyStart{
+  position:fixed;
+  left:50%;
+  bottom:max(14px, env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  z-index:999990;
+  display:none;
+  width:auto;
+  max-width:90vw;
+  margin:0;
+  padding:0;
+  border:none;
+  background:transparent;
+  pointer-events:none;
+}
+#techStickyStart.is-on{ display:block; }
+#techStickyStart .tech-sticky-inner{
+  pointer-events:auto;
+  display:flex;
+  justify-content:center;
+  width:100%;
+}
+#techStickyStart button{
+  min-width:132px;
+  max-width:200px;
+  width:auto;
+  min-height:38px !important;
+  padding:8px 16px !important;
+  font-size:12px !important;
+  border-radius:999px !important;
+  box-shadow:0 8px 22px rgba(0,0,0,.5),0 0 16px rgba(0,113,206,.4);
+  background:linear-gradient(135deg,#0038A8,#00A3E0) !important;
+  border:1.5px solid rgba(255,255,255,.45) !important;
+  color:#fff !important;
+  font-weight:800 !important;
+  cursor:pointer;
+  font-family:Orbitron,sans-serif;
+  letter-spacing:.4px;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
+}
+#techStickyStart button:active{ transform:scale(.95); }
+/* Subir un poco si hay bolita u otros controles abajo */
+@media (max-width:700px){
+  #techStickyStart{ bottom:max(18px, env(safe-area-inset-bottom)); }
+  #techStickyStart button{ min-height:40px !important; font-size:13px !important; padding:9px 18px !important; }
+}
+</style>
+<script id="tech-sticky-start-script">
+(function(){
+  'use strict';
+  function ensureSticky(){
+    var el=document.getElementById('techStickyStart');
+    if(el) return el;
+    el=document.createElement('div');
+    el.id='techStickyStart';
+    el.innerHTML='<div class="tech-sticky-inner"><button type="button" id="techStickyStartBtn">🚀 Iniciar</button></div>';
+    document.body.appendChild(el);
+    var btn=el.querySelector('#techStickyStartBtn');
+    if(btn){
+      btn.addEventListener('click', function(ev){
+        ev.preventDefault();
+        ev.stopPropagation();
+        var main=document.getElementById('startGame');
+        if(main){ try{ main.click(); return; }catch(e){} }
+        try{ if(typeof startGame==='function') startGame(); }catch(e){}
+      }, {passive:false});
+    }
+    return el;
+  }
+
+  function isShown(el){
+    if(!el) return false;
+    var st=window.getComputedStyle(el);
+    return st.display!=='none' && st.visibility!=='hidden' && el.offsetParent!==null;
+  }
+
+  function panelScrollAmount(panel){
+    if(!panel) return 0;
+    var top=panel.scrollTop||0;
+    /* Si el panel no scrollea, a veces el scroll va en el documento */
+    var docTop=window.scrollY||document.documentElement.scrollTop||document.body.scrollTop||0;
+    return Math.max(top, docTop);
+  }
+
+  function update(){
+    var panel=document.getElementById('startPanel');
+    var sticky=ensureSticky();
+    if(!sticky) return;
+
+    var startOpen=isShown(panel);
+    var playing=false;
+    try{ playing=!!(typeof gameRunning!=='undefined'&&gameRunning); }catch(e){}
+    var otherOpen=false;
+    try{
+      ['techStatisticsPanel','onlineRankingPanel','configPanel','pausePanel','gameOverPanel','techAuthModal'].forEach(function(id){
+        if(isShown(document.getElementById(id))) otherOpen=true;
+      });
+    }catch(e){}
+
+    if(!startOpen || playing || otherOpen){
+      sticky.classList.remove('is-on');
+      return;
+    }
+
+    var scrolled=panelScrollAmount(panel)>40;
+    /* En móvil también mostrar si el contenido del menú es alto (usuario ya bajó visualmente) */
+    try{
+      if(!scrolled && panel && panel.scrollHeight > panel.clientHeight + 60){
+        /* si hay overflow y el usuario tocó/scroll en extras */
+        var extras=document.getElementById('startExtras');
+        if(extras){
+          var r=extras.getBoundingClientRect();
+          var pr=panel.getBoundingClientRect();
+          if(r.top < pr.top + 20) scrolled=true;
+        }
+      }
+    }catch(e){}
+
+    if(scrolled) sticky.classList.add('is-on');
+    else sticky.classList.remove('is-on');
+  }
+
+  function bind(){
+    ensureSticky();
+    var panel=document.getElementById('startPanel');
+    if(panel && !panel.__stickyScrollBound){
+      panel.__stickyScrollBound=true;
+      panel.addEventListener('scroll', update, {passive:true});
+      panel.addEventListener('touchmove', function(){ setTimeout(update, 0); }, {passive:true});
+    }
+    window.addEventListener('scroll', update, {passive:true});
+    document.addEventListener('touchend', function(){ setTimeout(update, 50); }, {passive:true});
+    setInterval(update, 400);
+    update();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bind);
+  else bind();
+})();
+</script>
+
 </body>
 </html>
 <style id="tech-run-desktop-large-final">
