@@ -16346,6 +16346,361 @@ body.tech-playing .game-top{
 }
 </style>
 
+
+<style id="tech-quality-mobile-menu">
+/* Calidad gráfica + menú móvil por pestañas */
+#gfxQualitySelect, #startGfxQuality, #pauseGfxQuality{
+  width:90%;padding:8px 10px;border-radius:10px;background:#0a1428;color:#fff;
+  border:1px solid rgba(93,229,255,.3);font-family:Orbitron,sans-serif;font-size:12px;
+}
+.tech-gfx-hint{color:#8fa3bd;font-size:10px;margin:4px 0 10px;line-height:1.4}
+
+/* Pestañas menú móvil */
+#startMobileTabs{
+  display:none;
+  position:sticky;top:0;z-index:30;
+  gap:6px;padding:6px 0 10px;margin:0 0 8px;
+  background:linear-gradient(180deg,rgba(6,12,28,.98),rgba(6,12,28,.92));
+}
+#startMobileTabs.is-on{display:flex}
+#startMobileTabs button{
+  flex:1;min-height:40px;border-radius:11px;border:1px solid rgba(93,229,255,.25);
+  background:rgba(10,22,48,.85);color:#c8d6e8;font-family:Orbitron,sans-serif;
+  font-size:11px;font-weight:700;letter-spacing:.3px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+#startMobileTabs button.active{
+  border-color:rgba(255,205,0,.55);
+  background:linear-gradient(160deg,rgba(255,205,0,.2),rgba(0,90,180,.3));
+  color:#fff;box-shadow:0 0 12px rgba(255,205,0,.15);
+}
+#startExtras[data-tab="play"] .tab-nave,
+#startExtras[data-tab="play"] .tab-extra{display:none!important}
+#startExtras[data-tab="nave"] .tab-play,
+#startExtras[data-tab="nave"] .tab-extra{display:none!important}
+#startExtras[data-tab="extra"] .tab-play,
+#startExtras[data-tab="extra"] .tab-nave{display:none!important}
+
+@media (min-width:901px) and (pointer:fine){
+  #startMobileTabs{display:none!important}
+  #startExtras .tab-play,
+  #startExtras .tab-nave,
+  #startExtras .tab-extra{display:contents!important}
+  #startExtras[data-tab] .tab-play,
+  #startExtras[data-tab] .tab-nave,
+  #startExtras[data-tab] .tab-extra{display:contents!important}
+}
+</style>
+<script id="tech-quality-mobile-menu-js">
+(function(){
+  'use strict';
+  var LS_GFX='techGfxQuality';
+
+  function isMob(){
+    try{
+      if(typeof isMobile==='function') return isMobile();
+    }catch(e){}
+    return window.innerWidth<=900 || ('ontouchstart' in window) || /Mobi|Android|iPhone/i.test(navigator.userAgent||'');
+  }
+
+  function getGfx(){
+    try{
+      var v=String(localStorage.getItem(LS_GFX)||'').toLowerCase();
+      if(v==='low'||v==='bajo') return 'low';
+      if(v==='high'||v==='alto') return 'high';
+      if(v==='medium'||v==='medio') return 'medium';
+    }catch(e){}
+    /* por defecto: móvil=bajo, PC=medio */
+    return isMob()?'low':'medium';
+  }
+
+  function applyGfx(level, persist){
+    if(level!=='low' && level!=='medium' && level!=='high') level=getGfx();
+    if(persist!==false){
+      try{ localStorage.setItem(LS_GFX, level); }catch(e){}
+    }
+    window.techGfxQuality=level;
+
+    /* Mapear a lowPower y límites de render */
+    try{
+      if(typeof lowPower!=='undefined'){
+        lowPower = (level==='low');
+        try{ localStorage.setItem('techLowPower', lowPower?'1':'0'); }catch(e){}
+        var lp=document.getElementById('lowPowerToggle');
+        if(lp) lp.checked=!!lowPower;
+        var plp=document.getElementById('pauseLowPower');
+        if(plp) plp.checked=!!lowPower;
+        var slp=document.getElementById('startLowPower');
+        if(slp) slp.checked=!!lowPower;
+      }
+    }catch(e){}
+
+    /* Radar: en bajo se puede ocultar por defecto solo si no hay preferencia explícita */
+    try{
+      if(level==='low' && localStorage.getItem('techShowMinimap')==null){
+        window.showMinimap=false;
+      }
+      if(level==='high' && localStorage.getItem('techShowMinimap')==null){
+        window.showMinimap=true;
+      }
+    }catch(e){}
+
+    try{ if(typeof resizeCanvas==='function') resizeCanvas(true); }catch(e){}
+    try{ if(typeof initStars==='function') initStars(); }catch(e){}
+
+    document.querySelectorAll('#gfxQualitySelect,#startGfxQuality,#pauseGfxQuality').forEach(function(sel){
+      if(sel && sel.value!==level) sel.value=level;
+    });
+  }
+  window.techSetGfxQuality=applyGfx;
+  window.techGetGfxQuality=getGfx;
+
+  /* Ajustar gcEntities dinámicamente según calidad */
+  var _origGc=null;
+  function patchGc(){
+    if(typeof gcEntities!=='function') return;
+    if(gcEntities.__gfxPatched) return;
+    _origGc=gcEntities;
+    var wrapped=function(){
+      try{
+        var level=window.techGfxQuality||getGfx();
+        var m=false;
+        try{ m=typeof isMobile==='function'&&isMobile(); }catch(e){}
+        if(typeof trimArr==='function'){
+          if(level==='low'){
+            trimArr(obstacles, m?6:14);
+            trimArr(bullets, m?8:24);
+            trimArr(enemyBullets, m?6:20);
+            trimArr(explosions, m?1:6);
+            trimArr(particles, 0);
+            trimArr(traps, m?4:10);
+            trimArr(hitSparks, m?2:12);
+            trimArr(lightningFX, 0);
+          } else if(level==='medium'){
+            trimArr(obstacles, m?9:18);
+            trimArr(bullets, m?12:30);
+            trimArr(enemyBullets, m?10:26);
+            trimArr(explosions, m?3:9);
+            trimArr(particles, m?2:10);
+            trimArr(traps, m?6:12);
+            trimArr(hitSparks, m?5:16);
+            trimArr(lightningFX, m?1:5);
+          } else {
+            /* high */
+            trimArr(obstacles, m?12:24);
+            trimArr(bullets, m?16:36);
+            trimArr(enemyBullets, m?14:32);
+            trimArr(explosions, m?5:12);
+            trimArr(particles, m?6:16);
+            trimArr(traps, m?8:14);
+            trimArr(hitSparks, m?10:22);
+            trimArr(lightningFX, m?3:8);
+          }
+          trimArr(pickups, m?2:6);
+          trimArr(missiles, m?3:10);
+          trimArr(allies, m?2:4);
+          trimArr(drones, m?2:4);
+          if(typeof supplyCrates!=='undefined') trimArr(supplyCrates, m?1:2);
+          if(typeof gravZones!=='undefined') trimArr(gravZones, m?2:3);
+          return;
+        }
+      }catch(e){}
+      return _origGc.apply(this, arguments);
+    };
+    wrapped.__gfxPatched=true;
+    gcEntities=wrapped;
+    try{ window.gcEntities=wrapped; }catch(e){}
+  }
+
+  function gfxSelectHtml(id){
+    var g=getGfx();
+    return '<p style="color:#FFCD00;font-size:11px;margin:10px 0 4px">🎮 Calidad gráfica</p>'+
+      '<select id="'+id+'">'+
+      '<option value="low"'+(g==='low'?' selected':'')+'>🟢 Bajo — más FPS</option>'+
+      '<option value="medium"'+(g==='medium'?' selected':'')+'>🟡 Medio — equilibrado</option>'+
+      '<option value="high"'+(g==='high'?' selected':'')+'>🔴 Alto — más efectos</option>'+
+      '</select>'+
+      '<p class="tech-gfx-hint">Bajo: ideal celular · Medio: recomendado · Alto: PC potentes</p>';
+  }
+
+  function injectGfxControls(){
+    function addTo(panelId, selId, beforeSel){
+      var panel=document.getElementById(panelId);
+      if(!panel || panel.querySelector('#'+selId)) return;
+      var box=document.createElement('div');
+      box.className='tech-gfx-box';
+      box.innerHTML=gfxSelectHtml(selId);
+      var anchor=panel.querySelector(beforeSel||'#lowPowerToggle, #pauseLowPower');
+      if(anchor && anchor.closest('label')){
+        anchor.closest('label').parentNode.insertBefore(box, anchor.closest('label'));
+      } else if(anchor){
+        anchor.parentNode.insertBefore(box, anchor);
+      } else {
+        panel.appendChild(box);
+      }
+      var sel=box.querySelector('#'+selId);
+      if(sel){
+        sel.addEventListener('change', function(){ applyGfx(sel.value, true); });
+      }
+    }
+    addTo('configPanel', 'gfxQualitySelect', '#lowPowerToggle');
+    addTo('pausePanel', 'pauseGfxQuality', '#pauseLowPower');
+
+    /* en menú inicio, junto a config rápida */
+    try{
+      var box=document.getElementById('startExtras');
+      if(box && !document.getElementById('startGfxQuality')){
+        var host=box.querySelector('#startLowPower');
+        var wrap=document.createElement('div');
+        wrap.className='tech-gfx-box tab-extra';
+        wrap.innerHTML=gfxSelectHtml('startGfxQuality');
+        if(host && host.closest('label')){
+          host.closest('label').parentNode.insertBefore(wrap, host.closest('label'));
+        } else {
+          box.appendChild(wrap);
+        }
+        var sel=wrap.querySelector('#startGfxQuality');
+        if(sel) sel.addEventListener('change', function(){ applyGfx(sel.value, true); });
+      }
+    }catch(e){}
+  }
+
+  /* ——— Menú móvil por pestañas ——— */
+  function ensureTabs(){
+    var panel=document.getElementById('startPanel');
+    if(!panel) return null;
+    var tabs=document.getElementById('startMobileTabs');
+    if(tabs) return tabs;
+    tabs=document.createElement('div');
+    tabs.id='startMobileTabs';
+    tabs.innerHTML=
+      '<button type="button" data-mtab="play" class="active">▶ Jugar</button>'+
+      '<button type="button" data-mtab="nave">🚀 Nave</button>'+
+      '<button type="button" data-mtab="extra">✦ Extra</button>';
+    var extras=document.getElementById('startExtras');
+    if(extras && extras.parentNode===panel){
+      panel.insertBefore(tabs, extras);
+    } else {
+      panel.appendChild(tabs);
+    }
+    tabs.querySelectorAll('[data-mtab]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        setTab(btn.getAttribute('data-mtab'));
+      });
+    });
+    return tabs;
+  }
+
+  function classifyExtras(){
+    var box=document.getElementById('startExtras');
+    if(!box) return;
+    /* Envolver nodos sueltos en grupos si aún no están clasificados */
+    if(box.__tabsClassified && box.querySelector('.tab-play')) return;
+
+    var play=document.createElement('div'); play.className='tab-play';
+    var nave=document.createElement('div'); nave.className='tab-nave';
+    var extra=document.createElement('div'); extra.className='tab-extra';
+
+    var nodes=Array.prototype.slice.call(box.childNodes);
+    var section='play';
+    nodes.forEach(function(node){
+      if(node.nodeType!==1){
+        play.appendChild(node);
+        return;
+      }
+      var tag=node.tagName;
+      var text=(node.textContent||'').toLowerCase();
+      var id=node.id||'';
+
+      if(tag==='H3'){
+        if(/nave|skin|color|goku|fase|modelo/.test(text)) section='nave';
+        else if(/mejora|bono|arma|misi|historial|ajust|equip|manual|crédit|top:|mundo|weapon|record/.test(text)) section='extra';
+        else if(/modo|dificult/.test(text)) section='play';
+        else if(/seleccionar nave|todas las naves/.test(text)) section='nave';
+      }
+      if(id==='shipCarousel' || id==='gokuFormMenu' || node.querySelector&&node.querySelector('#shipCarousel')) section='nave';
+      if(id==='startInGameActions' || id==='btnLoadSave' || id==='btnDailyMissions' || id==='btnWeaponShop') section='extra';
+      if(id==='guestDataNotice') section='extra';
+
+      if(section==='nave') nave.appendChild(node);
+      else if(section==='extra') extra.appendChild(node);
+      else play.appendChild(node);
+    });
+
+    /* Continuar partida y modos deben estar en Jugar */
+    box.innerHTML='';
+    box.appendChild(play);
+    box.appendChild(nave);
+    box.appendChild(extra);
+    box.__tabsClassified=true;
+  }
+
+  function setTab(name){
+    if(name!=='play' && name!=='nave' && name!=='extra') name='play';
+    var box=document.getElementById('startExtras');
+    if(box) box.setAttribute('data-tab', name);
+    var tabs=document.getElementById('startMobileTabs');
+    if(tabs){
+      tabs.querySelectorAll('[data-mtab]').forEach(function(b){
+        b.classList.toggle('active', b.getAttribute('data-mtab')===name);
+      });
+    }
+    try{ localStorage.setItem('techStartTab', name); }catch(e){}
+  }
+
+  function refreshMobileMenu(){
+    var tabs=ensureTabs();
+    var mob=isMob();
+    if(tabs){
+      if(mob) tabs.classList.add('is-on');
+      else tabs.classList.remove('is-on');
+    }
+    var box=document.getElementById('startExtras');
+    if(!box) return;
+    if(mob){
+      classifyExtras();
+      var saved='play';
+      try{ saved=localStorage.getItem('techStartTab')||'play'; }catch(e){}
+      setTab(saved);
+    } else {
+      box.removeAttribute('data-tab');
+    }
+  }
+
+  /* Hook renderStart refresh */
+  function hookRender(){
+    try{
+      if(typeof window.techRefreshStartMenu==='function' && !window.techRefreshStartMenu.__gfxHook){
+        var orig=window.techRefreshStartMenu;
+        var wrapped=function(){
+          var r=orig.apply(this, arguments);
+          setTimeout(function(){ injectGfxControls(); refreshMobileMenu(); }, 30);
+          return r;
+        };
+        wrapped.__gfxHook=true;
+        window.techRefreshStartMenu=wrapped;
+      }
+    }catch(e){}
+  }
+
+  function boot(){
+    applyGfx(getGfx(), false);
+    patchGc();
+    injectGfxControls();
+    refreshMobileMenu();
+    hookRender();
+    setInterval(function(){
+      injectGfxControls();
+      hookRender();
+      patchGc();
+      if(isMob()) refreshMobileMenu();
+    }, 2000);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+
 </body>
 </html>
 <style id="tech-run-desktop-large-final">
