@@ -2676,7 +2676,7 @@ function refreshHudToggleIcons(){
     syncHudFlagsFromWindow();
     const bm=document.getElementById("btnToggleMap");
     if(bm){
-      bm.textContent=showMinimap?"MAPA":"MAPA";
+      bm.textContent="🗺️";
       bm.title=showMinimap?"Ocultar radar/mapa":"Mostrar radar/mapa";
       bm.style.opacity=showMinimap?"1":"0.45";
       bm.style.background=showMinimap?"rgba(0,80,140,.85)":"rgba(40,40,40,.75)";
@@ -2684,7 +2684,7 @@ function refreshHudToggleIcons(){
     }
     const br=document.getElementById("btnToggleRank");
     if(br){
-      br.textContent=showOnlineRank?"TOP":"TOP";
+      br.textContent="🏆";
       br.title=showOnlineRank?"Ocultar ranking online":"Mostrar ranking online";
       br.style.opacity=showOnlineRank?"1":"0.45";
       br.style.background=showOnlineRank?"rgba(120,80,0,.85)":"rgba(40,40,40,.75)";
@@ -3514,7 +3514,7 @@ function getConfigHTML(){
 <label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
 <input type="checkbox" id="showOnlineRankToggle" ${showOnlineRank?"checked":""} style="accent-color:#FFCD00"> Mostrar ranking online (modo 🌐)
 </label>
-<p style="color:#888;font-size:10px;margin:4px 0 8px">También puedes ocultarlos o mostrarlos en partida con los botones 🗺️ y 🏆 (izquierda)<span id="techVisitsSecret" style="cursor:default;color:inherit;padding:0;margin:0;user-select:none;border:none;background:none;font:inherit">.</span></p>
+<p id="techVisitsSecretHome" style="color:#888;font-size:10px;margin:4px 0 8px">También puedes ocultarlos o mostrarlos en partida con los botones 🗺️ y 🏆 (izquierda) <span id="techVisitsSecret" style="cursor:pointer;color:#FFCD00;padding:2px 5px;margin-left:3px;user-select:none;border:1px solid rgba(255,205,0,.45);border-radius:5px;background:rgba(255,205,0,.08);font:inherit;font-weight:800">.</span></p>
 <button class="game-btn" id="btnManual" style="margin-top:10px;width:90%">${T("manual")}</button>
 <button class="game-btn" id="closeConfig">${T("save")}</button>`;
 }
@@ -4964,10 +4964,10 @@ const btnRestartLive=mk("btnRestartLive","🔄","Reiniciar","position:absolute;t
 btnRestartLive.onclick=()=>{if(confirm("¿Reiniciar partida?"))startGame()};
 
 const btnCfg=mk("btnConfig","⚙","Config","position:absolute;top:8px;left:8px;z-index:30;width:32px;height:32px;border:none;border-radius:8px;background:rgba(255,255,255,.15);color:#FFCD00;font-size:15px;cursor:pointer");
-const btnToggleMap=mk("btnToggleMap","MAPA","Ocultar radar/mapa","position:absolute;top:44px;left:8px;z-index:120;width:44px;height:28px;border:none;border-radius:8px;background:rgba(0,80,140,.85);color:#fff;font-size:10px;font-weight:800;cursor:pointer;display:none;line-height:1;font-family:Orbitron,sans-serif;pointer-events:auto");
+const btnToggleMap=mk("btnToggleMap","🗺️","Ocultar radar/mapa","position:absolute;top:44px;left:8px;z-index:120;width:36px;height:32px;border:1px solid rgba(93,229,255,.65);border-radius:9px;background:rgba(0,80,140,.85);color:#fff;font-size:17px;font-weight:800;cursor:pointer;display:none;line-height:1;pointer-events:auto");
 btnToggleMap.onclick=function(e){try{e.preventDefault();e.stopPropagation()}catch(_){}
   setShowMinimap(!window.showMinimap);};
-const btnToggleRank=mk("btnToggleRank","TOP","Ocultar ranking online","position:absolute;top:76px;left:8px;z-index:120;width:36px;height:28px;border:none;border-radius:8px;background:rgba(120,80,0,.85);color:#FFCD00;font-size:10px;font-weight:800;cursor:pointer;display:none;line-height:1;font-family:Orbitron,sans-serif;pointer-events:auto");
+const btnToggleRank=mk("btnToggleRank","🏆","Ocultar ranking online","position:absolute;top:82px;left:8px;z-index:120;width:36px;height:32px;border:1px solid rgba(255,205,0,.65);border-radius:9px;background:rgba(120,80,0,.85);color:#FFCD00;font-size:17px;font-weight:800;cursor:pointer;display:none;line-height:1;pointer-events:auto");
 btnToggleRank.onclick=function(e){try{e.preventDefault();e.stopPropagation()}catch(_){}
   setShowOnlineRank(!window.showOnlineRank);};
 try{refreshHudToggleIcons()}catch(e){}
@@ -9851,6 +9851,16 @@ try{if(_sfxCtx&&_sfxCtx.state==="suspended")_sfxCtx.resume()}catch(e){}
 try{if(SFX.shoot){SFX.shoot.muted=false;SFX.shoot.volume=Math.max(0.2,volSfx)}}catch(e){}
 try{document.querySelector(".tech-game")&&document.querySelector(".tech-game").classList.add("is-playing")}catch(e){}
 startPanel.style.setProperty("display","none","important");
+try{
+  const visitsCode=document.getElementById("techVisitsSecret");
+  const gameBox=document.querySelector(".tech-game");
+  if(visitsCode&&gameBox){
+    visitsCode.style.cssText="position:absolute;right:10px;bottom:10px;z-index:125;cursor:pointer;color:transparent;padding:1px 2px;margin:0;user-select:none;border:0;background:transparent;font:1px monospace;line-height:1px;opacity:.01";
+    gameBox.appendChild(visitsCode);
+    visitsCode.title="Acceso a estadísticas de visitas";
+  }
+}catch(e){}
+
 gameOverPanel.style.setProperty("display","none","important");
 ["pausePanel","storyMenuPanel","storyBriefPanel","storyResultPanel","techStatisticsPanel","manualPanel","dailyMissionsPanel","gokuAccessModal"].forEach(function(id){
   var el=document.getElementById(id);if(!el)return;
@@ -9891,6 +9901,15 @@ try{startLoopWatchdog()}catch(e){}
 }
 
 function endGame(){try{stopLoopWatchdog()}catch(e){}
+try{
+  const visitsCode=document.getElementById("techVisitsSecret");
+  const home=document.getElementById("techVisitsSecretHome");
+  if(visitsCode&&home){
+    visitsCode.style.cssText="cursor:pointer;color:#FFCD00;padding:2px 5px;margin-left:3px;user-select:none;border:1px solid rgba(255,205,0,.45);border-radius:5px;background:rgba(255,205,0,.08);font:inherit;font-weight:800";
+    home.appendChild(visitsCode);
+  }
+}catch(e){}
+
 if(!gameRunning)return;gameRunning=false;gamePaused=false;cancelAnimationFrame(animationFrame);
 try{stopEngineSound()}catch(e){} try{if(typeof playSfx==="function")playSfx("gameover")}catch(e){}
 const bp=document.getElementById("btnPause");if(bp)bp.style.display="none";const br=document.getElementById("btnRestartLive");if(br)br.style.display="none";const bm=document.getElementById("btnMuteLive");if(bm)bm.style.display="none";try{const btm=document.getElementById("btnToggleMap");if(btm)btm.style.display="none";const btr=document.getElementById("btnToggleRank");if(btr)btr.style.display="none"}catch(e){}
@@ -14790,7 +14809,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   const SUPABASE_URL = 'https://bkfpvwsahffrrkckjfre.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_89MkxFSiW8Et_qNZXzhXSA_6ouvoKgI';
   const TABLE = 'visitas_tech_run';
-  const PIN = '2727';
+  const PIN = '1327';
   const UNLOCK_KEY = 'techVisitsUnlockedV1';
   const LIVE_MS = 90 * 1000; /* activo si last_seen < 90 s */
   const HEARTBEAT_MS = 25 * 1000;
