@@ -8,8 +8,10 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" href="nave.png" type="image/x-icon">   
-<button type="button" onclick="openProgrammerModal()" class="boton-foto" aria-label="Ver perfil del programador">
-  <img src="yo.jpeg" alt="Brahyan" class="foto-perfil">
+
+<button type="button" onclick="openProgrammerModal()" class="boton-foto" aria-label="Reproducir video del programador">
+  <span class="video-perfil-icon" aria-hidden="true">▶</span>
+  <span class="video-perfil-label">VER VIDEO</span>
 </button>
 
 
@@ -20,55 +22,32 @@
 <style>
 
 
-/* Foto de perfil: tamaño adaptable */
+/* Acceso al video del programador */
 .boton-foto {
-  position: fixed;
-  top: 10px;
-  left: 10px;
-  z-index: 99999;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  line-height: 0;
+  position: fixed; top: 10px; left: 10px; z-index: 99999;
+  width: 100px; height: 100px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 5px;
+  color: #fff; background: radial-gradient(circle at 35% 25%, #183b65, #080d19 72%);
+  border: 3px solid #fff; border-radius: 50%;
+  outline: 3px solid #CE1126; box-shadow: 0 0 20px rgba(206,17,38,.55);
+  cursor: pointer; font-family: 'Orbitron', sans-serif;
 }
-
-.foto-perfil {
-  display: block;
-  width: 100px;
-  height: 100px;
-  max-width: calc(100vw - 24px);
-  object-fit: cover;
-  object-position: center;
-  border-radius: 50%;
-  border: 3px solid white;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+.video-perfil-icon { display:flex; align-items:center; justify-content:center;
+  width:42px; height:42px; padding-left:4px; border-radius:50%;
+  color:#fff; background:#CE1126; font-size:20px;
+  box-shadow:0 0 15px rgba(206,17,38,.7);
 }
-
-/* Celulares */
-@media screen and (max-width: 600px) {
-  .boton-foto {
-    top: 8px;
-    left: 8px;
-  }
-
-  .foto-perfil {
-    width: 55px;
-    height: 55px;
-    border-width: 2px;
-  }
+.video-perfil-label { font-size:9px; font-weight:800; letter-spacing:1px; }
+.boton-foto:hover { transform:scale(1.05); }
+@media screen and (max-width:600px) {
+  .boton-foto { top:8px; left:8px; width:58px; height:58px; border-width:2px; outline-width:2px; gap:2px; }
+  .video-perfil-icon { width:27px; height:27px; font-size:13px; }
+  .video-perfil-label { font-size:6px; letter-spacing:.4px; }
 }
-
-/* Foto del icono: solo en menú de inicio, nunca durante la partida */
 .tech-game.is-playing ~ .boton-foto,
 body:has(.tech-game.is-playing) .boton-foto {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
+  display:none !important; visibility:hidden !important; pointer-events:none !important;
 }
-
-
-
 
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -1372,7 +1351,8 @@ body:has(.tech-game.is-playing) #techAccountExit{
 #programmerProfileModal{position:fixed;inset:0;z-index:1000000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.88);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
 #programmerProfileModal.is-open{display:flex}
 #programmerProfileModal .programmer-profile-card{position:relative;width:min(430px,92vw);padding:18px 18px 22px;text-align:center;background:linear-gradient(160deg,#090d18,#16070b);border:3px solid #fff;border-radius:22px;box-shadow:0 0 0 3px #CE1126,0 0 28px rgba(206,17,38,.65),0 18px 60px rgba(0,0,0,.8)}
-#programmerProfileModal .programmer-profile-photo{display:block;width:min(320px,75vw);height:min(320px,75vw);max-height:55vh;object-fit:cover;object-position:center;margin:0 auto 18px;border:5px solid #fff;outline:4px solid #CE1126;border-radius:18px;box-shadow:0 0 0 2px #fff,0 0 24px rgba(206,17,38,.6)}
+#programmerProfileModal .programmer-profile-video{display:block;width:100%;max-width:680px;max-height:70vh;aspect-ratio:16/9;object-fit:contain;background:#000;margin:0 auto 18px;border:4px solid #fff;outline:3px solid #CE1126;border-radius:14px;box-shadow:0 0 24px rgba(206,17,38,.6)}
+#programmerProfileModal .programmer-profile-card{width:min(760px,94vw)}
 #programmerProfileModal .programmer-profile-title{margin:8px 0 0;color:#fff!important;-webkit-text-fill-color:#fff!important;font-family:'Orbitron',sans-serif;font-weight:800;font-size:clamp(17px,4vw,23px);letter-spacing:1.5px;text-shadow:0 0 12px rgba(206,17,38,.8)}
 #programmerProfileModal .programmer-profile-close{position:absolute;top:8px;right:8px;width:38px;height:38px;border:2px solid #fff;border-radius:50%;background:#CE1126;color:#fff;font-size:24px;line-height:1;cursor:pointer;z-index:2}
 @media(max-width:600px){#programmerProfileModal{padding:12px}#programmerProfileModal .programmer-profile-card{padding:16px 12px 20px}}
@@ -15121,8 +15101,8 @@ create policy "visitas_update_all" on public.visitas_tech_run for update to anon
     modal.id='programmerProfileModal';
     modal.setAttribute('role','dialog');
     modal.setAttribute('aria-modal','true');
-    modal.setAttribute('aria-label','Perfil del programador de software');
-    modal.innerHTML='<div class="programmer-profile-card"><button type="button" class="programmer-profile-close" aria-label="Cerrar">×</button><img class="programmer-profile-photo" src="yo.jpeg" alt="Brahyan, programador de software"><h2 class="programmer-profile-title">PROGRAMADOR DE SOFTWARE</h2></div>';
+    modal.setAttribute('aria-label','Video del programador de software');
+    modal.innerHTML='<div class="programmer-profile-card"><button type="button" class="programmer-profile-close" aria-label="Cerrar">×</button><video class="programmer-profile-video" controls playsinline preload="metadata"><source src="video.mp4" type="video/mp4">Tu navegador no puede reproducir este video.</video><h2 class="programmer-profile-title">PROGRAMADOR DE SOFTWARE</h2></div>';
     document.body.appendChild(modal);
     modal.addEventListener('click',function(event){if(event.target===modal)closeProgrammerModal();});
     modal.querySelector('.programmer-profile-close').addEventListener('click',closeProgrammerModal);
@@ -15131,16 +15111,21 @@ create policy "visitas_update_all" on public.visitas_tech_run for update to anon
   window.openProgrammerModal=function(){
     initProgrammerModal();
     var modal=document.getElementById('programmerProfileModal');
-    var source=document.querySelector('.foto-perfil');
-    var photo=modal.querySelector('.programmer-profile-photo');
-    if(source&&source.getAttribute('src'))photo.setAttribute('src',source.getAttribute('src'));
+    var video=modal.querySelector('.programmer-profile-video');
     modal.classList.add('is-open');
     document.body.style.overflow='hidden';
+    video.currentTime=0;
+    var playAttempt=video.play();
+    if(playAttempt&&typeof playAttempt.catch==='function')playAttempt.catch(function(){});
     modal.querySelector('.programmer-profile-close').focus();
   };
   window.closeProgrammerModal=function(){
     var modal=document.getElementById('programmerProfileModal');
-    if(modal)modal.classList.remove('is-open');
+    if(modal){
+      var video=modal.querySelector('.programmer-profile-video');
+      if(video){video.pause();video.currentTime=0;}
+      modal.classList.remove('is-open');
+    }
     document.body.style.overflow='';
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initProgrammerModal);else initProgrammerModal();
