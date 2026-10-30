@@ -11,7 +11,6 @@
 
 <button type="button" onclick="openProgrammerModal()" class="boton-foto" aria-label="Reproducir video del programador">
   <span class="video-perfil-icon" aria-hidden="true">▶</span>
-  <span class="video-perfil-label">VER VIDEO</span>
 </button>
 
 
@@ -29,20 +28,18 @@
   align-items: center; justify-content: center; gap: 5px;
   color: #fff; background: radial-gradient(circle at 35% 25%, #183b65, #080d19 72%);
   border: 3px solid #fff; border-radius: 50%;
-  outline: 3px solid #CE1126; box-shadow: 0 0 20px rgba(206,17,38,.55);
+  outline: 3px solid #fff; box-shadow: 0 0 20px rgba(255,255,255,.35);
   cursor: pointer; font-family: 'Orbitron', sans-serif;
 }
 .video-perfil-icon { display:flex; align-items:center; justify-content:center;
   width:42px; height:42px; padding-left:4px; border-radius:50%;
-  color:#fff; background:#CE1126; font-size:20px;
-  box-shadow:0 0 15px rgba(206,17,38,.7);
+  color:#fff; background:#111827; border:2px solid #fff; font-size:20px;
+  box-shadow:0 0 15px rgba(255,255,255,.35);
 }
-.video-perfil-label { font-size:9px; font-weight:800; letter-spacing:1px; }
 .boton-foto:hover { transform:scale(1.05); }
 @media screen and (max-width:600px) {
   .boton-foto { top:8px; left:8px; width:58px; height:58px; border-width:2px; outline-width:2px; gap:2px; }
   .video-perfil-icon { width:27px; height:27px; font-size:13px; }
-  .video-perfil-label { font-size:6px; letter-spacing:.4px; }
 }
 .tech-game.is-playing ~ .boton-foto,
 body:has(.tech-game.is-playing) .boton-foto {
@@ -1350,8 +1347,8 @@ body:has(.tech-game.is-playing) #techAccountExit{
 /* Modal de perfil del programador: foto ampliada y bordes blancos/rojos */
 #programmerProfileModal{position:fixed;inset:0;z-index:1000000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.88);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
 #programmerProfileModal.is-open{display:flex}
-#programmerProfileModal .programmer-profile-card{position:relative;width:min(430px,92vw);padding:18px 18px 22px;text-align:center;background:linear-gradient(160deg,#090d18,#16070b);border:3px solid #fff;border-radius:22px;box-shadow:0 0 0 3px #CE1126,0 0 28px rgba(206,17,38,.65),0 18px 60px rgba(0,0,0,.8)}
-#programmerProfileModal .programmer-profile-video{display:block;width:100%;max-width:680px;max-height:70vh;aspect-ratio:16/9;object-fit:contain;background:#000;margin:0 auto 18px;border:4px solid #fff;outline:3px solid #CE1126;border-radius:14px;box-shadow:0 0 24px rgba(206,17,38,.6)}
+#programmerProfileModal .programmer-profile-card{position:relative;width:min(430px,92vw);padding:18px 18px 22px;text-align:center;background:linear-gradient(160deg,#090d18,#16070b);border:3px solid #fff;border-radius:22px;box-shadow:0 0 0 3px #fff,0 0 28px rgba(255,255,255,.3),0 18px 60px rgba(0,0,0,.8)}
+#programmerProfileModal .programmer-profile-video{display:block;width:100%;max-width:680px;max-height:70vh;aspect-ratio:16/9;object-fit:contain;background:#000;margin:0 auto 18px;border:4px solid #fff;outline:3px solid #fff;border-radius:14px;box-shadow:0 0 24px rgba(255,255,255,.35)}
 #programmerProfileModal .programmer-profile-card{width:min(760px,94vw)}
 #programmerProfileModal .programmer-profile-title{margin:8px 0 0;color:#fff!important;-webkit-text-fill-color:#fff!important;font-family:'Orbitron',sans-serif;font-weight:800;font-size:clamp(17px,4vw,23px);letter-spacing:1.5px;text-shadow:0 0 12px rgba(206,17,38,.8)}
 #programmerProfileModal .programmer-profile-close{position:absolute;top:8px;right:8px;width:38px;height:38px;border:2px solid #fff;border-radius:50%;background:#CE1126;color:#fff;font-size:24px;line-height:1;cursor:pointer;z-index:2}
@@ -15102,7 +15099,7 @@ create policy "visitas_update_all" on public.visitas_tech_run for update to anon
     modal.setAttribute('role','dialog');
     modal.setAttribute('aria-modal','true');
     modal.setAttribute('aria-label','Video del programador de software');
-    modal.innerHTML='<div class="programmer-profile-card"><button type="button" class="programmer-profile-close" aria-label="Cerrar">×</button><video class="programmer-profile-video" controls playsinline preload="metadata"><source src="video.mp4" type="video/mp4">Tu navegador no puede reproducir este video.</video><h2 class="programmer-profile-title">PROGRAMADOR DE SOFTWARE</h2></div>';
+    modal.innerHTML='<div class="programmer-profile-card"><button type="button" class="programmer-profile-close" aria-label="Cerrar">×</button><video class="programmer-profile-video" controls playsinline preload="metadata"><source src="sofware.mp4" type="video/mp4">Tu navegador no puede reproducir este video.</video><h2 class="programmer-profile-title">PROGRAMADOR DE SOFTWARE</h2></div>';
     document.body.appendChild(modal);
     modal.addEventListener('click',function(event){if(event.target===modal)closeProgrammerModal();});
     modal.querySelector('.programmer-profile-close').addEventListener('click',closeProgrammerModal);
