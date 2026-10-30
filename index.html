@@ -9,9 +9,73 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="icon" href="nave.png" type="image/x-icon">   
 
-<button type="button" onclick="openProgrammerModal()" class="boton-foto" aria-label="Reproducir video del programador">
+<button type="button" onclick="toggleProgrammerBallVideo(event)" class="boton-foto" aria-label="Reproducir o pausar video del programador">
+  <video class="video-perfil-en-bola" playsinline preload="auto">
+    <source src="software.mp4" type="video/mp4">
+  </video>
   <span class="video-perfil-icon" aria-hidden="true">▶</span>
 </button>
+
+<script id="programmer-ball-video-script">
+function toggleProgrammerBallVideo(event){
+  if(event) event.stopPropagation();
+  var button = document.querySelector('.boton-foto');
+  if(!button) return;
+  var video = button.querySelector('.video-perfil-en-bola');
+  var icon = button.querySelector('.video-perfil-icon');
+  video.muted = false;
+  video.volume = 1;
+  if(!video) return;
+  if(video.paused){
+    video.play().then(function(){
+      button.classList.add('video-reproduciendo');
+      if(icon) icon.style.display='none';
+    }).catch(function(){
+      button.classList.remove('video-reproduciendo');
+      if(icon) icon.style.display='flex';
+    });
+  }else{
+    video.pause();
+    button.classList.remove('video-reproduciendo');
+    if(icon) icon.style.display='flex';
+  }
+}
+document.addEventListener('DOMContentLoaded',function(){
+  var button=document.querySelector('.boton-foto');
+  if(!button) return;
+  var video=button.querySelector('.video-perfil-en-bola');
+  var icon=button.querySelector('.video-perfil-icon');
+  if(video){
+    // Mantener visible el primer fotograma al cargar y al terminar.
+    video.addEventListener('loadeddata',function(){
+      if(video.paused && video.currentTime === 0){
+        try { video.currentTime = 0; } catch(e) {}
+      }
+    });
+    video.addEventListener('ended',function(){
+      button.classList.remove('video-reproduciendo');
+      if(icon) icon.style.display='flex';
+      video.pause();
+      // Regresar al primer fotograma para evitar que la bolita quede negra.
+      video.currentTime=0;
+    });
+    video.addEventListener('seeked',function(){
+      if(video.paused && video.currentTime === 0){
+        button.classList.remove('video-reproduciendo');
+        if(icon) icon.style.display='flex';
+      }
+    });
+    video.addEventListener('pause',function(){
+      button.classList.remove('video-reproduciendo');
+      if(icon) icon.style.display='flex';
+    });
+    video.addEventListener('play',function(){
+      button.classList.add('video-reproduciendo');
+      if(icon) icon.style.display='none';
+    });
+  }
+});
+</script>
 
 
 <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2946228508432690"
@@ -15090,44 +15154,7 @@ create policy "visitas_update_all" on public.visitas_tech_run for update to anon
 })();
 </script>
 
-<script id="programmer-profile-modal-script">
-(function(){
-  function initProgrammerModal(){
-    if(document.getElementById('programmerProfileModal'))return;
-    var modal=document.createElement('div');
-    modal.id='programmerProfileModal';
-    modal.setAttribute('role','dialog');
-    modal.setAttribute('aria-modal','true');
-    modal.setAttribute('aria-label','Video del programador de software');
-    modal.innerHTML='<div class="programmer-profile-card"><button type="button" class="programmer-profile-close" aria-label="Cerrar">×</button><video class="programmer-profile-video" controls playsinline preload="metadata"><source src="software.mp4" type="video/mp4">Tu navegador no puede reproducir este video.</video><h2 class="programmer-profile-title">PROGRAMADOR DE SOFTWARE</h2></div>';
-    document.body.appendChild(modal);
-    modal.addEventListener('click',function(event){if(event.target===modal)closeProgrammerModal();});
-    modal.querySelector('.programmer-profile-close').addEventListener('click',closeProgrammerModal);
-    document.addEventListener('keydown',function(event){if(event.key==='Escape')closeProgrammerModal();});
-  }
-  window.openProgrammerModal=function(){
-    initProgrammerModal();
-    var modal=document.getElementById('programmerProfileModal');
-    var video=modal.querySelector('.programmer-profile-video');
-    modal.classList.add('is-open');
-    document.body.style.overflow='hidden';
-    video.currentTime=0;
-    var playAttempt=video.play();
-    if(playAttempt&&typeof playAttempt.catch==='function')playAttempt.catch(function(){});
-    modal.querySelector('.programmer-profile-close').focus();
-  };
-  window.closeProgrammerModal=function(){
-    var modal=document.getElementById('programmerProfileModal');
-    if(modal){
-      var video=modal.querySelector('.programmer-profile-video');
-      if(video){video.pause();video.currentTime=0;}
-      modal.classList.remove('is-open');
-    }
-    document.body.style.overflow='';
-  };
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initProgrammerModal);else initProgrammerModal();
-})();
-</script>
+<script id="programmer-profile-modal-script">/* Modal eliminado: el video se reproduce dentro de la bolita. */</script>
 
 <style id="tech-start-menu-layout-fix">
 /* Menú inicio: menos apeñuscado, mejor en pantallas grandes */
@@ -16707,8 +16734,156 @@ body.tech-playing .game-top{
 })();
 </script>
 
-</body>
-</html>
+</bod
+<style id="programmer-video-inline-redesign">
+/* Reproductor compacto: aparece junto al botón, sin cubrir ni ampliar la página */
+#programmerProfileModal{
+  position:fixed !important;
+  inset:0 auto auto 0 !important;
+  width:auto !important;
+  height:auto !important;
+  min-height:0 !important;
+  display:none !important;
+  align-items:flex-start !important;
+  justify-content:flex-start !important;
+  padding:0 !important;
+  background:transparent !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  pointer-events:none !important;
+  z-index:1000000 !important;
+}
+#programmerProfileModal.is-open{
+  display:flex !important;
+}
+#programmerProfileModal .programmer-profile-card{
+  position:fixed !important;
+  top:18px !important;
+  left:122px !important;
+  width:min(360px,calc(100vw - 140px)) !important;
+  max-width:360px !important;
+  padding:38px 12px 12px !important;
+  border:1px solid rgba(255,255,255,.7) !important;
+  border-radius:16px !important;
+  background:linear-gradient(145deg,rgba(8,16,32,.98),rgba(2,5,12,.98)) !important;
+  box-shadow:0 14px 38px rgba(0,0,0,.55),0 0 22px rgba(255,255,255,.10) !important;
+  pointer-events:auto !important;
+  box-sizing:border-box !important;
+  animation:programmerPlayerIn .18s ease-out both;
+}
+#programmerProfileModal .programmer-profile-video{
+  display:block !important;
+  width:100% !important;
+  height:auto !important;
+  max-height: min(42vh,230px) !important;
+  aspect-ratio:16/9 !important;
+  object-fit:contain !important;
+  background:#000 !important;
+  border:1px solid rgba(255,255,255,.35) !important;
+  border-radius:10px !important;
+}
+#programmerProfileModal .programmer-profile-title{
+  margin:10px 0 0 !important;
+  font-size:12px !important;
+  letter-spacing:1px !important;
+  text-align:center !important;
+  text-shadow:none !important;
+}
+#programmerProfileModal .programmer-profile-close{
+  top:7px !important;
+  right:8px !important;
+  width:29px !important;
+  height:29px !important;
+  border:1px solid #fff !important;
+  border-radius:9px !important;
+  background:#17243a !important;
+  color:#fff !important;
+  font-size:21px !important;
+  line-height:1 !important;
+}
+@keyframes programmerPlayerIn{
+  from{opacity:0;transform:translateY(-7px) scale(.98)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@media(max-width:600px){
+  #programmerProfileModal .programmer-profile-card{
+    top:76px !important;
+    left:8px !important;
+    width:min(330px,calc(100vw - 16px)) !important;
+    max-width:none !important;
+    padding:36px 9px 10px !important;
+  }
+  #programmerProfileModal .programmer-profile-video{
+    max-height:32vh !important;
+  }
+}
+/* El fondo ya no intercepta clics fuera del reproductor */
+#programmerProfileModal:not(.is-open){pointer-events:none !important}
+</style>
+
+y>
+</htm
+<style id="programmer-video-only-inside-ball">
+.boton-foto{
+  position:fixed !important;
+  top:10px !important;
+  right:10px !important;
+  left:auto !important;
+  width:100px !important;
+  height:100px !important;
+  min-width:100px !important;
+  min-height:100px !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  border-radius:50% !important;
+  isolation:isolate !important;
+  background:radial-gradient(circle at 35% 25%,#183b65,#080d19 72%) !important;
+  border:3px solid #fff !important;
+  outline:2px solid rgba(255,255,255,.85) !important;
+  box-shadow:0 0 20px rgba(255,255,255,.35) !important;
+  z-index:999999 !important;
+}
+.boton-foto .video-perfil-en-bola{
+  position:absolute !important;
+  inset:0 !important;
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:none !important;
+  max-height:none !important;
+  object-fit:cover !important;
+  border:0 !important;
+  border-radius:50% !important;
+  outline:0 !important;
+  box-shadow:none !important;
+  background:#000 !important;
+  opacity:0 !important;
+  pointer-events:none !important;
+}
+.boton-foto.video-reproduciendo .video-perfil-en-bola{
+  opacity:1 !important;
+}
+.boton-foto .video-perfil-icon{
+  position:relative !important;
+  z-index:2 !important;
+  display:flex;
+  pointer-events:none !important;
+}
+#programmerProfileModal{display:none !important}
+@media(max-width:600px){
+  .boton-foto{
+    top:10px !important;
+    right:10px !important;
+    left:auto !important;
+    width:76px !important;
+    height:76px !important;
+    min-width:76px !important;
+    min-height:76px !important;
+  }
+}
+</style>
+
+l>
 <style id="tech-run-desktop-large-final">
 /* PC: usar todo el ancho disponible y hacer el menú realmente legible */
 @media (min-width: 1101px) and (pointer: fine) {
@@ -16862,3 +17037,115 @@ body.tech-playing .game-top{
   clip-path: none !important;
 }
 </style>
+
+
+<style id="fix-video-hard-crop-circle">
+/* Recorte estricto: el único contenido visible es el interior de la bolita */
+button.boton-foto{
+  width:100px !important;
+  height:100px !important;
+  min-width:100px !important;
+  min-height:100px !important;
+  padding:0 !important;
+  overflow:hidden !important;
+  clip-path:circle(50%) !important;
+  -webkit-clip-path:circle(50%) !important;
+  border-radius:50% !important;
+  contain:paint !important;
+  transform:none !important;
+}
+button.boton-foto .video-perfil-en-bola{
+  position:absolute !important;
+  inset:0 !important;
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  min-width:0 !important;
+  min-height:0 !important;
+  max-width:100% !important;
+  max-height:100% !important;
+  margin:0 !important;
+  padding:0 !important;
+  object-fit:cover !important;
+  object-position:center center !important;
+  border:0 !important;
+  outline:0 !important;
+  border-radius:50% !important;
+  clip-path:circle(50%) !important;
+  -webkit-clip-path:circle(50%) !important;
+  transform:none !important;
+  box-shadow:none !important;
+  pointer-events:none !important;
+  background:#000 !important;
+}
+button.boton-foto.video-reproduciendo .video-perfil-en-bola{
+  opacity:1 !important;
+}
+button.boton-foto .video-perfil-icon{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+  margin:auto !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  border:0 !important;
+  border-radius:50% !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  z-index:5 !important;
+}
+@media(max-width:600px){
+  button.boton-foto{
+    width:76px !important;
+    height:76px !important;
+    min-width:76px !important;
+    min-height:76px !important;
+  }
+}
+</style>
+
+
+<style id="fix-video-thumbnail-visible">
+/* Mostrar siempre el fotograma del video, incluso cuando está pausado */
+button.boton-foto .video-perfil-en-bola,
+button.boton-foto.video-reproduciendo .video-perfil-en-bola {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+button.boton-foto .video-perfil-en-bola {
+  background: transparent !important;
+}
+</style>
+<script id="fix-video-first-frame-and-ended">
+document.addEventListener('DOMContentLoaded', function () {
+  var button = document.querySelector('button.boton-foto');
+  if (!button) return;
+  var video = button.querySelector('video.video-perfil-en-bola');
+  var icon = button.querySelector('.video-perfil-icon');
+  if (!video) return;
+  video.muted = false;
+  video.volume = 1;
+  video.playsInline = true;
+  video.preload = 'auto';
+  function showPausedFrame() {
+    button.classList.remove('video-reproduciendo');
+    if (icon) icon.style.display = 'flex';
+    video.pause();
+    if (video.readyState >= 2 && video.currentTime !== 0) {
+      try { video.currentTime = 0; } catch (e) {}
+    }
+  }
+  video.addEventListener('loadeddata', function () {
+    if (video.paused) showPausedFrame();
+  });
+  video.addEventListener('ended', showPausedFrame);
+  video.addEventListener('pause', function () {
+    if (video.ended || video.currentTime === 0) {
+      button.classList.remove('video-reproduciendo');
+      if (icon) icon.style.display = 'flex';
+    }
+  });
+});
+</script>
