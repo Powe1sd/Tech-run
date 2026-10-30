@@ -15099,7 +15099,7 @@ create policy "visitas_update_all" on public.visitas_tech_run for update to anon
     modal.setAttribute('role','dialog');
     modal.setAttribute('aria-modal','true');
     modal.setAttribute('aria-label','Video del programador de software');
-    modal.innerHTML='<div class="programmer-profile-card"><button type="button" class="programmer-profile-close" aria-label="Cerrar">×</button><video class="programmer-profile-video" controls playsinline preload="metadata"><source src="sofware.mp4" type="video/mp4">Tu navegador no puede reproducir este video.</video><h2 class="programmer-profile-title">PROGRAMADOR DE SOFTWARE</h2></div>';
+    modal.innerHTML='<div class="programmer-profile-card"><button type="button" class="programmer-profile-close" aria-label="Cerrar">×</button><video class="programmer-profile-video" controls playsinline preload="metadata"><source src="software.mp4" type="video/mp4">Tu navegador no puede reproducir este video.</video><h2 class="programmer-profile-title">PROGRAMADOR DE SOFTWARE</h2></div>';
     document.body.appendChild(modal);
     modal.addEventListener('click',function(event){if(event.target===modal)closeProgrammerModal();});
     modal.querySelector('.programmer-profile-close').addEventListener('click',closeProgrammerModal);
