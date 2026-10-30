@@ -10,71 +10,123 @@
 <link rel="icon" href="nave.png" type="image/x-icon">   
 
 <button type="button" onclick="toggleProgrammerBallVideo(event)" class="boton-foto" aria-label="Reproducir o pausar video del programador">
-  <video class="video-perfil-en-bola" playsinline preload="auto">
+  <video class="video-perfil-en-bola" playsinline webkit-playsinline disablepictureinpicture controlslist="nodownload noplaybackrate noremoteplayback" preload="auto">
     <source src="software.mp4" type="video/mp4">
   </video>
   <span class="video-perfil-icon" aria-hidden="true">▶</span>
 </button>
 
 <script id="programmer-ball-video-script">
-function toggleProgrammerBallVideo(event){
-  if(event) event.stopPropagation();
-  var button = document.querySelector('.boton-foto');
-  if(!button) return;
-  var video = button.querySelector('.video-perfil-en-bola');
-  var icon = button.querySelector('.video-perfil-icon');
-  video.muted = false;
-  video.volume = 1;
-  if(!video) return;
-  if(video.paused){
+(function(){
+  var button, video, icon, preview, frameReady = false, capturing = false;
+
+  function setPlaying(playing){
+    if(!button) return;
+    button.classList.toggle('video-reproduciendo', !!playing);
+    if(icon) icon.style.display = playing ? 'none' : 'flex';
+    if(preview) preview.style.display = playing ? 'none' : (frameReady ? 'block' : 'none');
+  }
+
+  function saveCurrentFrame(){
+    if(!video || !video.videoWidth || !video.videoHeight || !preview) return false;
+    try {
+      var canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      preview.src = canvas.toDataURL('image/jpeg', 0.92);
+      frameReady = true;
+      preview.style.display = video.paused ? 'block' : 'none';
+      return true;
+    } catch(e) { return false; }
+  }
+
+  // Decodifica el primer fotograma en silencio y lo conserva como imagen fija.
+  // Así no dependemos de que el navegador pinte el fotograma inicial del <video>.
+  function captureFirstFrame(){
+    if(!video || capturing || frameReady) return;
+    capturing = true;
+    var oldMuted = video.muted;
+    var oldTime = video.currentTime || 0;
+    video.muted = true;
     video.play().then(function(){
-      button.classList.add('video-reproduciendo');
-      if(icon) icon.style.display='none';
-    }).catch(function(){
-      button.classList.remove('video-reproduciendo');
-      if(icon) icon.style.display='flex';
-    });
-  }else{
-    video.pause();
-    button.classList.remove('video-reproduciendo');
-    if(icon) icon.style.display='flex';
-  }
-}
-document.addEventListener('DOMContentLoaded',function(){
-  var button=document.querySelector('.boton-foto');
-  if(!button) return;
-  var video=button.querySelector('.video-perfil-en-bola');
-  var icon=button.querySelector('.video-perfil-icon');
-  if(video){
-    // Mantener visible el primer fotograma al cargar y al terminar.
-    video.addEventListener('loadeddata',function(){
-      if(video.paused && video.currentTime === 0){
+      var capture = function(){
+        saveCurrentFrame();
+        video.pause();
+        video.muted = oldMuted;
         try { video.currentTime = 0; } catch(e) {}
+        capturing = false;
+        setPlaying(false);
+      };
+      if(video.requestVideoFrameCallback){
+        video.requestVideoFrameCallback(capture);
+      } else {
+        video.addEventListener('timeupdate', function once(){
+          video.removeEventListener('timeupdate', once);
+          capture();
+        });
       }
-    });
-    video.addEventListener('ended',function(){
-      button.classList.remove('video-reproduciendo');
-      if(icon) icon.style.display='flex';
-      video.pause();
-      // Regresar al primer fotograma para evitar que la bolita quede negra.
-      video.currentTime=0;
-    });
-    video.addEventListener('seeked',function(){
-      if(video.paused && video.currentTime === 0){
-        button.classList.remove('video-reproduciendo');
-        if(icon) icon.style.display='flex';
-      }
-    });
-    video.addEventListener('pause',function(){
-      button.classList.remove('video-reproduciendo');
-      if(icon) icon.style.display='flex';
-    });
-    video.addEventListener('play',function(){
-      button.classList.add('video-reproduciendo');
-      if(icon) icon.style.display='none';
+    }).catch(function(){
+      video.muted = oldMuted;
+      capturing = false;
     });
   }
-});
+
+  window.toggleProgrammerBallVideo = function(event){
+    if(event) event.stopPropagation();
+    if(!video) return;
+    if(video.paused){
+      video.muted = false;
+      video.volume = 1;
+      var playPromise = video.play();
+      if(playPromise && playPromise.catch) playPromise.catch(function(){ setPlaying(false); });
+    } else {
+      video.pause();
+      try { video.currentTime = 0; } catch(e) {}
+      setPlaying(false);
+    }
+  };
+
+  function init(){
+    button = document.querySelector('button.boton-foto');
+    if(!button) return;
+    video = button.querySelector('video.video-perfil-en-bola');
+    icon = button.querySelector('.video-perfil-icon');
+    if(!video) return;
+
+    preview = document.createElement('img');
+    preview.className = 'video-perfil-preview';
+    preview.alt = '';
+    preview.setAttribute('aria-hidden','true');
+    preview.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:50%;display:none;pointer-events:none;z-index:2;';
+    button.insertBefore(preview, video);
+
+    video.controls = false;
+    video.playsInline = true;
+    video.setAttribute('playsinline','');
+    video.setAttribute('webkit-playsinline','');
+    video.setAttribute('disablepictureinpicture','');
+    video.setAttribute('preload','auto');
+    video.muted = false;
+    video.volume = 1;
+
+    video.addEventListener('playing', function(){ setPlaying(true); });
+    video.addEventListener('pause', function(){ setPlaying(false); });
+    video.addEventListener('ended', function(){
+      // Mantiene visible la imagen capturada y reinicia el video detrás de ella.
+      setPlaying(false);
+      try { video.currentTime = 0; } catch(e) {}
+    });
+    video.addEventListener('loadeddata', captureFirstFrame, {once:true});
+    video.addEventListener('error', function(){ setPlaying(false); });
+    setPlaying(false);
+    if(video.readyState >= 2) captureFirstFrame();
+    else video.addEventListener('loadedmetadata', captureFirstFrame, {once:true});
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
+  else init();
+})();
 </script>
 
 
@@ -16821,8 +16873,6 @@ body.tech-playing .game-top{
 #programmerProfileModal:not(.is-open){pointer-events:none !important}
 </style>
 
-y>
-</htm
 <style id="programmer-video-only-inside-ball">
 .boton-foto{
   position:fixed !important;
@@ -16883,7 +16933,6 @@ y>
 }
 </style>
 
-l>
 <style id="tech-run-desktop-large-final">
 /* PC: usar todo el ancho disponible y hacer el menú realmente legible */
 @media (min-width: 1101px) and (pointer: fine) {
@@ -17118,34 +17167,25 @@ button.boton-foto .video-perfil-en-bola {
   background: transparent !important;
 }
 </style>
-<script id="fix-video-first-frame-and-ended">
-document.addEventListener('DOMContentLoaded', function () {
-  var button = document.querySelector('button.boton-foto');
-  if (!button) return;
-  var video = button.querySelector('video.video-perfil-en-bola');
-  var icon = button.querySelector('.video-perfil-icon');
-  if (!video) return;
-  video.muted = false;
-  video.volume = 1;
-  video.playsInline = true;
-  video.preload = 'auto';
-  function showPausedFrame() {
-    button.classList.remove('video-reproduciendo');
-    if (icon) icon.style.display = 'flex';
-    video.pause();
-    if (video.readyState >= 2 && video.currentTime !== 0) {
-      try { video.currentTime = 0; } catch (e) {}
-    }
-  }
-  video.addEventListener('loadeddata', function () {
-    if (video.paused) showPausedFrame();
-  });
-  video.addEventListener('ended', showPausedFrame);
-  video.addEventListener('pause', function () {
-    if (video.ended || video.currentTime === 0) {
-      button.classList.remove('video-reproduciendo');
-      if (icon) icon.style.display = 'flex';
-    }
-  });
-});
-</script>
+
+
+
+<style id="programmer-video-final-overrides">
+button.boton-foto{overflow:hidden!important;border-radius:50%!important;clip-path:circle(50%)!important;-webkit-clip-path:circle(50%)!important;isolation:isolate!important;}
+button.boton-foto video.video-perfil-en-bola{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;max-width:none!important;max-height:none!important;display:block!important;object-fit:cover!important;object-position:center!important;border:0!important;border-radius:50%!important;opacity:1!important;visibility:visible!important;pointer-events:none!important;z-index:1!important;background:transparent!important;}
+button.boton-foto .video-perfil-icon{position:absolute!important;inset:0!important;z-index:2!important;display:flex;align-items:center;justify-content:center;pointer-events:none!important;background:transparent!important;border:0!important;box-shadow:none!important;}
+button.boton-foto.video-reproduciendo .video-perfil-icon{display:none!important;}
+@media(max-width:600px){button.boton-foto{width:76px!important;height:76px!important;min-width:76px!important;min-height:76px!important;}}
+</style>
+
+
+<style id="programmer-video-preview-layer">
+button.boton-foto{position:fixed!important;isolation:isolate!important;}
+button.boton-foto img.video-perfil-preview{z-index:2!important;}
+button.boton-foto video.video-perfil-en-bola{z-index:1!important;}
+button.boton-foto .video-perfil-icon{z-index:3!important;}
+button.boton-foto.video-reproduciendo img.video-perfil-preview{display:none!important;}
+button.boton-foto:not(.video-reproduciendo) img.video-perfil-preview{display:block!important;}
+</style>
+</body>
+</html>
