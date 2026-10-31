@@ -4499,11 +4499,6 @@ function fireRedLBeam(){
 
 function applyNewPowerPickup(type){
   powersCollected++;
-  if(type==="chain"){
-    if(powerMode==="manual"){specialCharges=Math.min(9,specialCharges+1);playSfx("power");scenarioMsg="⚡ Cadena lista";scenarioTransition=45}
-    else activateChainLightning();
-    return true;
-  }
   if(type==="phase"){
     if(powerMode==="manual"){specialCharges=Math.min(9,specialCharges+1);playSfx("power");scenarioMsg="👻 Phase listo";scenarioTransition=45}
     else activatePhaseShift();
@@ -4537,7 +4532,7 @@ function useSpecialPower(){
     fireKamehameha();
     return;
   }
-  const opts=["hammer","bomb","burst","shield","missile","chain","phase","orbmine","vacuum","railgun","redL","redL"];
+  const opts=["bomb","burst","shield","missile","phase","orbmine","vacuum","railgun","redL","redL"];
   const pick=opts[Math.floor(Math.random()*opts.length)];
   if(pick==="hammer"){activateHammer();playSfx("hammer");if(!SFX.hammer)playSfx("power");try{playSfx("explode")}catch(e){}}
   else if(pick==="nova"){activateNova();playSfx("nova");if(!SFX.nova)playSfx("explode")}
@@ -6564,7 +6559,7 @@ function maybeSpawnPickup(x,y){
   /* pool de poderes especiales (hammer, chrono, barrier, stormbolt, bazooka, etc.) */
   if(r<.72){
     /* L y ┘ ponderados: aparecen con más frecuencia */
-    const pool=["ammo","hammer","shield","bounce","missile","allies","overdrive","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","invisible","drone","barrier","stormbolt","bazooka","vortex","ion","emp","chain","phase","orbmine","vacuum","railgun","redL","redL","redL"];
+    const pool=["ammo","shield","bounce","missile","allies","overdrive","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","invisible","drone","barrier","bazooka","vortex","ion","emp","phase","orbmine","vacuum","railgun","redL","redL","redL"];
     const type=pool[Math.floor(Math.random()*pool.length)];
     pickups.push({x,y,type,size:s,vy:1.5});
   }
@@ -8805,8 +8800,8 @@ function updateEnemyBullets(){
   }
 }
 
-function updatePickups(){for(let i=pickups.length-1;i>=0;i--){if(pickups[i]&&(pickups[i].type==="chrono"||pickups[i].type==="slow")){pickups.splice(i,1)}}const labels={redL:"┘",ammo:"+40",coin:"⭐",shield:"S",bounce:"↻",rapid:"R",triple:"3",slow:"⏱",laser:"L",bomb:"💣",pierce:"P",life:"♥",invisible:"★",magnet:"M",hammer:"🔨",missile:"🚀",allies:"✈",overdrive:"⚡",nova:"✸",reflect:"↺",burst:"✸✸",repair:"+",drone:"🛸",freeze:"❄",chrono:"⏱",barrier:"⬡",stormbolt:"⚡",bazooka:"🚀",vortex:"🌀",ion:"💠",emp:"💥",chain:"⚡⚡",phase:"👻",orbmine:"💣",vacuum:"🧲",railgun:"══"};
-const colors={redL:"#FF1738",ammo:"#FFCD00",coin:"#FFD700",shield:"#00C8FF",bounce:"#AAFFFF",rapid:"#00FF88",triple:"#66CCFF",slow:"#AA88FF",laser:"#00FFFF",bomb:"#FF4400",pierce:"#AADD00",life:"#FF3333",invisible:"#FFD700",magnet:"#FFAA00",hammer:"#E8F0FF",missile:"#FF8800",allies:"#44FFAA",overdrive:"#FF2244",nova:"#FFAA00",reflect:"#66FFEE",burst:"#FF8800",repair:"#88FF88",drone:"#88DDFF",freeze:"#AADDFF",chrono:"#FFE066",barrier:"#66CCFF",stormbolt:"#FFEE88",bazooka:"#FF8844",vortex:"#CC66FF",ion:"#66FFEE",emp:"#FFEE66",chain:"#66EEFF",phase:"#CCDDEE",orbmine:"#FF9944",vacuum:"#FFD700",railgun:"#FFE566"};
+function updatePickups(){for(let i=pickups.length-1;i>=0;i--){if(pickups[i]&&(pickups[i].type==="chrono"||pickups[i].type==="slow"||pickups[i].type==="hammer"||pickups[i].type==="chain"||pickups[i].type==="freeze"||pickups[i].type==="stormbolt")){pickups.splice(i,1)}}const labels={redL:"┘",ammo:"+40",coin:"⭐",shield:"S",bounce:"↻",rapid:"R",triple:"3",laser:"L",bomb:"💣",pierce:"P",life:"♥",invisible:"★",magnet:"M",missile:"🚀",allies:"✈",overdrive:"⚡",nova:"✸",reflect:"↺",burst:"✸✸",repair:"+",drone:"🛸",chrono:"⏱",barrier:"⬡",bazooka:"🚀",vortex:"🌀",ion:"💠",emp:"💥",phase:"👻",orbmine:"💣",vacuum:"🧲",railgun:"══"};
+const colors={redL:"#FF1738",ammo:"#FFCD00",coin:"#FFD700",shield:"#00C8FF",bounce:"#AAFFFF",rapid:"#00FF88",triple:"#66CCFF",laser:"#00FFFF",bomb:"#FF4400",pierce:"#AADD00",life:"#FF3333",invisible:"#FFD700",magnet:"#FFAA00",missile:"#FF8800",allies:"#44FFAA",overdrive:"#FF2244",nova:"#FFAA00",reflect:"#66FFEE",burst:"#FF8800",repair:"#88FF88",drone:"#88DDFF",chrono:"#FFE066",barrier:"#66CCFF",bazooka:"#FF8844",vortex:"#CC66FF",ion:"#66FFEE",emp:"#FFEE66",phase:"#CCDDEE",orbmine:"#FF9944",vacuum:"#FFD700",railgun:"#FFE566"};
 for(let i=pickups.length-1;i>=0;i--){const p=pickups[i];
 if(magnet>0){const dx=player.x-p.x,dy=player.y-p.y,d=Math.hypot(dx,dy)||1;p.x+=(dx/d)*2.5;p.y+=(dy/d)*2.5}
 p.y+=p.vy;
@@ -8844,11 +8839,6 @@ else if(p.type==="pierce"){pierce=360;playSfx("power")}
 else if(p.type==="life"){lives=Math.min(lives+1,3);updateLivesUI();playSfx("power")}
 else if(p.type==="invisible"){invisible=Math.max(invisible,420);playSfx("power");scenarioMsg="★ INVULNERABLE";scenarioTransition=75;try{doVibrate(20)}catch(e){}}
 else if(p.type==="magnet"){magnet=400;playSfx("power")}
-else if(p.type==="hammer"){
-  powersCollected++;
-  if(powerMode==="manual"){specialCharges=Math.min(6,specialCharges+1);playSfx("power");scenarioMsg="🔨 Martillo listo";scenarioTransition=50}
-  else{activateHammer();playSfx("hammer");if(!SFX.hammer)playSfx("power");playSfx("explode");scenarioMsg="🔨 MARTILLAZO";scenarioTransition=70}
-}
 else if(p.type==="missile"){missilePower=420;playSfx("missile");if(!SFX.missile)playSfx("power");for(let k=0;k<3;k++)setTimeout(()=>{if(gameRunning&&!gamePaused)fireMissile()},k*120)}
 else if(p.type==="allies"){spawnAllies();playSfx("allies");if(!SFX.allies)playSfx("power")}
 else if(p.type==="overdrive"){overdrive=360;playSfx("overdrive");if(!SFX.overdrive)playSfx("power")}
