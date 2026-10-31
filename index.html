@@ -2747,7 +2747,7 @@ let starsBG=[];
 let level=1,phase="meteors",phaseTimer=0,waveNumber=1,waveCount=0;
 let scenario=1,scenarioTransition=0,scenarioMsg="";
 const METEOR_DURATION=18*60,WARNING_DURATION=1.5*60; /* oleada cada 18 s */
-let ammo=100,shield=0,bounceShield=0,rapidFire=0,tripleShot=0,slowMo=0,laser=0,pierce=0,invisible=0,magnet=0,missilePower=0,allyPower=0,storm=0,overdrive=0,nova=0,reflect=0,burst=0,repair=0,freezeEnemies=0,barrier=0,bazooka=0,vortex=0,ion=0,emp=0,laserGrace=0,specialCharges=3,powersCollected=0,lives=1,powerMode=lsGet("techPowerMode","auto"),coins=Number(lsGet("techCoinsV2",lsGet("techCoins",0)))||0,ownedWeapons=(function(){try{var w=JSON.parse(lsGet('techWeapons','["basic"]'));return Array.isArray(w)?w:['basic']}catch(e){return['basic']}})(),currentWeapon=lsGet('techWeapon','basic')||'basic';
+let ammo=100,shield=0,bounceShield=0,rapidFire=0,tripleShot=0,laser=0,pierce=0,invisible=0,magnet=0,missilePower=0,allyPower=0,storm=0,overdrive=0,nova=0,reflect=0,burst=0,repair=0,freezeEnemies=0,barrier=0,bazooka=0,vortex=0,ion=0,emp=0,laserGrace=0,specialCharges=3,powersCollected=0,lives=1,powerMode=lsGet("techPowerMode","auto"),coins=Number(lsGet("techCoinsV2",lsGet("techCoins",0)))||0,ownedWeapons=(function(){try{var w=JSON.parse(lsGet('techWeapons','["basic"]'));return Array.isArray(w)?w:['basic']}catch(e){return['basic']}})(),currentWeapon=lsGet('techWeapon','basic')||'basic';
 let showGokuFormsBar=lsGet("techShowForms","1")!=="0";
 window.showMinimap=lsGet("techShowMinimap","1")!=="0";
 window.showOnlineRank=lsGet("techShowOnlineRank","1")!=="0";
@@ -2808,6 +2808,7 @@ let orbitalMines=[],chainFX=[];
 let runStartTime=0;
 const keys={up:false,down:false,left:false,right:false};
 let sensMouse=Number(lsGet("techSensMouse",0.85)); if(isNaN(sensMouse)||sensMouse<=0)sensMouse=0.85;
+let mouseCursorStyle=lsGet("techMouseCursorStyle","arrow"); if(!["arrow","chevron","diamond","spark"].includes(mouseCursorStyle))mouseCursorStyle="arrow";
 let sensKeys=Number(lsGet("techSensKeys",1)); if(isNaN(sensKeys)||sensKeys<=0)sensKeys=1;
 let sensPad=Number(lsGet("techSensPadV7",0.15)); if(isNaN(sensPad))sensPad=0.15; if(sensPad<0)sensPad=0;
 /* Volúmenes por defecto bajos */
@@ -3556,6 +3557,13 @@ function getConfigHTML(){
 <p style="color:#FFCD00;font-size:11px;margin:6px 0 2px">${T("sensMouse")}</p>
 <input type="range" id="sensMouse" min="0.2" max="2.0" step="0.05" value="${sensMouse}" style="width:90%;accent-color:#FFCD00">
 <p id="sensMouseVal" style="color:#aaa;font-size:10px">${Number(sensMouse).toFixed(2)}x</p>
+<p style="color:#FFCD00;font-size:11px;margin:8px 0 4px">🖱️ Diseño de flecha del mouse</p>
+<select id="cursorStyleSelect" style="width:90%;padding:8px;border-radius:8px;background:#111;color:#fff;border:1px solid #444">
+<option value="arrow" ${mouseCursorStyle==="arrow"?"selected":""}>➤ Flecha clásica</option>
+<option value="chevron" ${mouseCursorStyle==="chevron"?"selected":""}>➦ Flecha doble</option>
+<option value="diamond" ${mouseCursorStyle==="diamond"?"selected":""}>◆ Diamante</option>
+<option value="spark" ${mouseCursorStyle==="spark"?"selected":""}>✦ Estrella</option>
+</select>
 <p style="color:#FFCD00;font-size:11px;margin:6px 0 2px">${T("sensKeys")}</p>
 <input type="range" id="sensKeys" min="0.3" max="2.2" step="0.05" value="${sensKeys}" style="width:90%;accent-color:#0038A8">
 <p id="sensKeysVal" style="color:#aaa;font-size:10px">${Number(sensKeys).toFixed(2)}x</p>
@@ -5114,6 +5122,8 @@ if(ist)ist.onchange=()=>{impactShakeOn=ist.checked;lsSet("techImpactShake",impac
 const ift=document.getElementById("impactFlashToggle");
 if(ift)ift.onchange=()=>{impactFlashOn=ift.checked;lsSet("techImpactFlash",impactFlashOn?"1":"0");if(!impactFlashOn)damageFlash=0};
 const lp=document.getElementById("lowPowerToggle");if(lp)lp.onchange=()=>{lowPower=lp.checked;try{resizeCanvas()}catch(e){}};
+const cursorSel=document.getElementById("cursorStyleSelect");
+if(cursorSel){cursorSel.value=mouseCursorStyle;cursorSel.onchange=()=>{mouseCursorStyle=cursorSel.value;lsSet("techMouseCursorStyle",mouseCursorStyle);if(window.__techMouseCursor)window.__techMouseCursor.textContent=({arrow:"➤",chevron:"➦",diamond:"◆",spark:"✦"})[mouseCursorStyle]||"➤";};}
 const vds=document.getElementById("viewDistanceSelect");
 if(vds){vds.value=viewDistance;vds.onchange=()=>{viewDistance=String(vds.value||"standard");if(!["close","standard","far"].includes(viewDistance))viewDistance="standard";lsSet("techViewDistance",viewDistance);try{resizeCanvas()}catch(e){}}};
 const gy=document.getElementById("gyroToggle");if(gy)gy.onchange=()=>{gyroOn=gy.checked;if(gyroOn&&window.DeviceOrientationEvent){
@@ -5146,7 +5156,7 @@ if(pms){pms.value=powerMode;pms.onchange=()=>{powerMode=pms.value;lsSet("techPow
 const btnMan=document.getElementById("btnManual");if(btnMan)btnMan.onclick=()=>showUserManual();
 
 document.getElementById("closeConfig").onclick=()=>{
-  lsSet("techSensMouse",sensMouse);lsSet("techSensKeys",sensKeys);lsSet("techSensPadV7",sensPad);
+  lsSet("techSensMouse",sensMouse);lsSet("techMouseCursorStyle",mouseCursorStyle);lsSet("techSensKeys",sensKeys);lsSet("techSensPadV7",sensPad);
   lsSet("techVolMusicV3",volMusic);lsSet("techVolSfxV3",volSfx);lsSet("techAudioMuted",audioMuted?"1":"0");
   lsSet("techVibrate",vibrateOn?"1":"0");lsSet("techVibrateShoot",vibrateShoot?"1":"0");lsSet("techLowPower",lowPower?"1":"0");lsSet("techViewDistance",viewDistance||"standard");lsSet("techGyro",gyroOn?"1":"0");lsSet("techLang",lang);lsSet("techTouchLayout",touchLayout||"left");lsSet("techPowerMode",powerMode);lsSet("techShowMinimap",window.showMinimap?"1":"0");lsSet("techShowOnlineRank",window.showOnlineRank?"1":"0");try{applyTouchLayout();applyUILanguage();refreshHudToggleIcons()}catch(e){}
   cfg.classList.remove("config-panel-open");cfg.style.setProperty("display","none","important");
@@ -5815,6 +5825,19 @@ try{ window.visualViewport && window.visualViewport.addEventListener("resize",_o
 resizeCanvas(true);
 
 let _lastMouseAimAt=0;
+(function setupCustomMouseCursor(){
+  try{
+    const cursorGameBox=document.querySelector(".tech-game");
+    if(!cursorGameBox || window.matchMedia('(pointer:coarse)').matches)return;
+    let cur=document.getElementById("techGameMouseCursor");
+    if(!cur){cur=document.createElement("div");cur.id="techGameMouseCursor";cur.setAttribute("aria-hidden","true");cur.style.cssText="position:absolute;left:0;top:0;z-index:40;pointer-events:none;display:none;font: bold 25px/1 Arial,sans-serif;color:#fff;text-shadow:0 0 4px #00c8ff,0 0 9px #00c8ff,1px 1px 2px #000;transform:translate(-2px,-2px);";cursorGameBox.appendChild(cur);}
+    window.__techMouseCursor=cur;
+    cur.textContent=({arrow:"➤",chevron:"➦",diamond:"◆",spark:"✦"})[mouseCursorStyle]||"➤";
+    canvas.addEventListener("mouseenter",()=>{if(gameRunning)cur.style.display="block"});
+    canvas.addEventListener("mouseleave",()=>{cur.style.display="none"});
+    canvas.addEventListener("mousemove",ev=>{const b=cursorGameBox.getBoundingClientRect();cur.style.left=(ev.clientX-b.left)+"px";cur.style.top=(ev.clientY-b.top)+"px";if(gameRunning)cur.style.display="block"},{passive:true});
+  }catch(e){}
+})();
 canvas.addEventListener("mousemove",e=>{
   /* Limita el cálculo del cursor a ~60 actualizaciones por segundo. */
   const now=performance.now();
@@ -5822,7 +5845,7 @@ canvas.addEventListener("mousemove",e=>{
   _lastMouseAimAt=now;
   const r=canvas.getBoundingClientRect();
   const scaleX=canvas.width/Math.max(1,r.width), scaleY=canvas.height/Math.max(1,r.height);
-  const tx=(e.clientX-r.left)*scaleX, ty=(e.clientY-r.top)*scaleY;
+  const tx=(e.clientX-r.left)*scaleX, ty=Math.max(0,(e.clientY-r.top-20)*scaleY);
   const k=Math.max(0.2,Math.min(1.5,sensMouse));
   mouse.x=player.x+(tx-player.x)*k;
   mouse.y=player.y+(ty-player.y)*k;
@@ -7136,7 +7159,7 @@ function spawnTrap(){
   else if(roll<.80)traps.push({type:"shrapnel",x:50+Math.random()*(canvas.width-100),y:-30,size:16*s,vy:(1.8+Math.random())*getSpeedScale(),armed:true});
   else if(roll<.86)traps.push({type:"spike",x:30+Math.random()*(canvas.width-60),y:canvas.height+10,size:16*s,vy:-(2.2+Math.random()*1.5)*getSpeedScale(),wiggle:0});
   else if(roll<.88)traps.push({type:"vortex",x:50+Math.random()*(canvas.width-100),y:-30,size:20*s,vy:(1.2+Math.random()*.8)*getSpeedScale(),spin:0});
-  else if(roll<.92)traps.push({type:"blade",x:40+Math.random()*(canvas.width-80),y:-25,size:22*s,vy:(2.6+Math.random()*1.2)*getSpeedScale(),spin:0}); /* sierra horizontal */
+  else if(roll<.92)traps.push({type:"blade",x:40+Math.random()*(canvas.width-80),y:-25,size:22*s,vy:2.6+Math.random()*1.2,spin:0,spawnWave:waveCount||0,spawnScore:score||0}); /* sierra horizontal */
   else if(roll<.96)traps.push({type:"net",x:canvas.width*(.2+Math.random()*.6),y:-20,w:90*s,h:14*s,vy:(1.5+Math.random())*getSpeedScale(),life:260}); /* red que frena */
   else traps.push({type:"cluster",x:50+Math.random()*(canvas.width-100),y:-30,size:14*s,vy:(1.7+Math.random())*getSpeedScale(),armed:true}); /* bomba racimo */
 }
@@ -8712,7 +8735,8 @@ function updateExtraTraps(){
   for(let i=traps.length-1;i>=0;i--){
     const t=traps[i];
     if(t.type==="blade"){
-      t.y+=Math.max(t.vy||2.2, 2.4)*((typeof getSpeedScale==="function")?getSpeedScale():1);
+      const bladeProgress=1+Math.min(2.2,Math.max(0,(waveCount||0)*0.10+(score||0)*0.002));
+      t.y+=Math.max(t.vy||2.6, 2.6)*((typeof getSpeedScale==="function")?getSpeedScale():1)*bladeProgress;
       t.spin=(t.spin||0)+0.28;
       ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.spin);
       ctx.fillStyle="#FFD700";ctx.fillRect(-t.size, -3, t.size*2, 6);
@@ -9730,7 +9754,7 @@ if(introTimer>0){
   ctx.fillText(difficulty.toUpperCase(),canvas.width/2,canvas.height/2+16);
 }
 
-if(shield>0)shield--;if(bounceShield>0)bounceShield--;if(vortex>0)vortex--;if(ion>0)ion--;if(emp>0)emp--;if(laserGrace>0)laserGrace--;if(rapidFire>0)rapidFire--;if(tripleShot>0)tripleShot--;if(slowMo>0)slowMo--;if(laser>0)laser--;if(pierce>0)pierce--;if(invisible>0)invisible--;if(magnet>0)magnet--;if(missilePower>0)missilePower--;if(allyPower>0)allyPower--;if(storm>0)storm--;if(overdrive>0)overdrive--;if(nova>0)nova=0;if(reflect>0)reflect--;if(burst>0)burst=0;if(freezeEnemies>0)freezeEnemies--;if(barrier>0)barrier--;if(phaseShift>0)phaseShift--;if(railgun>0)railgun--;
+if(shield>0)shield--;if(bounceShield>0)bounceShield--;if(vortex>0)vortex--;if(ion>0)ion--;if(emp>0)emp--;if(laserGrace>0)laserGrace--;if(rapidFire>0)rapidFire--;if(tripleShot>0)tripleShot--;if(laser>0)laser--;if(pierce>0)pierce--;if(invisible>0)invisible--;if(magnet>0)magnet--;if(missilePower>0)missilePower--;if(allyPower>0)allyPower--;if(storm>0)storm--;if(overdrive>0)overdrive--;if(nova>0)nova=0;if(reflect>0)reflect--;if(burst>0)burst=0;if(freezeEnemies>0)freezeEnemies--;if(barrier>0)barrier--;if(phaseShift>0)phaseShift--;if(railgun>0)railgun--;
 if(comboTimer>0){comboTimer--}else{combo=0;comboMult=1}
 if(feverMode>0){
   feverMode--;
@@ -10021,7 +10045,7 @@ try{if(typeof showLiveGameControls==="function")showLiveGameControls(true);else{
   var ex=document.getElementById("techAccountExit");if(ex){ex.classList.remove("is-visible");ex.style.setProperty("display","none","important")}
 }}catch(e){}
 obstacles=[];particles=[];bullets=[];enemyBullets=[];pickups=[];explosions=[];traps=[];missiles=[];lightningFX=[];allies=[];gravZones=[];drones=[];
-score=0;meteorsDestroyed=0;shipsDestroyed=0;ki=0;kiReady=false;kamehameha=0;dashCd=0;dashInvuln=0;dashTrail=[];shieldCd=0;activeShield=0;chargeShot=0;worldTeleportCd=0;droneCd=0;bounceShot=0;bounceShotCd=0;freezeCd=0;phaseShift=0;railgun=0;lootVacuum=0;orbitalMines=[];chainFX=[];ammo=100;shield=0;rapidFire=0;tripleShot=0;slowMo=0;laser=0;pierce=0;invisible=0;magnet=0;missilePower=0;allyPower=0;storm=0;overdrive=0;nova=0;reflect=0;burst=0;repair=0;freezeEnemies=0;barrier=0;bazooka=0;specialCharges=3;powersCollected=0;lives=1;level=1;waveCount=0;waveNumber=1;scenario=selectedWorld||1;scenarioTransition=0;scenarioMsg="";gamePaused=false;lastEnemySpawn=0;
+score=0;meteorsDestroyed=0;shipsDestroyed=0;ki=0;kiReady=false;kamehameha=0;dashCd=0;dashInvuln=0;dashTrail=[];shieldCd=0;activeShield=0;chargeShot=0;worldTeleportCd=0;droneCd=0;bounceShot=0;bounceShotCd=0;freezeCd=0;phaseShift=0;railgun=0;lootVacuum=0;orbitalMines=[];chainFX=[];ammo=100;shield=0;rapidFire=0;tripleShot=0;laser=0;pierce=0;invisible=0;magnet=0;missilePower=0;allyPower=0;storm=0;overdrive=0;nova=0;reflect=0;burst=0;repair=0;freezeEnemies=0;barrier=0;bazooka=0;specialCharges=3;powersCollected=0;lives=1;level=1;waveCount=0;waveNumber=1;scenario=selectedWorld||1;scenarioTransition=0;scenarioMsg="";gamePaused=false;lastEnemySpawn=0;
 keys.up=keys.down=keys.left=keys.right=false;
 if(scoreElement)scoreElement.textContent="0";
 record=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;if(recordElement)recordElement.textContent=record;
@@ -17234,5 +17258,15 @@ button.boton-foto .video-perfil-icon{z-index:3!important;}
 button.boton-foto.video-reproduciendo img.video-perfil-preview{display:none!important;}
 button.boton-foto:not(.video-reproduciendo) img.video-perfil-preview{display:block!important;}
 </style>
+
+<style id="tech-run-final-frame-cursor-fixes">
+/* Escritorio: el marco completo permanece visible y el documento puede desplazarse normalmente. */
+.tech-game-section{max-height:none!important;overflow-x:hidden!important;overflow-y:visible!important;}
+.tech-game{height:clamp(420px,62vh,680px)!important;min-height:420px!important;max-height:680px!important;width:100%!important;}
+#gameCanvas{cursor:none!important;}
+#techGameMouseCursor{user-select:none!important;-webkit-user-select:none!important;}
+@media(max-width:700px){.tech-game{height:420px!important;min-height:360px!important;max-height:62vh!important;}#techGameMouseCursor{display:none!important;}}
+</style>
+
 </body>
 </html>
