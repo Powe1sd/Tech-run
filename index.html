@@ -2845,6 +2845,9 @@ window.isPvpMode=isPvpMode;
 let kamehameha=0; /* frames del rayo Kamehameha */
 let combo=0,comboTimer=0,comboMult=1;
 let screenShake=0,hitSparks=[];
+let impactEffectsOn=lsGet("techImpactEffects","1")!=="0";
+let impactShakeOn=lsGet("techImpactShake","0")==="1";
+let impactFlashOn=lsGet("techImpactFlash","1")!=="0";
 let feverMode=0,feverAnnounced=false,lastSupplyDrop=0,supplyCrates=[];
 let damageFlash=0,introTimer=0;
 let lowPower=(function(){
@@ -3576,6 +3579,17 @@ function getConfigHTML(){
 <label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
 <input type="checkbox" id="vibrateShootToggle" ${vibrateShoot?"checked":""} style="accent-color:#00C8FF"> ${T("vibShoot")}
 </label>
+<hr style="border:none;border-top:1px solid rgba(0,200,255,.22);margin:12px 0">
+<p style="color:#00C8FF;font-size:12px;margin:6px 0">💥 EFECTOS DE IMPACTO</p>
+<label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
+<input type="checkbox" id="impactEffectsToggle" ${impactEffectsOn?"checked":""} style="accent-color:#00C8FF"> Explosiones y partículas mejoradas
+</label>
+<label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
+<input type="checkbox" id="impactShakeToggle" ${impactShakeOn?"checked":""} style="accent-color:#FFCD00"> Vibración visual de pantalla
+</label>
+<label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
+<input type="checkbox" id="impactFlashToggle" ${impactFlashOn?"checked":""} style="accent-color:#FF3333"> Destellos al recibir impactos
+</label>
 <label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
 <input type="checkbox" id="lowPowerToggle" ${lowPower?"checked":""} style="accent-color:#00C8FF"> ${T("lowPower")}
 </label>
@@ -3895,20 +3909,21 @@ function checkAchievements(){
   if(feverMode>0&&combo>=8)unlockAch("fever",L("achFever","Fiebre de combo"));
 }
 function diffMult(){
-  if(difficulty==="easy")return 0.7;
-  if(difficulty==="hard")return 1.45;
+  if(difficulty==="easy")return 0.85;
+  if(difficulty==="hard")return 1.2;
   return 1;
 }
 function diffSpawnMult(){
-  /* más enemigos / oleadas más densas según modo */
-  if(difficulty==="easy")return 0.85;
-  if(difficulty==="hard")return 1.55;
-  return 1.15;
+  /* Fácil: menos oleadas; Normal: ritmo estándar; Difícil: más presión. */
+  if(difficulty==="easy")return 0.72;
+  if(difficulty==="hard")return 1.38;
+  return 1.0;
 }
 function diffSpeedMult(){
-  if(difficulty==="easy")return 0.9;
-  if(difficulty==="hard")return 1.25;
-  return 1.05;
+  /* Afecta la velocidad real de enemigos y obstáculos. */
+  if(difficulty==="easy")return 0.78;
+  if(difficulty==="hard")return 1.30;
+  return 1.0;
 }
 function addScoreCombo(pts){
   combo++;comboTimer=150;comboMult=1+Math.min(2,Math.floor(combo/5)*0.25);
@@ -5092,6 +5107,12 @@ const vt=document.getElementById("vibrateToggle");
 if(vt)vt.onchange=()=>{vibrateOn=vt.checked;if(vibrateOn)doVibrate(30)};
 const vst=document.getElementById("vibrateShootToggle");
 if(vst)vst.onchange=()=>{vibrateShoot=vst.checked;if(vibrateShoot)doVibrate(15)};
+const iet=document.getElementById("impactEffectsToggle");
+if(iet)iet.onchange=()=>{impactEffectsOn=iet.checked;lsSet("techImpactEffects",impactEffectsOn?"1":"0")};
+const ist=document.getElementById("impactShakeToggle");
+if(ist)ist.onchange=()=>{impactShakeOn=ist.checked;lsSet("techImpactShake",impactShakeOn?"1":"0");if(!impactShakeOn)screenShake=0};
+const ift=document.getElementById("impactFlashToggle");
+if(ift)ift.onchange=()=>{impactFlashOn=ift.checked;lsSet("techImpactFlash",impactFlashOn?"1":"0");if(!impactFlashOn)damageFlash=0};
 const lp=document.getElementById("lowPowerToggle");if(lp)lp.onchange=()=>{lowPower=lp.checked;try{resizeCanvas()}catch(e){}};
 const vds=document.getElementById("viewDistanceSelect");
 if(vds){vds.value=viewDistance;vds.onchange=()=>{viewDistance=String(vds.value||"standard");if(!["close","standard","far"].includes(viewDistance))viewDistance="standard";lsSet("techViewDistance",viewDistance);try{resizeCanvas()}catch(e){}}};
@@ -5793,15 +5814,19 @@ window.addEventListener("resize",_onResizeDebounced,{passive:true});
 try{ window.visualViewport && window.visualViewport.addEventListener("resize",_onResizeDebounced,{passive:true}); }catch(e){}
 resizeCanvas(true);
 
+let _lastMouseAimAt=0;
 canvas.addEventListener("mousemove",e=>{
+  /* Limita el cálculo del cursor a ~60 actualizaciones por segundo. */
+  const now=performance.now();
+  if(now-_lastMouseAimAt<16)return;
+  _lastMouseAimAt=now;
   const r=canvas.getBoundingClientRect();
   const scaleX=canvas.width/Math.max(1,r.width), scaleY=canvas.height/Math.max(1,r.height);
   const tx=(e.clientX-r.left)*scaleX, ty=(e.clientY-r.top)*scaleY;
-  /* sensMouse 0.2–2: qué tanto sigue al cursor (1 = natural) */
-  const k=Math.max(0.15,Math.min(1.5,sensMouse));
+  const k=Math.max(0.2,Math.min(1.5,sensMouse));
   mouse.x=player.x+(tx-player.x)*k;
   mouse.y=player.y+(ty-player.y)*k;
-});
+},{passive:true});
 canvas.addEventListener("mousedown",function(ev){
   try{
     if(gameRunning&&!gamePaused&&window.__hudHit){
@@ -6521,36 +6546,50 @@ function enemyShoot(o){
   }
 }
 
-function triggerShake(amt){ /* desactivado: el mapa no se mueve */ screenShake=0; }
+function triggerShake(amt){
+  if(!impactShakeOn||lowPower){screenShake=0;return}
+  screenShake=Math.min(10,Math.max(screenShake,Number(amt)||0));
+}
 function addHitSpark(x,y,col){
-  if(isMobile())return; /* chispas solo PC: menos carga */
-  if(hitSparks.length>16)return;
-  const n=3;
-  for(let i=0;i<n;i++){
-    const a=Math.random()*Math.PI*2,sp=1.5+Math.random()*3.5;
-    hitSparks.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:10+Math.random()*8,max:16,color:col||"255,200,50",size:1.5+Math.random()*2});
+  if(!impactEffectsOn)return;
+  const mobile=isMobile(),cap=mobile?10:32;
+  if(hitSparks.length>=cap)return;
+  const n=mobile?3:6;
+  for(let i=0;i<n&&hitSparks.length<cap;i++){
+    const a=(Math.PI*2*i/n)+(Math.random()-.5)*.45;
+    const sp=(mobile?1.2:2)+Math.random()*(mobile?2.2:4.2);
+    hitSparks.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:8+Math.random()*7,max:15,color:col||"255,200,50",size:1.4+Math.random()*2.8});
   }
 }
 function updateHitSparks(){
+  if(!impactEffectsOn){hitSparks.length=0;return}
   for(let i=hitSparks.length-1;i>=0;i--){
     const p=hitSparks[i];
-    p.x+=p.vx;p.y+=p.vy;p.vx*=0.94;p.vy*=0.94;p.life--;
-    const a=Math.max(0,p.life/(p.max||18));
+    p.x+=p.vx;p.y+=p.vy;p.vx*=0.95;p.vy*=0.95;p.life--;
+    const a=Math.max(0,p.life/(p.max||25));
     ctx.fillStyle=`rgba(${p.color},${a})`;
     ctx.beginPath();ctx.arc(p.x,p.y,p.size*a,0,Math.PI*2);ctx.fill();
     if(p.life<=0)hitSparks.splice(i,1);
   }
 }
 function createExplosion(x,y,size,color){
-  if(size>=8)playSfx("explode"); /* SONIDO EXPLOSIÓN METEORO/ENEMIGO */
-  if(size>=10)triggerShake(Math.min(14,4+size*0.15));
-  if(size>=12)addHitSpark(x,y,color||"255,180,40");
-  if(explosions.length>(isMobile()?1:8))explosions.splice(0,explosions.length-1);
-  const n=isMobile()?1:Math.min(2,1+Math.floor(size/12));
-  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=1+Math.random()*2.5;explosions.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,size:2+Math.random()*2.5,opacity:1,color:color||(Math.random()>.5?"255,80,40":"255,200,50")})}
+  const col=color||(Math.random()>.5?"255,90,45":"255,205,70");
+  if(size>=8)playSfx("explode");
+  if(size>=10)triggerShake(Math.min(10,3+size*0.12));
+  if(size>=12)addHitSpark(x,y,col);
+  if(!impactEffectsOn){
+    if(explosions.length>(isMobile()?1:8))explosions.splice(0,explosions.length-1);
+    explosions.push({x,y,vx:0,vy:0,size:Math.max(2,size*.32),opacity:1,color:col,kind:"simple"});
+    return;
+  }
+  const mobile=isMobile(),cap=mobile?8:30;
+  const count=Math.min(mobile?4:8,Math.max(mobile?2:4,Math.floor(size*(mobile?.28:.42))));
+  for(let i=0;i<count&&explosions.length<cap;i++){
+    const a=Math.random()*Math.PI*2,speed=(mobile?1.1:1.7)+Math.random()*(mobile?2:4.2);
+    explosions.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,size:(mobile?1.8:2.4)+Math.random()*(mobile?2.2:4.5),opacity:1,color:col,kind:"particle",gravity:0.025+Math.random()*.035});
+  }
+  if(size>=14&&!mobile&&explosions.length<cap)explosions.push({x,y,vx:0,vy:0,size:size*.48,opacity:.65,color:col,kind:"ring"});
 }
-
-/* Suelta un poder al azar (máx. pocos en pantalla) */
 function maybeSpawnPickup(x,y){
   /* Poderes en TODOS los mundos (1–14), sin filtro por escenario */
   if(pickups.length>=(isMobile()?2:4))return;
@@ -8849,7 +8888,20 @@ else if(p.type==="repair"){if(lives<3){lives++;updateLivesUI()}else shield=Math.
 else playSfx("power");
 createExplosion(p.x,p.y,10,"255,255,100");pickups.splice(i,1)}else if(p.y>canvas.height+30)pickups.splice(i,1)}}
 
-function updateExplosions(){for(let i=explosions.length-1;i>=0;i--){const e=explosions[i];e.x+=e.vx;e.y+=e.vy;e.opacity-=.04;e.size*=.96;ctx.fillStyle=`rgba(${e.color},${e.opacity})`;ctx.beginPath();ctx.arc(e.x,e.y,e.size,0,Math.PI*2);ctx.fill();if(e.opacity<=0)explosions.splice(i,1)}}
+function updateExplosions(){
+  for(let i=explosions.length-1;i>=0;i--){
+    const e=explosions[i];e.x+=e.vx||0;e.y+=e.vy||0;
+    if(e.kind==="ring"){
+      e.size*=1.12;e.opacity-=.075;
+      ctx.save();ctx.globalAlpha=Math.max(0,e.opacity);ctx.strokeStyle=`rgb(${e.color})`;
+      ctx.lineWidth=Math.max(1.2,e.size*.045);ctx.beginPath();ctx.arc(e.x,e.y,e.size,0,Math.PI*2);ctx.stroke();ctx.restore();
+    }else{
+      e.vy+=(e.gravity||0);e.vx*=.985;e.vy*=.985;e.opacity-=e.kind==="simple"?.055:.035;e.size*=e.kind==="simple"?.96:.975;
+      ctx.fillStyle=`rgba(${e.color},${Math.max(0,e.opacity)})`;ctx.beginPath();ctx.arc(e.x,e.y,Math.max(.5,e.size),0,Math.PI*2);ctx.fill();
+    }
+    if(e.opacity<=0)explosions.splice(i,1);
+  }
+}
 function updateParticles(){for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.y+=p.speed;p.opacity-=.03;ctx.fillStyle=`rgba(${p.color},${p.opacity})`;ctx.fillRect(p.x,p.y,p.size,p.size);if(p.opacity<=0)particles.splice(i,1)}}
 function checkCollision(o){return Math.hypot(player.x-(o.x+o.size/2),player.y-(o.y+o.size/2))<player.size*1.05+o.size*.55}
 
@@ -9656,13 +9708,18 @@ try{
   ctx.imageSmoothingEnabled=false;
   if(!_isMobLoop){ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality=(typeof lowPower!=="undefined"&&lowPower)?"low":"medium"}
 }catch(e){}
-/* Sin temblor de cámara: el mapa se queda fijo (también en PC reduce mareo) */
-screenShake=0;
+/* Temblor breve y configurable al producirse impactos fuertes */
+if(!impactShakeOn||lowPower)screenShake=0;
 ctx.save();
+if(screenShake>0){
+  const amount=screenShake;
+  ctx.translate((Math.random()-.5)*amount,(Math.random()-.5)*amount);
+  screenShake=Math.max(0,screenShake*.78-.35);
+}
 drawSpaceBG();
 /* mob-no-shadow: las GPUs móviles odian shadowBlur */
 if(_isMobLoop||(typeof lowPower!=="undefined"&&lowPower)){try{ctx.shadowBlur=0;ctx.shadowColor="transparent"}catch(e){}}
-if(damageFlash>0){ctx.fillStyle=`rgba(180,0,0,${0.12+damageFlash*0.01})`;ctx.fillRect(0,0,canvas.width,canvas.height)}
+if(impactFlashOn&&damageFlash>0){ctx.fillStyle=`rgba(180,0,0,${Math.min(.28,0.08+damageFlash*0.008)})`;ctx.fillRect(0,0,canvas.width,canvas.height)}
 /* fiebre: sin barras laterales (evita mareo) */
 if(introTimer>0){
   const a=Math.min(1,introTimer/24);
@@ -9707,8 +9764,8 @@ const keyDrive=typeof keys!=="undefined"&&(keys.left||keys.right||keys.up||keys.
 /* Disparar también cuenta como control: no retrocede al mantener FIRE */
 const controlling=touchDriving||stickActive||canvasShootId!==null||keyDrive||isShooting||fireTouchId!==null;
 const _ps3Slow=!!(typeof pollGamepad!=='undefined'&&pollGamepad._moving);
-const baseSmooth=_ps3Slow?0.12:(stickActive||touchDriving?(overdrive>0?0.7:0.58):(overdrive>0?0.4:0.34));
-const smooth=_ps3Slow?0.12:Math.min(0.82,baseSmooth*Math.max(1,Math.min(1.6,(stickActive||touchDriving?Math.max(sensPad,0.35):sensMouse)+0.15)));
+const baseSmooth=_ps3Slow?0.12:(stickActive||touchDriving?(overdrive>0?0.7:0.62):(overdrive>0?0.55:0.50));
+const smooth=_ps3Slow?0.12:Math.min(0.86,baseSmooth*Math.max(1,Math.min(1.6,(stickActive||touchDriving?Math.max(sensPad,0.35):sensMouse)+0.15)));
 const _psb=(typeof playerSpeedBonus==='function')?playerSpeedBonus():1;player.x+=(mouse.x-player.x)*smooth*_psb;player.y+=(mouse.y-player.y)*smooth*_psb;
 /* Solo al SOLTAR (ni mover ni disparar): retrocede */
 if(!controlling){
