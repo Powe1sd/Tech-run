@@ -168,7 +168,7 @@ html{scroll-behavior:smooth}
 body{margin:0;background:#03050c;font-family:'Orbitron',sans-serif;color:#fff;overflow-x:hidden;min-height:100vh;-webkit-tap-highlight-color:transparent}
 body::before{content:"";position:fixed;width:100%;height:200%;background-image:radial-gradient(circle,rgba(255,255,255,.28) 1px,transparent 1px),radial-gradient(circle,rgba(0,56,168,.18) 1px,transparent 1px),radial-gradient(circle,rgba(255,205,0,.1) 1px,transparent 1px);background-size:50px 50px,72px 72px,96px 96px;animation:stars 100s linear infinite;z-index:-1}
 @keyframes stars{to{transform:translateY(-50%)}}
-.tech-game-section{width:100%;max-width:1200px;margin:8px auto 10px;padding:0 25px;max-height:calc(100dvh - 8px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(0,200,255,.8) rgba(5,12,28,.85);-webkit-overflow-scrolling:touch}
+.tech-game-section{width:100%;max-width:1200px;margin:4px auto 0;padding:0 25px;max-height:none;overflow-x:hidden;overflow-y:visible;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(0,200,255,.8) rgba(5,12,28,.85);-webkit-overflow-scrolling:touch}
 .tech-game{position:relative;width:100%;height:420px;overflow:hidden;border-radius:20px;background:radial-gradient(ellipse at 50% 0%,#0a1228 0%,#000 70%);border:1px solid rgba(255,205,0,.28);box-shadow:0 0 0 1px rgba(0,56,168,.35),0 0 32px rgba(206,17,38,.12),0 12px 40px rgba(0,0,0,.55);touch-action:none}
 .tech-game::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:36px 36px;pointer-events:none;z-index:1;opacity:.35}
 .tech-game::after{content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;z-index:1;box-shadow:inset 0 0 40px rgba(0,56,168,.08),inset 0 1px 0 rgba(255,205,0,.08)}
@@ -17285,12 +17285,38 @@ button.boton-foto:not(.video-reproduciendo) img.video-perfil-preview{display:blo
 </style>
 
 <style id="tech-run-final-frame-cursor-fixes">
-/* Escritorio: el marco completo permanece visible y el documento puede desplazarse normalmente. */
-.tech-game-section{max-height:none!important;overflow-x:hidden!important;overflow-y:visible!important;}
-.tech-game{height:clamp(420px,62vh,680px)!important;min-height:420px!important;max-height:680px!important;width:100%!important;}
+/* Pantalla grande: el juego llena casi todo el alto y no deja franja negra abajo */
+.tech-game-section{
+  max-height:none!important;
+  overflow-x:hidden!important;
+  overflow-y:visible!important;
+  margin-top:4px!important;
+  margin-bottom:0!important;
+  padding-bottom:0!important;
+}
+.tech-game{
+  height:calc(100dvh - 16px)!important;
+  min-height:calc(100dvh - 16px)!important;
+  max-height:none!important;
+  width:100%!important;
+}
 #gameCanvas{cursor:none!important;}
 #techGameMouseCursor{user-select:none!important;-webkit-user-select:none!important;}
-@media(max-width:700px){.tech-game{height:420px!important;min-height:360px!important;max-height:62vh!important;}#techGameMouseCursor{display:none!important;}}
+@media(max-width:700px){
+  .tech-game{
+    height:calc(100dvh - 12px)!important;
+    min-height:calc(100dvh - 12px)!important;
+    max-height:none!important;
+  }
+  #techGameMouseCursor{display:none!important;}
+}
+@media (min-width:1101px) and (pointer:fine){
+  .tech-game{
+    height:calc(100dvh - 12px)!important;
+    min-height:calc(100dvh - 12px)!important;
+    max-height:none!important;
+  }
+}
 </style>
 
 </body>
