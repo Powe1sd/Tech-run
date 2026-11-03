@@ -2833,6 +2833,54 @@ function shiftShipGallery(dir){
   i=(i+dir+n)%n;
   applyShipGalleryEntry(SHIP_GALLERY[i]);
 }
+/* Actualiza solo la UI de nave (sin re-render completo del menú) */
+function refreshShipUI(){
+  try{
+    const box=document.getElementById("startExtras");
+    if(!box)return;
+    /* Botones de modelo */
+    box.querySelectorAll("[data-model]").forEach(function(b){
+      const on=b.getAttribute("data-model")===shipModel;
+      b.classList.toggle("active", on);
+    });
+    /* Fases Goku */
+    box.querySelectorAll("[data-gform]").forEach(function(b){
+      const on=shipModel==="goku" && b.getAttribute("data-gform")===(gokuForm||"normal");
+      b.classList.toggle("active", on);
+    });
+    const gfm=box.querySelector("#gokuFormMenu");
+    if(gfm) gfm.style.display = (shipModel==="goku") ? "block" : "none";
+    /* Skins */
+    box.querySelectorAll("[data-skin]").forEach(function(b){
+      b.classList.toggle("active", b.getAttribute("data-skin")===shipSkin);
+    });
+    /* Carrusel: nombre e índice */
+    const idx=getShipGalleryIndex();
+    const entry=SHIP_GALLERY[idx]||{};
+    const nameEl=box.querySelector("#shipCarouselName");
+    if(nameEl) nameEl.textContent=(entry.icon||"🚀")+" "+(entry.name||shipModel);
+    const meta=nameEl && nameEl.parentElement && nameEl.parentElement.querySelector("div[style*='font-size:11px']");
+    /* buscar el contador "X / N" */
+    box.querySelectorAll("#shipCarousel div").forEach(function(d){
+      const t=d.textContent||"";
+      if(/\d+\s*\/\s*\d+/.test(t) && t.indexOf("/")!==-1 && d.id!=="shipCarouselName"){
+        d.textContent=(idx+1)+" / "+SHIP_GALLERY.length+(shipModel==="goku"?" · fase Goku":"");
+      }
+    });
+    /* dots galería */
+    box.querySelectorAll("[data-gal]").forEach(function(d){
+      const i=Number(d.getAttribute("data-gal"));
+      const on=i===idx;
+      d.classList.toggle("active", on);
+      if(on){ d.style.background="#FFCD00"; d.style.opacity="1"; }
+      else { d.style.background="rgba(255,255,255,.35)"; d.style.opacity=".7"; }
+    });
+    try{ if(typeof drawShipPreview==="function") drawShipPreview(); }catch(e){}
+    try{ if(typeof updateGokuFormsUI==="function") updateGokuFormsUI(); }catch(e){}
+  }catch(e){ console.warn("[ship UI]", e); }
+}
+window.refreshShipUI=refreshShipUI;
+
 
 let shipModel=lsGet("techShipModelV2","classic"); // classic|fighter|interceptor|heavy|stealth|wing|needle|delta|r13|c67|rr1|s1000|f50|t200|s179|goku
 let gokuForm=lsGet("techGokuForm","normal"); // normal|ssj|...|ssblue|black|rose
@@ -5366,17 +5414,18 @@ if(startPanel&&!document.getElementById("startExtras")){
     });
     box.querySelectorAll("[data-upg]").forEach(b=>b.onclick=()=>{if(buyUpgrade(b.getAttribute("data-upg")))renderStart()});
     box.querySelectorAll("[data-skin]").forEach(b=>b.onclick=()=>{
-      shipSkin=b.getAttribute("data-skin");lsSet("techShipSkin",shipSkin);renderStart();
+      shipSkin=b.getAttribute("data-skin");lsSet("techShipSkin",shipSkin);
+      try{refreshShipUI()}catch(e){renderStart()}
     });
     box.querySelectorAll("[data-model]").forEach(b=>b.onclick=()=>{
       const m=b.getAttribute("data-model");
       shipModel=m;lsSet("techShipModelV2",shipModel);
       if(m==="goku"&&!gokuForm)gokuForm="normal";
+      if(m!=="goku") gokuForm="normal";
       if(m==="goku"){
         try{if(SFX.gokuFase&&SFX.gokuFase.src){try{SFX.gokuFase.currentTime=0}catch(_){}playSfx("gokuFase")}}catch(e){}
       }
-      renderStart();
-      try{updateGokuFormsUI()}catch(e){}
+      try{refreshShipUI()}catch(e){renderStart()}
     });
     box.querySelectorAll("[data-gform]").forEach(b=>b.onclick=()=>{
       gokuForm=b.getAttribute("data-gform");lsSet("techGokuForm",gokuForm);
@@ -5384,18 +5433,17 @@ if(startPanel&&!document.getElementById("startExtras")){
       try{
         if(SFX.gokuFase&&SFX.gokuFase.src){try{SFX.gokuFase.currentTime=0}catch(_){}playSfx("gokuFase")}
       }catch(e){}
-      renderStart();
-      try{updateGokuFormsUI()}catch(e){}
+      try{refreshShipUI()}catch(e){renderStart()}
     });
-    const goPrev=()=>{shiftShipGallery(-1);renderStart()};
-    const goNext=()=>{shiftShipGallery(1);renderStart()};
+    const goPrev=()=>{shiftShipGallery(-1);try{refreshShipUI()}catch(e){renderStart()}};
+    const goNext=()=>{shiftShipGallery(1);try{refreshShipUI()}catch(e){renderStart()}};
     const bp=box.querySelector("#shipPrev"), bn=box.querySelector("#shipNext");
     if(bp)bp.onclick=e=>{e.preventDefault();goPrev()};
     if(bn)bn.onclick=e=>{e.preventDefault();goNext()};
     box.querySelectorAll("[data-gal]").forEach(d=>{
       d.onclick=()=>{
         const i=Number(d.getAttribute("data-gal"));
-        if(!isNaN(i)&&SHIP_GALLERY[i]){applyShipGalleryEntry(SHIP_GALLERY[i]);renderStart()}
+        if(!isNaN(i)&&SHIP_GALLERY[i]){applyShipGalleryEntry(SHIP_GALLERY[i]);try{refreshShipUI()}catch(e){renderStart()}}
       };
     });
     /* Swipe en el preview */
@@ -5440,7 +5488,7 @@ if(startPanel&&!document.getElementById("startExtras")){
     if(spm)spm.onchange=()=>{powerMode=spm.value;lsSet("techPowerMode",powerMode);const tpm=document.getElementById("touchPowerMode");if(tpm)(function(){var lab=tpm.querySelector(".tu-lab");var t=powerMode==="auto"?"AUTO":"MANUAL";if(lab)lab.textContent=t;else tpm.textContent=t;})()};
     const bof=box.querySelector("#btnOpenFullConfig");
     if(bof)bof.onclick=()=>{const cfg=document.getElementById("configPanel");const btn=document.getElementById("btnConfig");if(btn)btn.click();else if(cfg)cfg.style.display="block"};
-    setTimeout(()=>{drawShipPreview();updateGokuFormsUI()},30);
+    try{drawShipPreview();updateGokuFormsUI()}catch(e){}
     const chb=document.getElementById("clearHistoryBtn");
     if(chb)chb.onclick=function(){if(confirm("¿Borrar historial de partidas?")){clearMatchHistory();renderStart();}};
 
