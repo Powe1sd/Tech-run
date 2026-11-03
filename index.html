@@ -2652,6 +2652,7 @@ let level=1,phase="meteors",phaseTimer=0,waveNumber=1,waveCount=0;
 let scenario=1,scenarioTransition=0,scenarioMsg="";
 const METEOR_DURATION=18*60,WARNING_DURATION=1.5*60; /* oleada cada 18 s */
 let ammo=100,shield=0,bounceShield=0,rapidFire=0,tripleShot=0,slowMo=0,laser=0,pierce=0,invisible=0,magnet=0,missilePower=0,allyPower=0,storm=0,overdrive=0,nova=0,reflect=0,burst=0,repair=0,freezeEnemies=0,barrier=0,bazooka=0,vortex=0,ion=0,emp=0,laserGrace=0,specialCharges=3,powersCollected=0,lives=1,powerMode=lsGet("techPowerMode","auto"),coins=Number(lsGet("techCoinsV2",lsGet("techCoins",0)))||0,ownedWeapons=(function(){try{var w=JSON.parse(lsGet('techWeapons','["basic"]'));return Array.isArray(w)?w:['basic']}catch(e){return['basic']}})(),currentWeapon=lsGet('techWeapon','basic')||'basic';
+let weaponHeat=0,weaponOverheat=0,weaponDeployCd=0,playerDeploys=[];
 let showGokuFormsBar=lsGet("techShowForms","1")!=="0";
 window.showMinimap=lsGet("techShowMinimap","1")!=="0";
 window.showOnlineRank=lsGet("techShowOnlineRank","1")!=="0";
@@ -3727,7 +3728,12 @@ const WEAPON_SHOP=[
   {id:"laser_gun",name:"Cañón láser",price:120,icon:"🔷",desc:"Disparo continuo tipo rayo (consume menos balas)."},
   {id:"missile_gun",name:"Lanzamisiles",price:150,icon:"🚀",desc:"Cada disparo suelta un misil teledirigido."},
   {id:"plasma",name:"Plasma",price:180,icon:"💚",desc:"Balas grandes de plasma con más daño."},
-  {id:"wave",name:"Onda",price:200,icon:"🌊",desc:"Disparo en forma de onda ancha."}
+  {id:"wave",name:"Onda",price:200,icon:"🌊",desc:"Disparo en forma de onda ancha."},
+  /* —— Arsenal premium (5000+) —— */
+  {id:"beam_cont",name:"Láser continuo",price:5000,icon:"🔴",desc:"Haz sostenido que atraviesa enemigos. +DPS alto en línea. −Se sobrecalienta: al 100% deja de disparar hasta enfriarse."},
+  {id:"homing_heavy",name:"Misiles teledirigidos",price:6500,icon:"🎯",desc:"Pocos misiles, mucho daño y seguimiento. +Elimina blancos duros. −Cadencia muy baja y alto consumo de munición."},
+  {id:"plasma_sg",name:"Escopeta de plasma",price:8000,icon:"💥",desc:"Ráfaga corta de plasma a quemarropa. +Daño masivo de cerca. −Alcance corto y recarga lenta."},
+  {id:"deploy_turret",name:"Mina / Torreta",price:10000,icon:"🛰️",desc:"Despliega una torreta-mina que dispara sola y explota al final. +Presión automática. −Cooldown de despliegue y no es arma de fuego directo."}
 ];
 function buyWeapon(id){
   const item=WEAPON_SHOP.find(w=>w.id===id);
@@ -3759,12 +3765,15 @@ function showWeaponShop(){
       else if(owned){btnLabel="EQUIPAR";btnStyle="background:#0038A8;color:#fff;border-color:#FFCD00";btnAct=w.id}
       else if(canBuy){btnLabel="COMPRAR · "+w.price+"⭐";btnStyle="background:linear-gradient(135deg,#CE1126,#FFCD00);color:#111;border-color:#fff";btnAct=w.id}
       else {btnLabel="🔒 "+w.price+"⭐";btnStyle="background:#222;color:#888;border-color:#444";btnAct=""}
-      cards+=`<div style="margin:8px 0;padding:12px;border-radius:12px;border:1px solid ${eq?"rgba(100,255,136,.5)":"rgba(255,205,0,.28)"};background:${eq?"rgba(20,60,30,.55)":"rgba(0,15,40,.7)"}">
+      const premium=w.price>=5000;
+      const border=eq?"rgba(100,255,136,.5)":(premium?"rgba(255,80,120,.55)":"rgba(255,205,0,.28)");
+      const bg=eq?"rgba(20,60,30,.55)":(premium?"rgba(40,8,20,.75)":"rgba(0,15,40,.7)");
+      cards+=`<div style="margin:8px 0;padding:12px;border-radius:12px;border:1px solid ${border};background:${bg}">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-          <span style="font-size:14px;color:#fff;font-weight:700">${w.icon} ${w.name}</span>
+          <span style="font-size:14px;color:#fff;font-weight:700">${w.icon} ${w.name}${premium?' <span style="font-size:9px;color:#FF8899;letter-spacing:.5px">PREMIUM</span>':''}</span>
           <span style="font-size:11px;color:#FFD700">${w.price?w.price+"⭐":"Gratis"}</span>
         </div>
-        <p style="font-size:11px;color:#bbb;margin:6px 0 10px;line-height:1.35">${w.desc}</p>
+        <p style="font-size:11px;color:#bbb;margin:6px 0 10px;line-height:1.4">${w.desc}</p>
         <button type="button" class="game-btn shop-w-btn" data-buy="${btnAct}" style="width:100%;margin:0;padding:8px;font-size:12px;${btnStyle}" ${btnAct?"":"disabled"}>${btnLabel}</button>
       </div>`;
     });
@@ -6423,6 +6432,84 @@ function shoot(){
       ammo--;
     }
     return}
+  /* Premium: láser continuo con sobrecalentamiento */
+  if(currentWeapon==="beam_cont"&&has("beam_cont")){
+    if(weaponOverheat>0){lastShot=now;return}
+    if(ammo<=0)return;
+    lastShot=now-Math.floor(cd*0.82); /* cadencia muy alta */
+    weaponHeat=Math.min(100,(weaponHeat||0)+3.2);
+    if(weaponHeat>=100){weaponOverheat=110;weaponHeat=100;try{if(window.techNotify)window.techNotify("⚠ Láser sobrecalentado","warning","arma")}catch(e){}}
+    const dmg=(1.15+(typeof bulletDamage==="function"?bulletDamage():1)*0.55);
+    bullets.push({x:player.x,y:player.y-player.size,speed:sp*1.55,size:2.0*s,pierce:true,dmg:dmg,beamCont:true});
+    if(Math.random()<0.28)ammo=Math.max(0,ammo-1);
+    return}
+  /* Premium: misiles teledirigidos potentes (pocos, mucho daño) */
+  if(currentWeapon==="homing_heavy"&&has("homing_heavy")){
+    if(ammo<4)return;
+    ammo-=4;
+    lastShot=now+420; /* cadencia lenta */
+    const sc=getScale();
+    missiles.push({
+      x:player.x,y:player.y-player.size,
+      vx:(Math.random()-0.5)*1.2,vy:-5.5*getSpeedScale(),
+      size:7*sc,life:320,heavy:true,dmg:8+(typeof bulletDamage==="function"?bulletDamage():1)*2
+    });
+    try{playSfx("shoot")}catch(e){}
+    return}
+  /* Premium: escopeta de plasma — corto alcance */
+  if(currentWeapon==="plasma_sg"&&has("plasma_sg")){
+    if(ammo<3)return;
+    ammo-=3;
+    lastShot=now+180;
+    const pellets=7;
+    for(let i=0;i<pellets;i++){
+      const t=(i/(pellets-1))-0.5;
+      const spread=t*6.5;
+      bullets.push({
+        x:player.x+spread*2.2,
+        y:player.y-player.size,
+        speed:sp*0.72,
+        size:3.6*s,
+        pierce:false,
+        vx:spread,
+        vy:-sp*0.72,
+        dmg:1.6+(typeof bulletDamage==="function"?bulletDamage():1)*0.85,
+        life:22, /* alcance corto */
+        plasmaSg:true
+      });
+    }
+    return}
+  /* Premium: mina / torreta desplegable */
+  if(currentWeapon==="deploy_turret"&&has("deploy_turret")){
+    if((weaponDeployCd||0)>0){lastShot=now;return}
+    if(ammo<6)return;
+    ammo-=6;
+    weaponDeployCd=160; /* ~2.5s a 60fps */
+    lastShot=now+120;
+    const sc=getScale();
+    playerDeploys.push({
+      x:player.x,
+      y:Math.max(40,player.y-player.size*2.2),
+      size:12*sc,
+      life:420,
+      shootT:18,
+      hp:8,
+      type:"turret"
+    });
+    /* también deja una mina de proximidad un poco más abajo */
+    playerDeploys.push({
+      x:player.x+(Math.random()-0.5)*30,
+      y:Math.min(canvas.height-30, player.y+player.size*1.4),
+      size:9*sc,
+      life:480,
+      shootT:0,
+      hp:1,
+      type:"mine",
+      arm:40
+    });
+    try{playSfx("power")}catch(e){try{playSfx("shoot")}catch(_){}}
+    createExplosion(player.x,player.y-player.size*2,10,"80,220,255");
+    return}
 
 const add=ox=>{if(ammo<=0)return;bullets.push({x:player.x+ox,y:player.y-player.size,speed:sp,size:3.2*s,pierce:pierce>0});ammo--};
 if(tripleShot>0){add(-12);add(0);add(12)}else add(0)}
@@ -6949,9 +7036,9 @@ function updateMissiles(){
     const dx=tx-m.x,dy=ty-m.y,d=Math.hypot(dx,dy)||1,speed=7*getSpeedScale();
     m.vx+=(dx/d)*.45;m.vy+=(dy/d)*.45;const mag=Math.hypot(m.vx,m.vy)||1;m.vx=(m.vx/mag)*speed;m.vy=(m.vy/mag)*speed;m.x+=m.vx;m.y+=m.vy;
     const ang=Math.atan2(m.vy,m.vx);
-    ctx.save();ctx.translate(m.x,m.y);ctx.rotate(ang);ctx.shadowColor="#FF8800";ctx.shadowBlur=isMobile()?0:(m.bazooka?18:12);
+    ctx.save();ctx.translate(m.x,m.y);ctx.rotate(ang);ctx.shadowColor=m.heavy?"#FF2244":"#FF8800";ctx.shadowBlur=isMobile()?0:(m.bazooka||m.heavy?18:12);
     const ms=m.bazooka?1.6:1;
-    ctx.fillStyle=m.bazooka?"#FF6622":"#FFCC44";ctx.beginPath();ctx.moveTo(8*ms,0);ctx.lineTo(-6*ms,-4*ms);ctx.lineTo(-4*ms,0);ctx.lineTo(-6*ms,4*ms);ctx.closePath();ctx.fill();
+    ctx.fillStyle=m.bazooka?"#FF6622":(m.heavy?"#FF3355":"#FFCC44");ctx.beginPath();ctx.moveTo(8*ms,0);ctx.lineTo(-6*ms,-4*ms);ctx.lineTo(-4*ms,0);ctx.lineTo(-6*ms,4*ms);ctx.closePath();ctx.fill();
     ctx.fillStyle="#FF4400";ctx.beginPath();ctx.moveTo(-6,0);ctx.lineTo(-12,-3);ctx.lineTo(-10,0);ctx.lineTo(-12,3);ctx.closePath();ctx.fill();
     ctx.restore();ctx.shadowBlur=0;
     let hit=false;
@@ -6969,6 +7056,20 @@ function updateMissiles(){
               oo.hp-=4;if(oo.hp<=0)destroyEnemy(oo,k);
             }
           }
+        } else if(m.heavy){
+          const hd=Number(m.dmg)||8;
+          createExplosion(m.x,m.y,28,"255,80,40");
+          o.hp-=hd;
+          /* splash corto */
+          for(let k=obstacles.length-1;k>=0;k--){
+            if(k===j)continue;
+            const oo=obstacles[k];
+            if(!oo||oo.type==="hard")continue;
+            if(Math.hypot(m.x-(oo.x+oo.size/2),m.y-(oo.y+oo.size/2))<48*getScale()){
+              oo.hp-=hd*0.45;if(oo.hp<=0)destroyEnemy(oo,k);
+            }
+          }
+          if(o.hp<=0)destroyEnemy(o,j);
         } else {
           o.hp-=2;createExplosion(m.x,m.y,14,"255,150,40");if(o.hp<=0)destroyEnemy(o,j);
         }
@@ -6982,6 +7083,117 @@ function updateMissiles(){
 function spawnDrone(){
   const sc=getScale();
   drones.push({x:player.x+30,y:player.y,size:10*sc,life:500,shootT:20,orbit:Math.random()*Math.PI*2});
+}
+
+function updatePlayerDeploys(){
+  if(!playerDeploys||!playerDeploys.length)return;
+  const sc=(typeof getScale==="function")?getScale():1;
+  const spd=(typeof getSpeedScale==="function")?getSpeedScale():1;
+  for(let i=playerDeploys.length-1;i>=0;i--){
+    const d=playerDeploys[i];
+    d.life--;
+    if(d.type==="turret"){
+      /* dibujo torreta */
+      try{
+        ctx.save();
+        ctx.shadowColor="#5de5ff";ctx.shadowBlur=isMobile()?4:10;
+        ctx.fillStyle="#1a3a5c";
+        ctx.beginPath();ctx.arc(d.x,d.y,d.size*0.7,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle="#5de5ff";
+        ctx.fillRect(d.x-2,d.y-d.size*1.1,4,d.size*0.9);
+        ctx.fillStyle="#FFCD00";
+        ctx.beginPath();ctx.arc(d.x,d.y,d.size*0.28,0,Math.PI*2);ctx.fill();
+        /* barra de vida */
+        ctx.fillStyle="rgba(0,0,0,.45)";ctx.fillRect(d.x-14,d.y+d.size*0.85,28,4);
+        ctx.fillStyle="#66FF88";ctx.fillRect(d.x-14,d.y+d.size*0.85,28*Math.max(0,d.life/420),4);
+        ctx.restore();ctx.shadowBlur=0;
+      }catch(e){}
+      d.shootT=(d.shootT||0)-1;
+      if(d.shootT<=0){
+        d.shootT=16;
+        /* dispara hacia el enemigo más cercano arriba, o hacia arriba */
+        let tx=d.x,ty=d.y-120;
+        let best=1e9;
+        for(let j=0;j<obstacles.length;j++){
+          const o=obstacles[j];if(!o)continue;
+          const ox=o.x+o.size/2,oy=o.y+o.size/2;
+          if(oy>d.y+10)continue;
+          const dist=Math.hypot(ox-d.x,oy-d.y);
+          if(dist<best&&dist<220*sc){best=dist;tx=ox;ty=oy}
+        }
+        const dx=tx-d.x,dy=ty-d.y,mag=Math.hypot(dx,dy)||1;
+        const bs=7.5*spd;
+        bullets.push({x:d.x,y:d.y-d.size*0.5,vx:(dx/mag)*bs,vy:(dy/mag)*bs,speed:bs,size:2.6*sc,pierce:false,dmg:1.4+(typeof bulletDamage==="function"?bulletDamage():1)*0.5,life:55});
+      }
+      /* colisión con enemigos: la torreta absorbe un golpe */
+      for(let j=obstacles.length-1;j>=0;j--){
+        const o=obstacles[j];if(!o)continue;
+        if(Math.hypot(d.x-(o.x+o.size/2),d.y-(o.y+o.size/2))<o.size*0.5+d.size*0.7){
+          d.hp=(d.hp||1)-1;
+          try{o.hp-=2;if(o.hp<=0)destroyEnemy(o,j)}catch(e){}
+          createExplosion(d.x,d.y,8,"80,200,255");
+          if(d.hp<=0){d.life=0;break}
+        }
+      }
+    } else if(d.type==="mine"){
+      if(d.arm>0)d.arm--;
+      const pulse=0.85+Math.sin((d.life||0)*0.15)*0.15;
+      try{
+        ctx.save();
+        ctx.shadowColor=d.arm>0?"#888":"#FF4455";ctx.shadowBlur=isMobile()?3:8;
+        ctx.fillStyle=d.arm>0?"#555":"#CE1126";
+        ctx.beginPath();ctx.arc(d.x,d.y,d.size*pulse*0.55,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle="#FFCD00";ctx.lineWidth=1.5;
+        ctx.beginPath();ctx.arc(d.x,d.y,d.size*0.7,0,Math.PI*2);ctx.stroke();
+        ctx.restore();ctx.shadowBlur=0;
+      }catch(e){}
+      if(d.arm<=0){
+        for(let j=obstacles.length-1;j>=0;j--){
+          const o=obstacles[j];if(!o||o.type==="hard")continue;
+          if(Math.hypot(d.x-(o.x+o.size/2),d.y-(o.y+o.size/2))<o.size*0.55+d.size*1.2){
+            createExplosion(d.x,d.y,32,"255,60,40");
+            for(let k=obstacles.length-1;k>=0;k--){
+              const oo=obstacles[k];if(!oo||oo.type==="hard")continue;
+              if(Math.hypot(d.x-(oo.x+oo.size/2),d.y-(oo.y+oo.size/2))<70*sc){
+                oo.hp-=5+(typeof bulletDamage==="function"?bulletDamage():1);
+                if(oo.hp<=0)destroyEnemy(oo,k);
+              }
+            }
+            d.life=0;break;
+          }
+        }
+      }
+    }
+    if(d.life<=0){
+      if(d.type==="turret")createExplosion(d.x,d.y,18,"80,220,255");
+      playerDeploys.splice(i,1);
+    }
+  }
+}
+
+function drawWeaponHeatHud(){
+  if(currentWeapon!=="beam_cont")return;
+  if(!(typeof gameRunning!=="undefined"&&gameRunning))return;
+  try{
+    const x=12,y=(canvas.height||400)-36,w=90,h=8;
+    ctx.save();
+    ctx.fillStyle="rgba(0,0,0,.55)";ctx.fillRect(x-2,y-2,w+4,h+4);
+    const heat=Math.max(0,Math.min(100,weaponHeat||0));
+    const over=weaponOverheat>0;
+    ctx.fillStyle=over?"#CE1126":(heat>75?"#FF8800":"#5de5ff");
+    ctx.fillRect(x,y,w*(over?1:heat/100),h);
+    ctx.strokeStyle="rgba(255,255,255,.35)";ctx.strokeRect(x,y,w,h);
+    ctx.fillStyle="#fff";ctx.font="10px Share Tech Mono,monospace";
+    ctx.fillText(over?"SOBRECALENTADO":("CALOR "+(heat|0)+"%"),x,y-4);
+    ctx.restore();
+  }catch(e){}
+}
+function coolWeaponHeat(){
+  if(weaponOverheat>0){weaponOverheat--;if(weaponOverheat<=0){weaponHeat=35;try{if(window.techNotify)window.techNotify("Láser listo","success","arma")}catch(e){}}return}
+  if(!isShooting||currentWeapon!=="beam_cont"){
+    weaponHeat=Math.max(0,(weaponHeat||0)-1.4);
+  }
+  if(weaponDeployCd>0)weaponDeployCd--;
 }
 function updateDrones(){
   for(let i=drones.length-1;i>=0;i--){
@@ -8543,6 +8755,7 @@ for(let j=obstacles.length-1;j>=0;j--){const o=obstacles[j];if(Math.abs(o.x+o.si
 function drawBullets(){
   for(let i=bullets.length-1;i>=0;i--){
     const b=bullets[i];
+    if(b.life!=null){b.life--;if(b.life<=0){bullets.splice(i,1);continue}}
     if(b.vx!=null||b.vy!=null){b.x+=(b.vx||0);b.y+=(b.vy!=null?b.vy:-b.speed)}
     else b.y-=b.speed;
     ctx.save();
@@ -9826,7 +10039,7 @@ for(let i=obstacles.length-1;i>=0;i--){
   if((o.type==="hunter"||o.type==="kamikaze")&&(o.y>canvas.height+50||o.x<-50||o.x>canvas.width+50))obstacles.splice(i,1);
 }
 updateTraps();updateExtraTraps();if(!gameRunning)return;
-updateDashTrail();updateLaser();updateKamehameha();drawBullets();updateMissiles();updateEnemyBullets();if(!gameRunning)return;
+updateDashTrail();updateLaser();updateKamehameha();drawBullets();updateMissiles();try{updatePlayerDeploys()}catch(e){};try{coolWeaponHeat()}catch(e){};updateEnemyBullets();if(!gameRunning)return;
 updatePickups();try{updateNewPowers()}catch(e){}updateSupplyCrates();
 if(phase==="meteors"&&gameRunning&&!gamePaused){
   const nowTs=performance.now();
@@ -9835,7 +10048,7 @@ if(phase==="meteors"&&gameRunning&&!gamePaused){
     if(Math.random()<0.55)spawnSupplyCrate();
   }
 }
-updateExplosions();if(lightningFX&&lightningFX.length){updateLightning()}else if(!((selectedWorld===5||scenario===5)&&(typeof isMobile==="function"&&isMobile())&&!!lowPower)&&!lowPower){updateLightning()}updateAllies();updateDrones();drawPlayer();
+updateExplosions();if(lightningFX&&lightningFX.length){updateLightning()}else if(!((selectedWorld===5||scenario===5)&&(typeof isMobile==="function"&&isMobile())&&!!lowPower)&&!lowPower){updateLightning()}updateAllies();updateDrones();drawPlayer();try{drawWeaponHeatHud()}catch(e){}
 try{updateEngineSound()}catch(e){}
 
 /* Vórtice: atrae enemigos */
@@ -9940,7 +10153,7 @@ if(rec>=100)upgSpeed=Math.max(upgSpeed,2);
 startBgMusic();
 startEngineSound();
 
-lastSpawn=performance.now();lastShot=0;lastAmmoDrop=0;lastTrapSpawn=performance.now();
+lastSpawn=performance.now();lastShot=0;lastAmmoDrop=0;lastTrapSpawn=performance.now();weaponHeat=0;weaponOverheat=0;weaponDeployCd=0;playerDeploys=[];
 /* Arrancar el bucle ANTES de inicializaciones auxiliares: si una fase o las estrellas fallan,
    la partida no queda marcada como activa pero congelada sin fotogramas. */
 try{cancelAnimationFrame(animationFrame)}catch(e){}
