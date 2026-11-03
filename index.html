@@ -2486,6 +2486,80 @@ html,body{width:100%;min-width:320px}
 </style>
 
 
+
+<style id="tech-coins-visible">
+.tech-game .hud-coins{
+  border-color:rgba(255,205,0,.65)!important;
+  background:linear-gradient(145deg,rgba(40,28,0,.96),rgba(20,12,0,.92))!important;
+  min-width:88px!important;
+}
+.tech-game .hud-coins .hud-icon,
+.tech-game .hud-coins strong{
+  color:#FFCD00!important;
+  -webkit-text-fill-color:#FFCD00!important;
+  text-shadow:0 0 10px rgba(255,205,0,.45)!important;
+}
+.tech-game .hud-coins .hud-label{
+  color:#ffe9a0!important;
+  -webkit-text-fill-color:#ffe9a0!important;
+}
+.tech-game .hud-score strong,
+#gameScore{
+  color:#FFCD00!important;
+  -webkit-text-fill-color:#FFCD00!important;
+  font-size:18px!important;
+}
+#gameCoins{
+  color:#FFCD00!important;
+  -webkit-text-fill-color:#FFCD00!important;
+  font-size:18px!important;
+  font-weight:800!important;
+}
+/* Badge fijo en menú inicio */
+#techCoinsBar{
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin:10px auto 6px!important;
+  padding:10px 16px!important;
+  max-width:100%;
+  width:fit-content;
+  min-width:min(280px,92%);
+  border-radius:14px!important;
+  border:2px solid #FFCD00!important;
+  background:linear-gradient(135deg,rgba(255,205,0,.18),rgba(206,17,38,.2),rgba(0,40,100,.55))!important;
+  box-shadow:0 0 18px rgba(255,205,0,.25), inset 0 1px 0 rgba(255,255,255,.12)!important;
+  color:#fff!important;
+  -webkit-text-fill-color:#fff!important;
+  font-family:Orbitron,sans-serif!important;
+  z-index:5;
+  position:relative;
+}
+#techCoinsBar .tcb-label{
+  font-size:11px!important;
+  letter-spacing:1px!important;
+  color:#ffe9a0!important;
+  -webkit-text-fill-color:#ffe9a0!important;
+  font-weight:700!important;
+}
+#techCoinsBar .tcb-value{
+  font-size:22px!important;
+  font-weight:800!important;
+  color:#FFCD00!important;
+  -webkit-text-fill-color:#FFCD00!important;
+  text-shadow:0 0 12px rgba(255,205,0,.55)!important;
+  font-family:'Share Tech Mono',monospace!important;
+}
+#techCoinsBar .tcb-star{font-size:20px}
+@media(max-width:600px){
+  .tech-game .game-score{flex-wrap:wrap!important;max-width:100%!important}
+  .tech-game .hud-stat{min-width:64px!important;padding:6px 7px!important}
+  .tech-game .hud-stat strong,#gameScore,#gameCoins{font-size:15px!important}
+  #techCoinsBar .tcb-value{font-size:20px!important}
+}
+</style>
+
 <style id="tech-ship-carousel-fix">
 #shipCarouselName{color:#FFCD00!important;-webkit-text-fill-color:#FFCD00!important;opacity:1!important;visibility:visible!important}
 #shipCarouselIndex{
@@ -2508,6 +2582,7 @@ html,body{width:100%;min-width:320px}
   <div class="game-title"><span class="hud-live-dot"></span> TECH RUN <small>MISSION HUD</small></div>
   <div class="game-score">
     <div class="hud-stat hud-score"><span class="hud-icon">✦</span><span class="hud-label">PUNTOS</span><strong id="gameScore">0</strong></div>
+    <div class="hud-stat hud-coins"><span class="hud-icon">⭐</span><span class="hud-label">PUNTOSJUEGO</span><strong id="gameCoins">0</strong></div>
     <div class="hud-stat hud-record"><span class="hud-icon">★</span><span class="hud-label">RÉCORD</span><strong id="gameRecord">0</strong></div>
     <div class="hud-stat hud-lives"><span class="hud-icon">♥</span><span class="hud-label">VIDAS</span><strong id="gameLives">1</strong></div>
   </div>
@@ -2515,7 +2590,12 @@ html,body{width:100%;min-width:320px}
 <canvas id="gameCanvas"></canvas>
 <div class="game-panel" id="startPanel">
 <h2>⚡ TECH RUN</h2>
-<small>Elige dificultad y nave · Desliza para ver más</small><br>
+<small>Elige dificultad y nave · Desliza para ver más</small>
+<div id="techCoinsBar" aria-label="Puntosjuego disponibles">
+  <span class="tcb-star">⭐</span>
+  <span class="tcb-label">PUNTOSJUEGO</span>
+  <span class="tcb-value" id="techCoinsMainValue">0</span>
+</div>
 <button class="game-btn" id="openTechAccount" style="margin-top:8px;background:linear-gradient(135deg,#35205e,#6b39a8);border-color:#c9a4ff;color:#fff">Crear cuenta / Iniciar sesión</button>
 <button class="game-btn" id="startGame" style="margin-top:10px">🚀 Iniciar</button>
 </div>
@@ -3519,7 +3599,7 @@ function applyUILanguage(){
     const a=document.getElementById("gameScore"),b=document.getElementById("gameRecord"),c=document.getElementById("gameLives");
     const sa=a?a.textContent:"0",sb=b?b.textContent:"0",scv=c?c.textContent:"1";
     gs.innerHTML=T("points")+' <span id="gameScore">'+sa+'</span> · '+T("record")+' <span id="gameRecord">'+sb+'</span> · '+T("lives")+' <span id="gameLives">'+scv+'</span>';
-    try{scoreElement=document.getElementById("gameScore");recordElement=document.getElementById("gameRecord");livesElement=document.getElementById("gameLives")}catch(e){}
+    try{scoreElement=document.getElementById("gameScore");recordElement=document.getElementById("gameRecord");livesElement=document.getElementById("gameLives");const gc=document.getElementById("gameCoins");if(gc)gc.textContent=String(Math.max(0,Number(coins)||0))}catch(e){}
   }
   const hint=document.querySelector(".touch-move-hint");if(hint)hint.textContent=T("move");
   const fire=document.getElementById("touchFire");if(fire)fire.textContent=T("fire");
@@ -3790,7 +3870,7 @@ function buyWeapon(id){
   }
   if(coins<item.price){alert("Necesitas "+item.price+" puntosjuego");return false}
   coins-=item.price;ownedWeapons.push(id);
-  lsSet("techCoinsV2",coins);lsSet("techWeapons",JSON.stringify(ownedWeapons));
+  lsSet("techCoinsV2",coins);lsSet("techWeapons",JSON.stringify(ownedWeapons));try{if(typeof syncCoinsUI==="function")syncCoinsUI()}catch(e){}
   currentWeapon=id;lsSet("techWeapon",id);
   return "buy";
 }
@@ -5415,7 +5495,12 @@ if(startPanel&&!document.getElementById("startExtras")){
       <button type="button" data-skin="steel" class="${shipSkin==="steel"?"active":""}">Acero</button>
       <button type="button" data-skin="orange" class="${shipSkin==="orange"?"active":""}">Naranja</button>
     </div>
-    <h3>⭐ Puntosjuego: ${coins}</h3>
+    <div id="techCoinsBar" style="margin:12px auto">
+  <span class="tcb-star">⭐</span>
+  <span class="tcb-label">PUNTOSJUEGO</span>
+  <span class="tcb-value" id="techCoinsMainValue">${coins}</span>
+</div>
+<h3 style="color:#FFCD00!important">⭐ Puntosjuego: ${coins}</h3>
     <div class="diff-btns">
       <button type="button" data-w="basic" class="${currentWeapon==="basic"?"active":""}">Básica</button>
       <button type="button" data-w="double" class="${currentWeapon==="double"?"active":""}">Doble · 40</button>
@@ -9198,7 +9283,7 @@ if(p.type==="redL"){
   for(let k=0;k<18;k++){const a=Math.random()*Math.PI*2;const d=12+Math.random()*55;createExplosion(p.x+Math.cos(a)*d,p.y+Math.sin(a)*d,5+Math.random()*9,"255,20,55")}
 }else if(["chain","phase","orbmine","vacuum","railgun","redL"].includes(p.type)){applyNewPowerPickup(p.type)}
 else if(p.type==="ammo"){ammo=Math.min(ammo+40,250);playSfx("power")}
-else if(p.type==="coin"){coins+=(p.value||5)*2;lsSet("techCoinsV2",coins);playSfx("power");scenarioMsg="⭐ +"+(p.value||5)*2+" puntosjuego";scenarioTransition=40}
+else if(p.type==="coin"){coins+=(p.value||5)*2;lsSet("techCoinsV2",coins);try{if(typeof syncCoinsUI==="function")syncCoinsUI()}catch(e){};playSfx("power");scenarioMsg="⭐ +"+(p.value||5)*2+" puntosjuego";scenarioTransition=40}
 else if(powerMode==="manual"&&["hammer","bomb","burst","shield","bounce","missile","laser","pierce","reflect","vortex","ion","emp","chain","phase","orbmine","vacuum","railgun","redL"].includes(p.type)){
   specialCharges=Math.min(9,specialCharges+1);powersCollected++;playSfx("power");
 }else if(p.type==="shield"){shield=320;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("shield");if(!SFX.shield)playSfx("power")}
@@ -9285,14 +9370,22 @@ if(bounceShield>0){
   ctx.textAlign="right";ctx.font="bold "+P(8)+"px Orbitron";ctx.fillStyle="#AAFFFF";
   ctx.fillText("REBOTE",canvas.width-P(8),P(12));
 }
-ctx.fillStyle="rgba(0,0,0,.5)";ctx.fillRect(0,canvas.height-P(26),canvas.width,P(26));
-ctx.textAlign="left";ctx.font="bold "+P(10)+"px Orbitron";
+ctx.fillStyle="rgba(0,0,0,.62)";ctx.fillRect(0,canvas.height-P(40),canvas.width,P(40));
+ctx.textAlign="left";ctx.font="bold "+P(11)+"px Orbitron";
 ctx.fillStyle=ammo>15?"#FFCD00":"#FF3333";
 ctx.fillText("MUNICIÓN "+ammo,P(8),canvas.height-P(10));
-ctx.fillStyle="#FFD700";ctx.font="bold "+P(9)+"px Orbitron";
-ctx.fillText("⭐ "+coins,P(8),canvas.height-P(20));
+/* Puntosjuego bien visibles */
+ctx.font="bold "+P(12)+"px Orbitron";
+ctx.fillStyle="#000";
+ctx.fillText("⭐ PUNTOSJUEGO "+(coins|0),P(9),canvas.height-P(23));
+ctx.fillStyle="#FFCD00";
+ctx.fillText("⭐ PUNTOSJUEGO "+(coins|0),P(8),canvas.height-P(24));
 ctx.fillStyle="#FFFFFF";ctx.font="bold "+P(9)+"px Orbitron";
-ctx.fillText("☄ "+meteorsDestroyed,P(8),canvas.height-P(34));
+ctx.fillText("☄ "+meteorsDestroyed,P(8),canvas.height-P(36));
+try{
+  const gc=document.getElementById("gameCoins");
+  if(gc) gc.textContent=String(coins|0);
+}catch(e){}
 if(ammo<=0){ctx.textAlign="center";ctx.font="bold "+P(9)+"px Orbitron";ctx.fillText("¡SIN MUNICIÓN! +40",canvas.width/2,canvas.height-P(10))}
 const pows=[];
 if(shield>0)pows.push(["ESC","#00C8FF"]);
@@ -11471,8 +11564,27 @@ function runAdded(node){if(!node||node.nodeType!==1)return;run(node);}
   window.updateTechRunCounters=function(){
     const code=getLang(), t=LANGS[code]||LANGS.es;
     const value=String(Math.max(0,Number(typeof coins!=='undefined'?coins:localStorage.getItem('techCoinsV2'))||0));
-    const main=document.getElementById('techCoinsMainValue'); if(main)main.textContent=value;
+    document.querySelectorAll('#techCoinsMainValue, #gameCoins').forEach(function(el){ if(el) el.textContent=value; });
     const hud=document.getElementById('techRunCounterText'); if(hud)hud.textContent=t.meteors+': '+(Number(typeof meteorsDestroyed!=='undefined'?meteorsDestroyed:0)||0);
+  };
+  window.syncCoinsUI=function(){
+    try{
+      const value=String(Math.max(0,Number(typeof coins!=='undefined'?coins:0)||0));
+      const els=document.querySelectorAll('#techCoinsMainValue, #gameCoins, .tcb-value');
+      els.forEach(function(el){ el.textContent=value; });
+      let bar=document.getElementById('techCoinsBar');
+      if(!bar){
+        const start=document.getElementById('startPanel');
+        if(start){
+          bar=document.createElement('div');
+          bar.id='techCoinsBar';
+          bar.innerHTML='<span class="tcb-star">⭐</span><span class="tcb-label">PUNTOSJUEGO</span><span class="tcb-value" id="techCoinsMainValue">'+value+'</span>';
+          const h2=start.querySelector('h2');
+          if(h2&&h2.nextSibling) start.insertBefore(bar, h2.nextSibling);
+          else start.insertBefore(bar, start.firstChild);
+        }
+      }
+    }catch(e){}
   };
   function setupMainLanguage(){
     /* Idioma solo en Configuración — quitar selector del menú de inicio */
@@ -11482,7 +11594,7 @@ function runAdded(node){if(!node||node.nodeType!==1)return;run(node);}
       const sel=document.getElementById('startLangSelect');
       if(sel && sel.closest && !sel.closest('#configPanel')) sel.remove();
     }catch(e){}
-    const badge=document.getElementById('techCoinsMainBadge'); if(badge)badge.remove();
+    try{if(typeof syncCoinsUI==='function')syncCoinsUI()}catch(_e){}
   }
   const priorSetLanguage=window.setLanguage;
   window.setLanguage=function(code){
@@ -11557,7 +11669,7 @@ function runAdded(node){if(!node||node.nodeType!==1)return;run(node);}
       const el=document.getElementById('gameScore'); if(el && el.textContent!==String(n))el.textContent=String(n);
       const fin=document.getElementById('finalScore');
       if(!gameRunning && fin && document.getElementById('gameOverPanel')?.style.display==='block')fin.textContent=String(n);
-      const badge=document.getElementById('techCoinsMainBadge');if(badge)badge.remove();
+      try{if(typeof syncCoinsUI==='function')syncCoinsUI();else if(typeof updateTechRunCounters==='function')updateTechRunCounters()}catch(_e){}
     } catch(e){}
   }
   try {
@@ -11596,7 +11708,7 @@ function runAdded(node){if(!node||node.nodeType!==1)return;run(node);}
     }
   } catch(e){}
   function init(){
-    const badge=document.getElementById('techCoinsMainBadge');if(badge)badge.remove();
+    try{if(typeof syncCoinsUI==='function')syncCoinsUI();else if(typeof updateTechRunCounters==='function')updateTechRunCounters()}catch(_e){}
     syncLiveScore();
     const scoreEl=document.getElementById('gameScore');
     if(scoreEl && !scoreEl.dataset.liveScoreReady){scoreEl.dataset.liveScoreReady='1';}
@@ -16783,6 +16895,28 @@ body.tech-playing .game-top{
 
 </bod
 y>
+
+<script id="tech-coins-sync-always">
+(function(){
+  function tick(){
+    try{
+      if(typeof syncCoinsUI==='function') syncCoinsUI();
+      else if(typeof updateTechRunCounters==='function') updateTechRunCounters();
+      const gc=document.getElementById('gameCoins');
+      if(gc && typeof coins!=='undefined') gc.textContent=String(Math.max(0,Number(coins)||0));
+      const gs=document.getElementById('gameScore');
+      if(gs && typeof score!=='undefined' && gameRunning) {
+        const n=String(Math.max(0,Number(score)||0));
+        if(gs.textContent!==n) gs.textContent=n;
+      }
+    }catch(e){}
+  }
+  setInterval(tick, 500);
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', tick);
+  else tick();
+})();
+</script>
+
 </html>
 <style id="tech-run-desktop-large-final">
 /* PC: usar todo el ancho disponible y hacer el menú realmente legible */
