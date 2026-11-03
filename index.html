@@ -8,10 +8,9 @@ git commit -m "first commi
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TECH RUN — Juego</title>
-<link rel="icon" href="logo-no-background (2).png" type="image/x-icon">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%237cf7ff'/%3E%3Cstop offset='1' stop-color='%237b61ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' stroke='%23fff' stroke-width='1.5' d='M32 3C20 13 17 27 19 39l-9 11 14-3 8 12 8-12 14 3-9-11C47 27 44 13 32 3Z'/%3E%3Ccircle cx='32' cy='27' r='6' fill='%230b1630' stroke='%23fff' stroke-width='2'/%3E%3Cpath fill='%23ff9f43' d='m25 43 7 15 7-15-7 5z'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="icon" href="nave.png" type="image/x-icon">   
 
 
 <button type="button" onclick="toggleProgrammerBallVideo(event)" class="boton-foto" aria-label="Reproducir o pausar video del programador">
@@ -14975,6 +14974,36 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   const PIN_HASH = 'fe1302a2a86f4ebf77a8fc1e36c9ff0ac7be26447ce861b95b0f107b1dce7cce';
   const PIN_SALT = 'TECH-RUN-visitas-2026-v1';
   const UNLOCK_KEY = 'techVisitsUnlockedV1';
+
+  // Respaldo SHA-256 para navegadores/contextos donde crypto.subtle no está disponible.
+  // Conserva exactamente el mismo algoritmo, sal y hash anteriores: no cambia la contraseña.
+  function sha256Fallback(input){
+    const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+    const bytes=Array.from(new TextEncoder().encode(String(input))); const bitLen=bytes.length*8;
+    bytes.push(0x80); while(bytes.length%64!==56) bytes.push(0);
+    const hi=Math.floor(bitLen/0x100000000), lo=bitLen>>>0;
+    for(let i=3;i>=0;i--) bytes.push((hi>>>(i*8))&255);
+    for(let i=3;i>=0;i--) bytes.push((lo>>>(i*8))&255);
+    let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+    const rotr=(x,n)=>(x>>>n)|(x<<(32-n));
+    for(let off=0;off<bytes.length;off+=64){
+      const w=new Array(64);
+      for(let i=0;i<16;i++){const j=off+i*4;w[i]=((bytes[j]<<24)|(bytes[j+1]<<16)|(bytes[j+2]<<8)|bytes[j+3])>>>0;}
+      for(let i=16;i<64;i++){const a=w[i-15],b=w[i-2],s0=rotr(a,7)^rotr(a,18)^(a>>>3),s1=rotr(b,17)^rotr(b,19)^(b>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0;}
+      let [a,b,c,d,e,f,g,h]=H;
+      for(let i=0;i<64;i++){const S1=rotr(e,6)^rotr(e,11)^rotr(e,25),ch=(e&f)^(~e&g),t1=(h+S1+ch+K[i]+w[i])>>>0;const S0=rotr(a,2)^rotr(a,13)^rotr(a,22),maj=(a&b)^(a&c)^(b&c),t2=(S0+maj)>>>0;h=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b;b=a;a=(t1+t2)>>>0;}
+      H=H.map((v,i)=>(v+[a,b,c,d,e,f,g,h][i])>>>0);
+    }
+    return H.map(v=>v.toString(16).padStart(8,'0')).join('');
+  }
+  async function hashPin(code){
+    const value=PIN_SALT+code;
+    if(window.crypto&&window.crypto.subtle){
+      const digest=await window.crypto.subtle.digest('SHA-256',new TextEncoder().encode(value));
+      return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
+    }
+    return sha256Fallback(value);
+  }
   const LIVE_MS = 90 * 1000; /* activo si last_seen < 90 s */
   const HEARTBEAT_MS = 25 * 1000;
   let heartbeatTimer = null;
@@ -15281,12 +15310,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
     const code = String((inp && inp.value) || '');
 
     try {
-      const encoder = new TextEncoder();
-      const data = encoder.encode(PIN_SALT + code);
-      const digest = await crypto.subtle.digest('SHA-256', data);
-      const hash = Array.from(new Uint8Array(digest))
-        .map(b => b.toString(16).padStart(2, '0'))
-        .join('');
+      const hash = await hashPin(code);
 
       if(hash === PIN_HASH){
         try { sessionStorage.setItem(UNLOCK_KEY, '1'); } catch(e){}
