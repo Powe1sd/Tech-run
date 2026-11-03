@@ -14901,7 +14901,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
 .tv-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:12px}
 .tv-head h2{margin:0;font-size:clamp(18px,4vw,24px);color:#fff}
 .tv-close{width:38px;height:38px;border-radius:10px;border:1px solid #c9a0ff;background:#2a1848;color:#fff;font-size:18px;cursor:pointer}
-.tv-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.tv-cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:12px}
 .tv-card{padding:11px;border-radius:12px;border:1px solid rgba(201,160,255,.2);background:rgba(30,18,50,.85)}
 .tv-card span{display:block;font-size:10px;color:#cbb8e8}
 .tv-card strong{font-size:clamp(16px,2.8vw,26px);font-family:monospace}
@@ -14918,7 +14918,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
 .tv-status{font-size:11px;color:#cbb8e8;margin-top:8px}
 .tv-tools{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .tv-tools button{border:1px solid rgba(201,160,255,.45);background:#2a1848;color:#fff;border-radius:9px;padding:8px 12px;font-size:11px;cursor:pointer}
-@media(max-width:560px){.tv-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:900px){.tv-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}\n@media(max-width:560px){.tv-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .tv-live{color:#69f0ae;font-weight:800}
 .tv-off{color:#9a8ab8}
 .tv-dev{font-weight:700}
@@ -14951,17 +14951,20 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
     <div class="tv-card"><span>🟢 En vivo ahora</span><strong id="tvLive">—</strong></div>
     <div class="tv-card"><span>Total visitas</span><strong id="tvTotal">—</strong></div>
     <div class="tv-card"><span>Hoy</span><strong id="tvToday">—</strong></div>
-    <div class="tv-card"><span>7 días</span><strong id="tvWeek">—</strong></div>
+    <div class="tv-card"><span>7 días</span><strong id="tvWeek">—</strong></div>\n    <div class="tv-card"><span>Visitantes únicos</span><strong id="tvUnique">—</strong></div>\n    <div class="tv-card"><span>PC / portátiles</span><strong id="tvComputers">—</strong></div>
   </div>
   <div class="tv-section"><h3>🟢 Sesiones activas (en el link ahora)</h3>
-    <div class="tv-table-wrap"><table class="tv-table"><thead><tr><th>Estado</th><th>Dispositivo</th><th>Usuario</th><th>Entró</th><th>Última señal</th></tr></thead><tbody id="tvLiveBody"></tbody></table></div>
+    <div class="tv-table-wrap"><table class="tv-table"><thead><tr><th>Estado</th><th>Dispositivo</th><th>Usuario</th><th>Tipo de usuario</th><th>IP pública</th><th>Entró</th><th>Última señal</th></tr></thead><tbody id="tvLiveBody"></tbody></table></div>
   </div>
-  <div class="tv-section"><h3>Últimos 14 días</h3><div id="tvDailyBars"></div></div>
+  <div class="tv-section"><h3>💻 Dispositivos y aperturas por computador/navegador</h3>
+    <div class="tv-table-wrap"><table class="tv-table"><thead><tr><th>Dispositivo identificado</th><th>Tipo</th><th>Sistema</th><th>N.º de aperturas</th><th>Última visita</th></tr></thead><tbody id="tvDeviceBody"></tbody></table></div>
+  </div>
+  <div class="tv-section"><h3>📊 Últimos 14 días</h3><div id="tvDailyBars"></div></div>
   <div class="tv-section"><h3>Historial de visitas</h3>
-    <div class="tv-table-wrap"><table class="tv-table"><thead><tr><th>Estado</th><th>Fecha y hora</th><th>Dispositivo</th><th>Usuario</th><th>Última señal</th><th>Origen</th></tr></thead><tbody id="tvTableBody"></tbody></table></div>
+    <div class="tv-table-wrap"><table class="tv-table"><thead><tr><th>Estado</th><th>Fecha y hora</th><th>Dispositivo</th><th>Usuario</th><th>Tipo</th><th>IP pública</th><th>Aperturas</th><th>Última señal</th><th>Origen</th></tr></thead><tbody id="tvTableBody"></tbody></table></div>
   </div>
   <div class="tv-tools"><button type="button" id="tvRefresh">↻ Actualizar</button></div>
-  <p class="tv-status" id="tvStatus"></p>
+  <p class="tv-status" id="tvStatus"></p>\n  <p class="tv-status">Privacidad: la IP pública es un dato personal. Informa a tus visitantes y aplica una política de privacidad; la identificación por navegador no garantiza reconocer físicamente el mismo computador.</p>
 </div>
 <script id="tech-site-visits">
 (function(){
@@ -14995,8 +14998,52 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
       const ua=navigator.userAgent||'';
       if(/iPad|Tablet/i.test(ua)) return 'Tablet';
       if(/Mobi|Android|iPhone|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua)) return 'Celular';
-      return 'PC';
+      return 'PC / portátil';
     }catch(e){ return 'Desconocido'; }
+  }
+  function visitorId(){
+    try{
+      let id=localStorage.getItem('techVisitBrowserIdV1');
+      if(!id){
+        id='v_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);
+        localStorage.setItem('techVisitBrowserIdV1',id);
+      }
+      return id;
+    }catch(e){ return sessionId(); }
+  }
+  function browserInfo(){
+    const ua=navigator.userAgent||'';
+    let browser='Otro', os='Otro';
+    if(/Edg\//.test(ua)) browser='Edge';
+    else if(/OPR\//.test(ua)) browser='Opera';
+    else if(/Chrome\//.test(ua)) browser='Chrome';
+    else if(/Firefox\//.test(ua)) browser='Firefox';
+    else if(/Safari\//.test(ua)) browser='Safari';
+    if(/Windows/i.test(ua)) os='Windows';
+    else if(/Mac OS X|Macintosh/i.test(ua)) os='macOS';
+    else if(/Android/i.test(ua)) os='Android';
+    else if(/iPhone|iPad|iPod/i.test(ua)) os='iOS / iPadOS';
+    else if(/Linux/i.test(ua)) os='Linux';
+    return {browser:browser,os:os};
+  }
+  async function publicIp(){
+    try{
+      const ctrl=('AbortController' in window)?new AbortController():null;
+      const timer=ctrl?setTimeout(()=>ctrl.abort(),3500):null;
+      const res=await fetch('https://api.ipify.org?format=json',{cache:'no-store',signal:ctrl?ctrl.signal:undefined});
+      if(timer)clearTimeout(timer);
+      if(!res.ok)return null;
+      const data=await res.json();
+      return data&&data.ip?String(data.ip).slice(0,64):null;
+    }catch(e){return null;}
+  }
+  function visitCounter(){
+    try{
+      const key='techVisitOpenCountV1';
+      const n=Math.max(0,parseInt(localStorage.getItem(key)||'0',10)||0)+1;
+      localStorage.setItem(key,String(n));
+      return n;
+    }catch(e){return 1;}
   }
   function username(){
     try{ if(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn()&&window.techAuthUsername) return String(window.techAuthUsername()||'').slice(0,32)||null; }catch(e){}
@@ -15008,9 +15055,16 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   }
   function nowIso(){ return new Date().toISOString(); }
 
-  function visitPayload(online){
+  function visitPayload(online, ip, openCount){
+    const info=browserInfo();
     const body = {
       session_id: sessionId(),
+      visitor_id: visitorId(),
+      visit_count: openCount || 1,
+      ip_address: ip || null,
+      browser: info.browser,
+      os: info.os,
+      user_type: (username()?'Registrado':'Invitado'),
       path: (location.pathname||'/')+(location.search||''),
       referrer: (document.referrer||'').slice(0,400)||null,
       user_agent: (navigator.userAgent||'').slice(0,300)||null,
@@ -15031,7 +15085,9 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
         startHeartbeat();
         return;
       }
-      const body = visitPayload(true);
+      const ip=await publicIp();
+      const count=visitCounter();
+      const body = visitPayload(true, ip, count);
       const res = await fetch(SUPABASE_URL+'/rest/v1/'+TABLE, {
         method:'POST', headers:headers(true,'return=representation'), body:JSON.stringify(body), keepalive:true
       });
@@ -15110,7 +15166,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   function devicePretty(d){
     const x = String(d||'').toLowerCase();
     if(x==='celular'||x==='mobile') return '📱 Celular';
-    if(x==='pc'||x==='desktop') return '💻 PC';
+    if(x==='pc'||x==='desktop'||x==='pc / portátil') return '💻 PC / portátil';
     if(x==='tablet') return '📲 Tablet';
     return d ? ('📱 '+d) : '—';
   }
@@ -15119,7 +15175,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   async function fetchVisits(){
     setStatus('Cargando…');
     try{
-      const res=await fetch(SUPABASE_URL+'/rest/v1/'+TABLE+'?select=id,session_id,visited_at,last_seen,online,path,referrer,username,device&order=last_seen.desc.nullslast&order=visited_at.desc&limit=2000',{headers:headers(false)});
+      const res=await fetch(SUPABASE_URL+'/rest/v1/'+TABLE+'?select=id,session_id,visitor_id,visit_count,ip_address,browser,os,user_type,visited_at,last_seen,online,path,referrer,username,device&order=last_seen.desc.nullslast&order=visited_at.desc&limit=2000',{headers:headers(false)});
       const text=await res.text();
       let rows=[]; try{ rows=text?JSON.parse(text):[]; }catch(e){ rows=[]; }
       if(!res.ok){
@@ -15145,15 +15201,40 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
       $('tvToday').textContent=String(todayCount);
       $('tvWeek').textContent=String(weekCount);
 
+      const visitors={};
+      rows.forEach(function(r){
+        const key=r.visitor_id||r.session_id||('row_'+r.id);
+        if(!visitors[key] || Date.parse(r.visited_at||0)>Date.parse(visitors[key].visited_at||0)) visitors[key]=r;
+      });
+      const uniqueCount=Object.keys(visitors).length;
+      const computerCount=Object.values(visitors).filter(r=>r.device==='PC'||r.device==='PC / portátil'||r.device==='desktop').length;
+      $('tvUnique').textContent=String(uniqueCount);
+      $('tvComputers').textContent=String(computerCount);
+
+      const byDevice={};
+      rows.forEach(function(r){
+        const key=r.visitor_id||r.session_id||('row_'+r.id);
+        if(!byDevice[key]) byDevice[key]={id:key,device:r.device||'Desconocido',browser:r.browser||'—',os:r.os||'—',count:0,last:r.visited_at||r.last_seen};
+        byDevice[key].count=Math.max(byDevice[key].count,Number(r.visit_count)||1);
+        const t=Date.parse(r.visited_at||r.last_seen||0), old=Date.parse(byDevice[key].last||0);
+        if(t>old)byDevice[key].last=r.visited_at||r.last_seen;
+      });
+      const deviceRows=Object.values(byDevice).sort((a,b)=>b.count-a.count).slice(0,100);
+      $('tvDeviceBody').innerHTML=deviceRows.length?deviceRows.map(function(d){
+        return '<tr><td>'+esc(String(d.id).slice(0,18))+'</td><td>'+esc(devicePretty(d.device))+'</td><td>'+esc(d.os+' · '+d.browser)+'</td><td><b>'+esc(d.count)+'</b></td><td>'+esc(fmtDateTime(d.last))+'</td></tr>';
+      }).join(''):'<tr><td colspan="5">Sin datos de dispositivos</td></tr>';
+
       $('tvLiveBody').innerHTML = live.length ? live.map(function(r){
         return '<tr>'
           +'<td class="tv-live">🟢 En vivo</td>'
           +'<td class="tv-dev">'+esc(devicePretty(r.device))+'</td>'
           +'<td>'+esc(r.username||'invitado')+'</td>'
+          +'<td>'+esc(r.user_type||(r.username?'Registrado':'Invitado'))+'</td>'
+          +'<td>'+esc(r.ip_address||'No disponible')+'</td>'
           +'<td>'+esc(fmtDateTime(r.visited_at))+'</td>'
           +'<td>'+esc(fmtDateTime(r.last_seen||r.visited_at))+'</td>'
           +'</tr>';
-      }).join('') : '<tr><td colspan="5" class="tv-off">Nadie en el link en este momento</td></tr>';
+      }).join('') : '<tr><td colspan="7" class="tv-off">Nadie en el link en este momento</td></tr>';
 
       const days=[]; const now=Date.now();
       for(let i=13;i>=0;i--){ const d=new Date(now-i*24*3600*1000); const k=d.toISOString().slice(0,10); days.push({k,n:byDay[k]||0,label:k.slice(5)}); }
@@ -15169,10 +15250,13 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
           +'<td>'+esc(fmtDateTime(r.visited_at))+'</td>'
           +'<td class="tv-dev">'+esc(devicePretty(r.device))+'</td>'
           +'<td>'+esc(r.username||'invitado')+'</td>'
+          +'<td>'+esc(r.user_type||(r.username?'Registrado':'Invitado'))+'</td>'
+          +'<td>'+esc(r.ip_address||'No disponible')+'</td>'
+          +'<td>'+esc(r.visit_count||1)+'</td>'
           +'<td>'+esc(fmtDateTime(r.last_seen||r.visited_at))+'</td>'
           +'<td>'+esc(origin)+'</td>'
           +'</tr>';
-      }).join(''):'<tr><td colspan="6">Sin visitas aún</td></tr>';
+      }).join(''):'<tr><td colspan="9">Sin visitas aún</td></tr>';
       setStatus('Actualizado · '+live.length+' en vivo · '+rows.length+' registros', true);
     }catch(e){ setStatus('Error de red: '+(e.message||e), false); }
   }
@@ -15267,8 +15351,21 @@ create table if not exists public.visitas_tech_run (
   username text,
   user_id uuid,
   device text,
-  is_new_session boolean default true
+  is_new_session boolean default true,
+  visitor_id text,
+  visit_count integer default 1,
+  ip_address text,
+  browser text,
+  os text,
+  user_type text
 );
+alter table public.visitas_tech_run add column if not exists visitor_id text;
+alter table public.visitas_tech_run add column if not exists visit_count integer default 1;
+alter table public.visitas_tech_run add column if not exists ip_address text;
+alter table public.visitas_tech_run add column if not exists browser text;
+alter table public.visitas_tech_run add column if not exists os text;
+alter table public.visitas_tech_run add column if not exists user_type text;
+create index if not exists visitas_tech_run_visitor_idx on public.visitas_tech_run (visitor_id);
 alter table public.visitas_tech_run add column if not exists last_seen timestamptz default now();
 alter table public.visitas_tech_run add column if not exists online boolean default true;
 create index if not exists visitas_tech_run_visited_at_idx on public.visitas_tech_run (visited_at desc);
