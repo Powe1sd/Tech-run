@@ -2485,6 +2485,20 @@ html,body{width:100%;min-width:320px}
 @media(min-width:601px) and (max-width:1100px){.tech-game{height:clamp(500px,75vh,800px)}}
 </style>
 
+
+<style id="tech-ship-carousel-fix">
+#shipCarouselName{color:#FFCD00!important;-webkit-text-fill-color:#FFCD00!important;opacity:1!important;visibility:visible!important}
+#shipCarouselIndex{
+  color:#fff!important;-webkit-text-fill-color:#fff!important;
+  font-size:13px!important;font-weight:800!important;
+  opacity:1!important;visibility:visible!important;display:inline-block!important;
+  background:rgba(0,0,0,.55)!important;border:1px solid rgba(255,205,0,.45)!important;
+  padding:4px 12px!important;border-radius:999px!important;margin-top:6px!important;
+  text-shadow:0 1px 2px #000!important;letter-spacing:1px!important;
+}
+#shipPreview{display:block!important;opacity:1!important;visibility:visible!important}
+</style>
+
 </head>
 <body>
 
@@ -2855,17 +2869,32 @@ function refreshShipUI(){
     box.querySelectorAll("[data-skin]").forEach(function(b){
       b.classList.toggle("active", b.getAttribute("data-skin")===shipSkin);
     });
-    /* Carrusel: nombre e índice */
+    /* Carrusel: nombre e índice (siempre visibles) */
     const idx=getShipGalleryIndex();
     const entry=SHIP_GALLERY[idx]||{};
-    const nameEl=box.querySelector("#shipCarouselName");
-    if(nameEl) nameEl.textContent=(entry.icon||"🚀")+" "+(entry.name||shipModel);
-    const meta=nameEl && nameEl.parentElement && nameEl.parentElement.querySelector("div[style*='font-size:11px']");
-    /* buscar el contador "X / N" */
-    box.querySelectorAll("#shipCarousel div").forEach(function(d){
+    const nameEl=box.querySelector("#shipCarouselName")||document.getElementById("shipCarouselName");
+    if(nameEl){
+      nameEl.textContent=(entry.icon||"🚀")+" "+(entry.name||shipModel);
+      nameEl.style.color="#FFCD00";
+      nameEl.style.webkitTextFillColor="#FFCD00";
+    }
+    const idxEl=document.getElementById("shipCarouselIndex");
+    if(idxEl){
+      idxEl.textContent=(idx+1)+" / "+SHIP_GALLERY.length+(shipModel==="goku"?" · fase Goku":"");
+      idxEl.style.color="#fff";
+      idxEl.style.webkitTextFillColor="#fff";
+      idxEl.style.display="inline-block";
+      idxEl.style.visibility="visible";
+      idxEl.style.opacity="1";
+    }
+    /* fallback: cualquier contador con patrón X / N cerca del carrusel */
+    box.querySelectorAll("#shipCarousel ~ div div, #shipCarousel div").forEach(function(d){
+      if(d.id==="shipCarouselName"||d.id==="shipCarouselIndex")return;
       const t=d.textContent||"";
-      if(/\d+\s*\/\s*\d+/.test(t) && t.indexOf("/")!==-1 && d.id!=="shipCarouselName"){
+      if(/\d+\s*\/\s*\d+/.test(t) && t.indexOf("/")!==-1){
         d.textContent=(idx+1)+" / "+SHIP_GALLERY.length+(shipModel==="goku"?" · fase Goku":"");
+        d.style.color="#fff";
+        d.style.webkitTextFillColor="#fff";
       }
     });
     /* dots galería */
@@ -2883,7 +2912,12 @@ function refreshShipUI(){
 window.refreshShipUI=refreshShipUI;
 
 
-let shipModel=lsGet("techShipModelV2","classic"); // classic|fighter|interceptor|heavy|stealth|wing|needle|delta|r13|c67|rr1|s1000|f50|t200|s179|goku
+let shipModel=(function(){
+  const allowed=["classic","fighter","interceptor","heavy","stealth","wing","needle","delta","r13","c67","rr1","s1000","f50","t200","s179","goku"];
+  let m=lsGet("techShipModelV2","classic")||"classic";
+  if(allowed.indexOf(m)<0) m="classic";
+  return m;
+})(); // classic|fighter|...|goku
 let gokuForm=lsGet("techGokuForm","normal"); // normal|ssj|...|ssblue|black|rose
 let gokuUnlocked=true; /* Goku libre — sin PIN */
 lsSet("techGokuUnlocked","1");
@@ -3733,7 +3767,20 @@ const WEAPON_SHOP=[
   {id:"beam_cont",name:"Láser continuo",price:5000,icon:"🔴",desc:"Haz sostenido que atraviesa enemigos. +DPS alto en línea. −Se sobrecalienta: al 100% deja de disparar hasta enfriarse."},
   {id:"homing_heavy",name:"Misiles teledirigidos",price:6500,icon:"🎯",desc:"Pocos misiles, mucho daño y seguimiento. +Elimina blancos duros. −Cadencia muy baja y alto consumo de munición."},
   {id:"plasma_sg",name:"Escopeta de plasma",price:8000,icon:"💥",desc:"Ráfaga corta de plasma a quemarropa. +Daño masivo de cerca. −Alcance corto y recarga lenta."},
-  {id:"deploy_turret",name:"Mina / Torreta",price:10000,icon:"🛰️",desc:"Despliega una torreta-mina que dispara sola y explota al final. +Presión automática. −Cooldown de despliegue y no es arma de fuego directo."}
+  {id:"deploy_turret",name:"Mina / Torreta",price:10000,icon:"🛰️",desc:"Despliega una torreta-mina que dispara sola y explota al final. +Presión automática. −Cooldown de despliegue y no es arma de fuego directo."},
+  {id:"rail_cannon",name:"Cañón de riel",price:12000,icon:"⚡",desc:"Proyectil hiperveloz que perfora en línea. +Daño alto y atraviesa. −Cadencia baja y gasta mucha munición."},
+  {id:"frost_beam",name:"Rayo gélido",price:14000,icon:"❄️",desc:"Haz frío que ralentiza enemigos. +Control de oleadas. −Daño moderado y se sobrecalienta."},
+  {id:"chain_arc",name:"Arco voltaico",price:16000,icon:"🌩️",desc:"Disparo que salta entre enemigos cercanos. +Limpia grupos. −Ineficaz contra blancos solitarios lejanos."},
+  {id:"flak_burst",name:"Ráfaga flak",price:18000,icon:"🎆",desc:"Estalla en metralla a media distancia. +Área de efecto. −Poco daño a jefes concentrados."},
+  {id:"drone_pod",name:"Vaina de drones",price:20000,icon:"🤖",desc:"Lanza un dron de combate temporal. +Apoyo autónomo. −Cooldown largo y un solo dron a la vez."},
+  {id:"nova_shell",name:"Proyectil nova",price:22000,icon:"☀️",desc:"Bala lenta que detona en radio grande. +Limpieza de zona. −Muy lenta y fácil de fallar el timing."},
+  {id:"phase_blade",name:"Hoja de fase",price:25000,icon:"🗡️",desc:"Corte cuerpo a cuerpo al frente. +Daño brutal de cerca. −Alcance mínimo, riesgo alto."},
+  {id:"seeker_swarm",name:"Enjambre buscador",price:28000,icon:"🐝",desc:"Tres micro-misiles teledirigidos. +Cobertura multiobjetivo. −Daño individual bajo."},
+  {id:"ion_lance",name:"Lanza iónica",price:30000,icon:"💠",desc:"Rayo estrecho de iones con daño continuo. +DPS sostenido. −Consume munición rápido."},
+  {id:"grav_pulse",name:"Pulso gravitatorio",price:32000,icon:"🌀",desc:"Empuja/atrae enemigos y hace daño de área. +Control de posición. −Cadencia muy baja."},
+  {id:"cryo_mines",name:"Minas criogénicas",price:35000,icon:"🧊",desc:"Deja 2 minas de hielo que congelan al contacto. +Zona de control. −No dispara balas directas."},
+  {id:"meteor_battery",name:"Batería meteórica",price:38000,icon:"☄️",desc:"Invoca meteoritos sobre la zona superior. +Daño masivo de artillería. −Lento y predecible."},
+  {id:"singularity",name:"Singularidad",price:42000,icon:"🕳️",desc:"Agujero negro de combate: atrae y destroza. +Máximo poder. −Cooldown extremo y coste enorme de munición."}
 ];
 function buyWeapon(id){
   const item=WEAPON_SHOP.find(w=>w.id===id);
@@ -5307,8 +5354,8 @@ if(startPanel&&!document.getElementById("startExtras")){
       <button type="button" id="shipNext" aria-label="Siguiente" style="flex:0 0 44px;height:44px;border-radius:12px;border:1px solid rgba(255,205,0,.5);background:rgba(0,20,50,.9);color:#FFCD00;font-size:22px;font-weight:800;cursor:pointer;line-height:1">▶</button>
     </div>
     <div style="text-align:center;margin:6px 0 2px">
-      <div id="shipCarouselName" style="font-size:15px;font-weight:800;color:#FFCD00;letter-spacing:1px">${(SHIP_GALLERY[getShipGalleryIndex()]||{}).icon||"🚀"} ${(SHIP_GALLERY[getShipGalleryIndex()]||{}).name||shipModel}</div>
-      <div style="font-size:11px;color:#aaa;margin-top:3px">${getShipGalleryIndex()+1} / ${SHIP_GALLERY.length}${shipModel==="goku"?" · fase Goku":""}</div>
+      <div id="shipCarouselName" style="font-size:15px;font-weight:800;color:#FFCD00;letter-spacing:1px;-webkit-text-fill-color:#FFCD00">${(SHIP_GALLERY[getShipGalleryIndex()]||{}).icon||"🚀"} ${(SHIP_GALLERY[getShipGalleryIndex()]||{}).name||shipModel}</div>
+      <div id="shipCarouselIndex" style="font-size:13px;font-weight:800;color:#fff;margin-top:4px;letter-spacing:1px;-webkit-text-fill-color:#fff;text-shadow:0 0 8px rgba(0,0,0,.9);background:rgba(0,0,0,.45);display:inline-block;padding:3px 12px;border-radius:999px;border:1px solid rgba(255,205,0,.4)">${getShipGalleryIndex()+1} / ${SHIP_GALLERY.length}${shipModel==="goku"?" · fase Goku":""}</div>
       <div style="display:flex;justify-content:center;gap:4px;margin-top:8px;flex-wrap:wrap">
         ${SHIP_GALLERY.map((_,i)=>`<span data-gal="${i}" style="width:7px;height:7px;border-radius:50%;display:inline-block;cursor:pointer;background:${i===getShipGalleryIndex()?"#FFCD00":"rgba(255,255,255,.25)"}"></span>`).join("")}
       </div>
@@ -5498,6 +5545,9 @@ if(startPanel&&!document.getElementById("startExtras")){
     const bof=box.querySelector("#btnOpenFullConfig");
     if(bof)bof.onclick=()=>{const cfg=document.getElementById("configPanel");const btn=document.getElementById("btnConfig");if(btn)btn.click();else if(cfg)cfg.style.display="block"};
     try{drawShipPreview();updateGokuFormsUI()}catch(e){}
+    try{refreshShipUI()}catch(e){}
+    setTimeout(function(){try{drawShipPreview();refreshShipUI()}catch(e){}},40);
+    setTimeout(function(){try{drawShipPreview()}catch(e){}},200);
     const chb=document.getElementById("clearHistoryBtn");
     if(chb)chb.onclick=function(){if(confirm("¿Borrar historial de partidas?")){clearMatchHistory();renderStart();}};
 
@@ -6510,6 +6560,114 @@ function shoot(){
     try{playSfx("power")}catch(e){try{playSfx("shoot")}catch(_){}}
     createExplosion(player.x,player.y-player.size*2,10,"80,220,255");
     return}
+  /* —— Arsenal premium adicional —— */
+  if(currentWeapon==="rail_cannon"&&has("rail_cannon")){
+    if(ammo<5)return;ammo-=5;lastShot=now+280;
+    bullets.push({x:player.x,y:player.y-player.size,speed:sp*2.2,size:2.4*s,pierce:true,dmg:4+(typeof bulletDamage==="function"?bulletDamage():1)*1.6,rail:true,life:70});
+    try{playSfx("laser")}catch(e){}
+    return}
+  if(currentWeapon==="frost_beam"&&has("frost_beam")){
+    if(weaponOverheat>0){lastShot=now;return}
+    if(ammo<=0)return;
+    lastShot=now-Math.floor(cd*0.7);
+    weaponHeat=Math.min(100,(weaponHeat||0)+2.4);
+    if(weaponHeat>=100){weaponOverheat=90;weaponHeat=100}
+    bullets.push({x:player.x,y:player.y-player.size,speed:sp*1.2,size:2.6*s,pierce:true,dmg:0.85+(typeof bulletDamage==="function"?bulletDamage():1)*0.4,frost:true,life:50});
+    if(Math.random()<0.35)ammo=Math.max(0,ammo-1);
+    return}
+  if(currentWeapon==="chain_arc"&&has("chain_arc")){
+    if(ammo<2)return;ammo-=2;lastShot=now+90;
+    bullets.push({x:player.x,y:player.y-player.size,speed:sp*1.1,size:3*s,pierce:false,dmg:1.2+(typeof bulletDamage==="function"?bulletDamage():1)*0.6,chain:true});
+    try{if(typeof activateChainLightning==="function"){/* se activa al impactar */} }catch(e){}
+    return}
+  if(currentWeapon==="flak_burst"&&has("flak_burst")){
+    if(ammo<4)return;ammo-=4;lastShot=now+200;
+    bullets.push({x:player.x,y:player.y-player.size,speed:sp*0.85,size:4.5*s,pierce:false,dmg:1.5+(typeof bulletDamage==="function"?bulletDamage():1)*0.7,flak:true,life:28});
+    return}
+  if(currentWeapon==="drone_pod"&&has("drone_pod")){
+    if(ammo<8)return;
+    if(drones&&drones.length>=2){lastShot=now+60;return}
+    ammo-=8;lastShot=now+400;
+    const sc=getScale();
+    drones.push({x:player.x+28,y:player.y,size:11*sc,life:520,shootT:12,orbit:Math.random()*Math.PI*2});
+    try{playSfx("power")}catch(e){}
+    return}
+  if(currentWeapon==="nova_shell"&&has("nova_shell")){
+    if(ammo<6)return;ammo-=6;lastShot=now+320;
+    bullets.push({x:player.x,y:player.y-player.size,speed:sp*0.55,size:6*s,pierce:false,dmg:2+(typeof bulletDamage==="function"?bulletDamage():1),novaShell:true,life:55});
+    return}
+  if(currentWeapon==="phase_blade"&&has("phase_blade")){
+    if(ammo<3)return;ammo-=3;lastShot=now+160;
+    const R=48*s;
+    createExplosion(player.x,player.y-player.size*1.2,R*0.55,"180,220,255");
+    for(let j=obstacles.length-1;j>=0;j--){
+      const o=obstacles[j];if(!o||o.type==="hard")continue;
+      const ox=o.x+o.size/2,oy=o.y+o.size/2;
+      if(oy>player.y+10)continue;
+      if(Math.hypot(ox-player.x,oy-player.y)<R+o.size*0.4){
+        o.hp-=5+(typeof bulletDamage==="function"?bulletDamage():1)*2;
+        if(o.hp<=0){try{destroyEnemy(o,j)}catch(e){}}
+      }
+    }
+    try{playSfx("hit")}catch(e){}
+    return}
+  if(currentWeapon==="seeker_swarm"&&has("seeker_swarm")){
+    if(ammo<5)return;ammo-=5;lastShot=now+260;
+    const sc=getScale();
+    for(let k=-1;k<=1;k++){
+      missiles.push({x:player.x+k*10,y:player.y-player.size,vx:k*1.8,vy:-5*getSpeedScale(),size:4.5*sc,life:260,heavy:false,dmg:2.5+(typeof bulletDamage==="function"?bulletDamage():1)*0.8});
+    }
+    return}
+  if(currentWeapon==="ion_lance"&&has("ion_lance")){
+    if(ammo<=0)return;
+    lastShot=now-Math.floor(cd*0.75);
+    bullets.push({x:player.x,y:player.y-player.size,speed:sp*1.5,size:2.2*s,pierce:true,dmg:1.4+(typeof bulletDamage==="function"?bulletDamage():1)*0.55,ion:true,life:60});
+    if(Math.random()<0.55)ammo=Math.max(0,ammo-1);
+    return}
+  if(currentWeapon==="grav_pulse"&&has("grav_pulse")){
+    if(ammo<7)return;ammo-=7;lastShot=now+380;
+    const R=90*s;
+    createExplosion(player.x,player.y-40,R*0.4,"120,80,255");
+    for(let j=obstacles.length-1;j>=0;j--){
+      const o=obstacles[j];if(!o)continue;
+      const ox=o.x+o.size/2,oy=o.y+o.size/2;
+      const d=Math.hypot(ox-player.x,oy-(player.y-40));
+      if(d<R+o.size*0.5){
+        const pull=1.2*(1-d/(R+1));
+        o.x+=(player.x-ox)*pull*0.08;
+        o.y+=((player.y-40)-oy)*pull*0.08;
+        o.hp-=2.5+(typeof bulletDamage==="function"?bulletDamage():1)*0.8;
+        if(o.hp<=0){try{destroyEnemy(o,j)}catch(e){}}
+      }
+    }
+    try{playSfx("nova")}catch(e){}
+    return}
+  if(currentWeapon==="cryo_mines"&&has("cryo_mines")){
+    if((weaponDeployCd||0)>0){lastShot=now;return}
+    if(ammo<5)return;ammo-=5;weaponDeployCd=140;lastShot=now+100;
+    const sc=getScale();
+    for(let k=-1;k<=1;k+=2){
+      playerDeploys.push({x:player.x+k*28,y:Math.min(canvas.height-30,player.y+player.size),size:8*sc,life:400,shootT:0,hp:1,type:"mine",arm:35,cryo:true});
+    }
+    try{playSfx("power")}catch(e){}
+    return}
+  if(currentWeapon==="meteor_battery"&&has("meteor_battery")){
+    if(ammo<10)return;ammo-=10;lastShot=now+450;
+    const sc=getScale();
+    for(let k=0;k<5;k++){
+      const mx=player.x+(k-2)*38+(Math.random()-0.5)*20;
+      bullets.push({x:mx,y:-20-k*18,speed:sp*0.7,size:5*sc,pierce:false,dmg:3+(typeof bulletDamage==="function"?bulletDamage():1),meteor:true,vx:(Math.random()-0.5)*1.2,vy:sp*0.7,life:90});
+    }
+    try{playSfx("explode")}catch(e){}
+    return}
+  if(currentWeapon==="singularity"&&has("singularity")){
+    if(ammo<15)return;ammo-=15;lastShot=now+600;
+    const sc=getScale();
+    playerDeploys.push({x:player.x,y:player.y-player.size*3,size:16*sc,life:180,shootT:0,hp:99,type:"singularity"});
+    createExplosion(player.x,player.y-player.size*3,20,"80,40,160");
+    try{playSfx("nova")}catch(e){}
+    return}
+
 
 const add=ox=>{if(ammo<=0)return;bullets.push({x:player.x+ox,y:player.y-player.size,speed:sp,size:3.2*s,pierce:pierce>0});ammo--};
 if(tripleShot>0){add(-12);add(0);add(12)}else add(0)}
@@ -7164,15 +7322,52 @@ function updatePlayerDeploys(){
         }
       }
     }
+    else if(d.type==="singularity"){
+      const sc=(typeof getScale==="function")?getScale():1;
+      const R=d.size*(1.2+Math.sin((d.life||0)*0.12)*0.15);
+      try{
+        ctx.save();
+        const g=ctx.createRadialGradient(d.x,d.y,2,d.x,d.y,R*2.2);
+        g.addColorStop(0,"rgba(20,0,40,.95)");
+        g.addColorStop(0.4,"rgba(80,40,160,.55)");
+        g.addColorStop(1,"rgba(0,0,0,0)");
+        ctx.fillStyle=g;ctx.beginPath();ctx.arc(d.x,d.y,R*2.2,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle="rgba(180,120,255,.7)";ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(d.x,d.y,R,0,Math.PI*2);ctx.stroke();
+        ctx.restore();
+      }catch(e){}
+      for(let j=obstacles.length-1;j>=0;j--){
+        const o=obstacles[j];if(!o||o.type==="hard")continue;
+        const ox=o.x+o.size/2,oy=o.y+o.size/2;
+        const dist=Math.hypot(ox-d.x,oy-d.y);
+        if(dist<R*2.4+o.size*0.5){
+          const pull=(1-dist/(R*2.4+1))*3.2;
+          o.x+=(d.x-ox)/Math.max(1,dist)*pull;
+          o.y+=(d.y-oy)/Math.max(1,dist)*pull;
+          o.hp-=0.35+(typeof bulletDamage==="function"?bulletDamage():1)*0.15;
+          if(o.hp<=0){try{destroyEnemy(o,j)}catch(e){}}
+        }
+      }
+    }
+    /* minas criogénicas: ralentizan al armar */
+    if(d.type==="mine"&&d.cryo&&d.arm<=0){
+      for(let j=0;j<obstacles.length;j++){
+        const o=obstacles[j];if(!o)continue;
+        if(Math.hypot(d.x-(o.x+o.size/2),d.y-(o.y+o.size/2))<o.size*0.6+d.size*1.4){
+          try{o.vy=(o.vy||2)*0.3;o.speed=(o.speed||2)*0.35;o._frostT=120}catch(e){}
+        }
+      }
+    }
     if(d.life<=0){
       if(d.type==="turret")createExplosion(d.x,d.y,18,"80,220,255");
+      if(d.type==="singularity")createExplosion(d.x,d.y,40,"120,60,200");
       playerDeploys.splice(i,1);
     }
   }
 }
 
 function drawWeaponHeatHud(){
-  if(currentWeapon!=="beam_cont")return;
+  if(currentWeapon!=="beam_cont"&&currentWeapon!=="frost_beam")return;
   if(!(typeof gameRunning!=="undefined"&&gameRunning))return;
   try{
     const x=12,y=(canvas.height||400)-36,w=90,h=8;
@@ -7190,7 +7385,7 @@ function drawWeaponHeatHud(){
 }
 function coolWeaponHeat(){
   if(weaponOverheat>0){weaponOverheat--;if(weaponOverheat<=0){weaponHeat=35;try{if(window.techNotify)window.techNotify("Láser listo","success","arma")}catch(e){}}return}
-  if(!isShooting||currentWeapon!=="beam_cont"){
+  if(!isShooting||(currentWeapon!=="beam_cont"&&currentWeapon!=="frost_beam")){
     weaponHeat=Math.max(0,(weaponHeat||0)-1.4);
   }
   if(weaponDeployCd>0)weaponDeployCd--;
@@ -7792,8 +7987,8 @@ function drawShipModel(g,s,model,skin,label){
   bodyG.addColorStop(0,col.a);bodyG.addColorStop(.5,col.b);bodyG.addColorStop(1,col.c);
   g.fillStyle=bodyG;g.strokeStyle=col.stroke;g.lineWidth=Math.max(1,s*.08);
   g.beginPath();
-  if(model==="classic"){
-    /* Nave clásica original Br7 (cuerpo + alas laterales) */
+  if(model==="classic"||model==="fighter"){
+    /* Nave clásica / cazadora (cuerpo + alas laterales) — siempre se dibuja completa */
     g.moveTo(0,-s-5);g.lineTo(s*.22,-s*.35);g.lineTo(s*.5,s*.15);g.lineTo(s*.32,s*.72);g.lineTo(0,s*.5);
     g.lineTo(-s*.32,s*.72);g.lineTo(-s*.5,s*.15);g.lineTo(-s*.22,-s*.35);g.closePath();
     g.fill();g.stroke();
@@ -7803,6 +7998,12 @@ function drawShipModel(g,s,model,skin,label){
     g.beginPath();g.moveTo(s*.25,s*.05);g.lineTo(s*1.15,s*.5);g.lineTo(s*1.0,s*.78);g.lineTo(s*.3,s*.62);g.closePath();g.fill();g.stroke();
     /* línea central */
     g.strokeStyle=col.stroke;g.globalAlpha=0.55;g.beginPath();g.moveTo(0,-s-2);g.lineTo(0,s*.35);g.stroke();g.globalAlpha=1;
+    /* cabina propia (por si el fill compartido no aplica bien) */
+    try{
+      const cab=g.createRadialGradient(0,-2,1,0,0,s*.35);
+      cab.addColorStop(0,"#fff");cab.addColorStop(.6,"#8ab");cab.addColorStop(1,"#345");
+      g.fillStyle=cab;g.beginPath();g.ellipse(0,-s*.15,s*.18,s*.28,0,0,Math.PI*2);g.fill();
+    }catch(e){}
     g.beginPath(); /* vacío para no rellenar de nuevo abajo */
   }else if(model==="interceptor"){
     g.moveTo(0,-s-6);g.lineTo(s*.15,-s*.2);g.lineTo(s*.7,s*.4);g.lineTo(s*.2,s*.2);g.lineTo(0,s*.55);
@@ -9933,7 +10134,9 @@ if(level>=1&&ts-lastTrapSpawn>Math.max(isMobile()?3500:2600,isMobile()?5500:4500
 /* Lento suave (no para el juego): 0.75 en vez de 0.4 */
 const slow=1; /* sin ralentizar */
 for(let i=obstacles.length-1;i>=0;i--){
-  const o=obstacles[i];const frz=freezeEnemies>0?0.28:1;
+  const o=obstacles[i];
+  if(o._frostT>0){o._frostT--;}
+  const frz=(freezeEnemies>0?0.28:1)*(o._frostT>0?0.42:1);
   // gravity on objects
   applyGravity(o,o.x+o.size/2,o.y+o.size/2,.6);
 
