@@ -18,7 +18,7 @@
 /* Foto de perfil: tamaño adaptable */
 .boton-foto {
   position: fixed;
-  top: 14px;
+  top: 4px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 99999;
@@ -44,7 +44,7 @@
 /* Celulares */
 @media screen and (max-width: 600px) {
   .boton-foto {
-    top: 8px;
+    top: 2px;
     left: 50%;
     transform: translateX(-50%);
   }
@@ -2753,10 +2753,9 @@ let feverMode=0,feverAnnounced=false,lastSupplyDrop=0,supplyCrates=[];
 let damageFlash=0,introTimer=0;
 let lowPower=(function(){
   const v=lsGet("techLowPower","");
-  if(v==="0")return false;
   if(v==="1")return true;
-  /* por defecto activado en móvil / touch para evitar lag y pausas */
-  try{return window.innerWidth<=1024||('ontouchstart' in window)||/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent||"")}catch(e){return true}
+  /* Efectos al máximo por defecto (solo bajo si el usuario lo elige) */
+  return false;
 })();
 /* Distancia de cámara / zoom visual: close | standard | far */
 let viewDistance=(function(){
@@ -5664,10 +5663,21 @@ function resizeCanvas(force){
   }
   let dpr=window.devicePixelRatio||1;
   if(mobile){
-    dpr=1;
-    try{ if(typeof lowPower!=='undefined') lowPower=true; }catch(e){}
+    /* Alta calidad: más nitidez; bajo: dpr 1 */
+    try{
+      var gfx=(window.techGfxQuality||localStorage.getItem('techGfxQuality')||'high').toLowerCase();
+      if(gfx==='high'||gfx==='alto'){
+        dpr=Math.min(Math.max(window.devicePixelRatio||1,1),1.75);
+        if(typeof lowPower!=='undefined') lowPower=false;
+      } else if(gfx==='medium'||gfx==='medio'){
+        dpr=Math.min(Math.max(window.devicePixelRatio||1,1),1.25);
+      } else {
+        dpr=1;
+        if(typeof lowPower!=='undefined') lowPower=true;
+      }
+    }catch(e){ dpr=1; }
   }
-  else dpr=Math.min(Math.max(dpr,1), lowPower?1.25:1.5);
+  else dpr=Math.min(Math.max(dpr,1), lowPower?1.25:2);
   const w=Math.max(1,Math.floor(cssW*dpr));
   const h=Math.max(1,Math.floor(cssH*dpr));
   if(canvas.width!==w||canvas.height!==h){
@@ -8965,7 +8975,7 @@ function drawSpaceBG(){
   const t=performance.now();
   const w=selectedWorld||1;
   const mobile=(typeof isMobile==="function"&&isMobile())||false;
-  const lite=!!lowPower||mobile;
+  const lite=!!lowPower || ((window.techGfxQuality||'high')==='low');
   if(mobile){
     const colors={1:'#050b1a',2:'#081428',3:'#120808',4:'#0a1020',5:'#100818',6:'#061018',7:'#0c1408',8:'#080818'};
     ctx.fillStyle=colors[w]||'#050b1a';
@@ -9541,18 +9551,19 @@ function gcEntities(){
   const hw=(selectedWorld===5||scenario===5);
   /* Límites equilibrados: fluido en móvil pero sin vaciar enemigos/trampas */
   const lim=m?(hw?0.5:0.7):1;
-  trimArr(obstacles,Math.floor((m?8:22)*lim));
-  trimArr(bullets,Math.floor((m?10:32)*lim));
-  trimArr(enemyBullets,Math.floor((m?8:28)*lim));
-  trimArr(explosions,Math.floor((m?2:10)*(hw&&m?0.5:1)));
-  trimArr(particles,m?0:12);
-  trimArr(pickups,m?2:6);
-  trimArr(traps,Math.floor((m?5:12)*(hw&&m?0.6:1)));
-  trimArr(missiles,m?3:10);
-  trimArr(lightningFX,m?0:6);
-  trimArr(hitSparks,Math.floor((m?3:20)*(hw&&m?0.4:1)));
-  trimArr(allies,m?1:4);
-  trimArr(drones,m?1:4);
+  /* Base más alta: efectos visibles; patchGc de calidad los ajusta */
+  trimArr(obstacles,Math.floor((m?14:28)*lim));
+  trimArr(bullets,Math.floor((m?20:48)*lim));
+  trimArr(enemyBullets,Math.floor((m?16:40)*lim));
+  trimArr(explosions,Math.floor((m?10:24)*(hw&&m?0.7:1)));
+  trimArr(particles,m?12:32);
+  trimArr(pickups,m?4:8);
+  trimArr(traps,Math.floor((m?8:16)*(hw&&m?0.7:1)));
+  trimArr(missiles,m?6:14);
+  trimArr(lightningFX,m?4:12);
+  trimArr(hitSparks,Math.floor((m?12:36)*(hw&&m?0.6:1)));
+  trimArr(allies,m?2:5);
+  trimArr(drones,m?2:5);
   if(typeof supplyCrates!=="undefined")trimArr(supplyCrates,m?1:2);
   if(typeof gravZones!=="undefined")trimArr(gravZones,m?1:3);
 }
@@ -9574,7 +9585,7 @@ screenShake=0;
 ctx.save();
 drawSpaceBG();
 /* mob-no-shadow: las GPUs móviles odian shadowBlur */
-if(_isMobLoop||(typeof lowPower!=="undefined"&&lowPower)){try{ctx.shadowBlur=0;ctx.shadowColor="transparent"}catch(e){}}
+if((typeof lowPower!=="undefined"&&lowPower) || ((window.techGfxQuality||'high')==='low')){try{ctx.shadowBlur=0;ctx.shadowColor="transparent"}catch(e){}}
 if(damageFlash>0){ctx.fillStyle=`rgba(180,0,0,${0.12+damageFlash*0.01})`;ctx.fillRect(0,0,canvas.width,canvas.height)}
 /* fiebre: sin barras laterales (evita mareo) */
 if(introTimer>0){
@@ -9776,7 +9787,7 @@ if(phase==="meteors"&&gameRunning&&!gamePaused){
     if(Math.random()<0.55)spawnSupplyCrate();
   }
 }
-updateExplosions();if(lightningFX&&lightningFX.length){updateLightning()}else if(!((selectedWorld===5||scenario===5)&&(typeof isMobile==="function"&&isMobile()))&&(!(typeof mob==="function"?mob():isMobile())||!lowPower)){updateLightning()}updateAllies();updateDrones();drawPlayer();
+updateExplosions();if(lightningFX&&lightningFX.length){updateLightning()}else if(!((selectedWorld===5||scenario===5)&&(typeof isMobile==="function"&&isMobile())&&!!lowPower)&&!lowPower){updateLightning()}updateAllies();updateDrones();drawPlayer();
 try{updateEngineSound()}catch(e){}
 
 /* Vórtice: atrae enemigos */
@@ -15380,10 +15391,16 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
       var mob=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent||'')||('ontouchstart' in window)||(navigator.maxTouchPoints>0);
       try{ if(typeof isMobile==='function') mob=mob||isMobile(); }catch(e){}
       if(!mob) return;
-      try{ if(typeof lowPower!=='undefined') lowPower=true; }catch(e){}
-      try{ localStorage.setItem('techLowPower','1'); }catch(e){}
+      /* Respetar calidad alta: no forzar lowPower ni bajar efectos */
       try{
-        document.body.classList.add('low-power');
+        var gfx=(window.techGfxQuality||localStorage.getItem('techGfxQuality')||'high').toLowerCase();
+        if(gfx==='high'||gfx==='alto'){
+          if(typeof lowPower!=='undefined') lowPower=false;
+          document.body.classList.remove('low-power');
+        } else if(gfx==='low'||gfx==='bajo'){
+          if(typeof lowPower!=='undefined') lowPower=true;
+          document.body.classList.add('low-power');
+        }
         var playing=!!(typeof gameRunning!=='undefined'&&gameRunning&&!(typeof gamePaused!=='undefined'&&gamePaused));
         document.body.classList.toggle('game-active', playing);
       }catch(e){}
@@ -16098,15 +16115,15 @@ body.tech-playing .game-top{
             trimArr(hitSparks, m?5:16);
             trimArr(lightningFX, m?1:5);
           } else {
-            /* high */
-            trimArr(obstacles, m?12:24);
-            trimArr(bullets, m?16:36);
-            trimArr(enemyBullets, m?14:32);
-            trimArr(explosions, m?5:12);
-            trimArr(particles, m?6:16);
-            trimArr(traps, m?8:14);
-            trimArr(hitSparks, m?10:22);
-            trimArr(lightningFX, m?3:8);
+            /* high — efectos al máximo */
+            trimArr(obstacles, m?18:36);
+            trimArr(bullets, m?28:56);
+            trimArr(enemyBullets, m?24:48);
+            trimArr(explosions, m?14:28);
+            trimArr(particles, m?20:40);
+            trimArr(traps, m?12:22);
+            trimArr(hitSparks, m?20:40);
+            trimArr(lightningFX, m?8:16);
           }
           trimArr(pickups, m?2:6);
           trimArr(missiles, m?3:10);
@@ -16132,7 +16149,7 @@ body.tech-playing .game-top{
       '<option value="medium"'+(g==='medium'?' selected':'')+'>🟡 Medio — equilibrado</option>'+
       '<option value="high"'+(g==='high'?' selected':'')+'>🔴 Alto — más efectos</option>'+
       '</select>'+
-      '<p class="tech-gfx-hint">Bajo: ideal celular · Medio: recomendado · Alto: PC potentes</p>';
+      '<p class="tech-gfx-hint">Por defecto: Alto (máximos efectos). Bajo solo si necesitas más FPS.</p>';
   }
 
   function injectGfxControls(){
@@ -16279,7 +16296,11 @@ body.tech-playing .game-top{
   }
 
   function boot(){
-    applyGfx(getGfx(), false);
+    /* Efectos al máximo por defecto */
+    try{ localStorage.setItem(LS_GFX, 'high'); }catch(e){}
+    applyGfx('high', true);
+    try{ if(typeof lowPower!=='undefined') lowPower=false; }catch(e){}
+    try{ localStorage.setItem('techLowPower','0'); }catch(e){}
     patchGc();
     injectGfxControls();
     refreshMobileMenu();
