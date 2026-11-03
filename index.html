@@ -5646,6 +5646,7 @@ if(startPanel&&!document.getElementById("startExtras")){
       currentWeapon=w;lsSet("techWeapon",w);renderStart();
     });
     const bms=box.querySelector("#btnManualStart");if(bms)bms.onclick=()=>showUserManual();
+    const btut=box.querySelector("#btnTutorialStart");if(btut)btut.onclick=()=>{try{window.openTechTutorial&&window.openTechTutorial(true)}catch(e){}};
     const guestAccountCta=box.querySelector("#guestAccountCta");if(guestAccountCta)guestAccountCta.onclick=()=>{if(loggedForNotice){const exitButton=document.getElementById("techAccountExit");if(exitButton)exitButton.click();else{const logoutButton=document.getElementById("taLogout");if(logoutButton)logoutButton.click();else{const accountButton=document.getElementById("openTechAccount");if(accountButton)accountButton.click();}}}else{const accountButton=document.getElementById("openTechAccount");if(accountButton)accountButton.click();}};
     const bgc=box.querySelector("#btnGameCredits");
     const gcb=box.querySelector("#gameCreditsBox");
@@ -16914,6 +16915,322 @@ y>
   setInterval(tick, 500);
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', tick);
   else tick();
+})();
+</script>
+
+
+<style id="tech-tutorial-styles">
+#techTutorialOverlay{
+  position:fixed;inset:0;z-index:2000000;display:none;
+  align-items:center;justify-content:center;
+  padding:max(12px, env(safe-area-inset-top)) 14px max(12px, env(safe-area-inset-bottom));
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(255,205,0,.22), transparent 45%),
+    radial-gradient(ellipse at 80% 90%, rgba(206,17,38,.25), transparent 40%),
+    rgba(0,0,0,.88);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+#techTutorialOverlay.is-open{display:flex}
+#techTutorialCard{
+  width:min(520px,96vw);max-height:min(92vh,720px);
+  overflow:hidden;display:flex;flex-direction:column;
+  border-radius:22px;
+  border:2px solid rgba(255,205,0,.55);
+  background:
+    linear-gradient(160deg, rgba(12,18,40,.98) 0%, rgba(6,8,18,.99) 55%, rgba(20,6,10,.98) 100%);
+  box-shadow:
+    0 0 0 1px rgba(206,17,38,.35),
+    0 0 40px rgba(255,205,0,.18),
+    0 24px 60px rgba(0,0,0,.65);
+  position:relative;
+}
+#techTutorialCard::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,#FFCD00,#CE1126,#0038A8,#FFCD00);
+  background-size:200% 100%;animation:tutBar 2.5s linear infinite;
+}
+@keyframes tutBar{to{background-position:200% 0}}
+.tut-head{
+  padding:20px 18px 10px;text-align:center;flex-shrink:0;
+}
+.tut-badge{
+  display:inline-block;padding:4px 12px;border-radius:999px;
+  font:800 10px Orbitron,sans-serif;letter-spacing:2px;
+  color:#111;background:linear-gradient(135deg,#FFCD00,#FF8800);
+  margin-bottom:8px;
+}
+.tut-head h2{
+  margin:0;font:800 clamp(22px,5vw,30px) Orbitron,sans-serif;
+  letter-spacing:2px;color:#fff!important;-webkit-text-fill-color:#fff!important;
+  text-shadow:0 0 20px rgba(255,205,0,.35);
+}
+.tut-step-num{
+  margin-top:6px;font:700 12px 'Share Tech Mono',monospace;
+  color:#FFCD00;-webkit-text-fill-color:#FFCD00;
+}
+.tut-body{
+  flex:1;overflow-y:auto;padding:8px 20px 12px;
+  -webkit-overflow-scrolling:touch;scrollbar-width:thin;
+}
+.tut-icon{
+  font-size:clamp(42px,10vw,64px);text-align:center;
+  line-height:1;margin:6px 0 12px;
+  filter:drop-shadow(0 0 12px rgba(255,205,0,.4));
+  animation:tutPulse 1.6s ease-in-out infinite;
+}
+@keyframes tutPulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.08)}
+}
+.tut-title{
+  text-align:center;font:800 18px Orbitron,sans-serif;
+  color:#FFCD00!important;-webkit-text-fill-color:#FFCD00!important;
+  margin:0 0 10px;letter-spacing:1px;
+}
+.tut-text{
+  color:#d8e4f4!important;-webkit-text-fill-color:#d8e4f4!important;
+  font:500 14px Inter,system-ui,sans-serif;line-height:1.55;
+  text-align:center;margin:0 0 14px;
+}
+.tut-tips{
+  list-style:none;padding:0;margin:0 0 8px;
+}
+.tut-tips li{
+  display:flex;gap:10px;align-items:flex-start;
+  margin:0 0 8px;padding:10px 12px;border-radius:12px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.1);
+  color:#eef3fb!important;-webkit-text-fill-color:#eef3fb!important;
+  font:500 13px Inter,system-ui,sans-serif;line-height:1.4;
+  text-align:left;
+}
+.tut-tips li span{
+  flex:0 0 28px;height:28px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#FFCD00,#CE1126);
+  color:#111;font-weight:800;font-size:14px;
+}
+.tut-foot{
+  flex-shrink:0;padding:12px 16px 16px;
+  border-top:1px solid rgba(255,255,255,.08);
+  display:flex;flex-direction:column;gap:10px;
+}
+.tut-dots{display:flex;justify-content:center;gap:7px;margin-bottom:2px}
+.tut-dot{
+  width:9px;height:9px;border-radius:50%;
+  background:rgba(255,255,255,.25);border:none;padding:0;cursor:pointer;
+}
+.tut-dot.on{background:#FFCD00;box-shadow:0 0 10px rgba(255,205,0,.7);transform:scale(1.15)}
+.tut-actions{display:flex;gap:8px;flex-wrap:wrap}
+.tut-actions button{
+  flex:1;min-height:48px;border-radius:12px;cursor:pointer;
+  font:800 13px Orbitron,sans-serif;letter-spacing:.6px;
+  border:1px solid rgba(255,255,255,.25);
+  -webkit-tap-highlight-color:transparent;
+}
+.tut-btn-skip{
+  background:rgba(255,255,255,.06);color:#bbb!important;
+}
+.tut-btn-prev{
+  background:rgba(20,40,80,.9);color:#fff!important;
+  border-color:rgba(93,229,255,.35)!important;
+}
+.tut-btn-next{
+  background:linear-gradient(135deg,#FFCD00,#FF6A00)!important;
+  color:#111!important;border-color:#fff!important;
+  box-shadow:0 6px 20px rgba(255,205,0,.3);
+}
+.tut-btn-next:active,.tut-btn-prev:active{transform:scale(.97)}
+@media(max-width:480px){
+  .tut-head{padding:16px 14px 8px}
+  .tut-body{padding:6px 14px 10px}
+  .tut-actions button{min-height:46px;font-size:12px}
+}
+</style>
+<script id="tech-tutorial-script">
+(function(){
+  'use strict';
+  var LS_KEY='techTutorialSeenV1';
+  var step=0;
+  var STEPS=[
+    {
+      icon:'⚡',
+      title:'BIENVENIDO A TECH RUN',
+      text:'Un shooter espacial duro y directo. Sobrevive oleadas, sube de puntuación y gasta tus ⭐ puntosjuego en armas brutales.',
+      tips:[
+        ['🚀','Elige dificultad, mundo y nave antes de iniciar.'],
+        ['⭐','Los puntosjuego se guardan y sirven para Equipamiento.'],
+        ['🎯','Tu puntuación de partida y el récord se ven arriba en el HUD.']
+      ]
+    },
+    {
+      icon:'🕹️',
+      title:'MOVERTE',
+      text:'Controla la nave con precisión. En móvil usa el pad; en PC el ratón o las flechas.',
+      tips:[
+        ['📱','Móvil: arrastra el pad izquierdo para mover.'],
+        ['🖱️','PC: mueve el cursor o usa ← → ↑ ↓.'],
+        ['🛡️','No te quedes quieto: los enemigos apuntan a tu posición.']
+      ]
+    },
+    {
+      icon:'🔥',
+      title:'DISPARAR',
+      text:'Mantén el fuego. La munición se gasta: sin balas, estás muerto en el espacio.',
+      tips:[
+        ['💥','Móvil: botón FIRE. PC: clic o ESPACIO.'],
+        ['🔫','Cambia de arma en Extra → Equipamiento.'],
+        ['📦','Recoge pickups de munición y poderes en el mapa.']
+      ]
+    },
+    {
+      icon:'⚡',
+      title:'PODERES Y ESPECIALES',
+      text:'Escudo, dash, misiles, torretas, singularidad… cada poder tiene identidad. Úsalos en el momento justo.',
+      tips:[
+        ['🛡️','Escudo y dash te salvan de impactos limpios.'],
+        ['🛰️','Armas premium (5000⭐+) cambian el estilo de juego.'],
+        ['🥋','Si juegas con Goku, las fases desbloquean poderes extra.']
+      ]
+    },
+    {
+      icon:'⭐',
+      title:'PUNTOSJUEGO',
+      text:'Son tu moneda permanente. Se ven en el menú y en el HUD durante la partida.',
+      tips:[
+        ['💰','Ganas puntosjuego al destruir enemigos y completar misiones.'],
+        ['🛒','Gástalos en Equipamiento y mejoras permanentes.'],
+        ['👀','Barra dorada del menú = saldo actual. ¡Mírala siempre!']
+      ]
+    },
+    {
+      icon:'🏆',
+      title:'OBJETIVO',
+      text:'Resiste, sube el combo, rompe tu récord y domina el arsenal. Esto no es un paseo.',
+      tips:[
+        ['📈','Más oleadas = más velocidad y más caos.'],
+        ['📋','Revisa Misiones diarias en Extra.'],
+        ['🎓','Puedes repetir este tutorial cuando quieras desde Extra.']
+      ]
+    }
+  ];
+
+  function seen(){
+    try{ return localStorage.getItem(LS_KEY)==='1'; }catch(e){ return false; }
+  }
+  function markSeen(){
+    try{ localStorage.setItem(LS_KEY,'1'); }catch(e){}
+  }
+
+  function ensure(){
+    var ov=document.getElementById('techTutorialOverlay');
+    if(ov) return ov;
+    ov=document.createElement('div');
+    ov.id='techTutorialOverlay';
+    ov.setAttribute('role','dialog');
+    ov.setAttribute('aria-modal','true');
+    ov.setAttribute('aria-label','Tutorial TECH RUN');
+    ov.innerHTML=
+      '<div id="techTutorialCard">'+
+        '<div class="tut-head">'+
+          '<div class="tut-badge">TECH RUN · TUTORIAL</div>'+
+          '<h2>GUÍA RÁPIDA</h2>'+
+          '<div class="tut-step-num" id="tutStepNum"></div>'+
+        '</div>'+
+        '<div class="tut-body" id="tutBody"></div>'+
+        '<div class="tut-foot">'+
+          '<div class="tut-dots" id="tutDots"></div>'+
+          '<div class="tut-actions">'+
+            '<button type="button" class="tut-btn-skip" id="tutSkip">SALTAR</button>'+
+            '<button type="button" class="tut-btn-prev" id="tutPrev">← ATRÁS</button>'+
+            '<button type="button" class="tut-btn-next" id="tutNext">SIGUIENTE →</button>'+
+          '</div>'+
+        '</div>'+
+      '</div>';
+    document.body.appendChild(ov);
+    ov.addEventListener('click', function(e){ if(e.target===ov) closeTut(true); });
+    document.getElementById('tutSkip').onclick=function(){ closeTut(true); };
+    document.getElementById('tutPrev').onclick=function(){ go(-1); };
+    document.getElementById('tutNext').onclick=function(){ go(1); };
+    document.addEventListener('keydown', function(e){
+      if(!ov.classList.contains('is-open')) return;
+      if(e.key==='Escape') closeTut(true);
+      if(e.key==='ArrowRight'||e.key==='Enter') go(1);
+      if(e.key==='ArrowLeft') go(-1);
+    });
+    return ov;
+  }
+
+  function render(){
+    var s=STEPS[step]||STEPS[0];
+    var body=document.getElementById('tutBody');
+    var num=document.getElementById('tutStepNum');
+    var dots=document.getElementById('tutDots');
+    var next=document.getElementById('tutNext');
+    var prev=document.getElementById('tutPrev');
+    if(num) num.textContent='PASO '+(step+1)+' / '+STEPS.length;
+    if(body){
+      var tips=s.tips.map(function(t){
+        return '<li><span>'+t[0]+'</span><div>'+t[1]+'</div></li>';
+      }).join('');
+      body.innerHTML=
+        '<div class="tut-icon">'+s.icon+'</div>'+
+        '<div class="tut-title">'+s.title+'</div>'+
+        '<p class="tut-text">'+s.text+'</p>'+
+        '<ul class="tut-tips">'+tips+'</ul>';
+    }
+    if(dots){
+      dots.innerHTML=STEPS.map(function(_,i){
+        return '<button type="button" class="tut-dot'+(i===step?' on':'')+'" data-i="'+i+'" aria-label="Paso '+(i+1)+'"></button>';
+      }).join('');
+      dots.querySelectorAll('.tut-dot').forEach(function(d){
+        d.onclick=function(){ step=Number(d.getAttribute('data-i'))||0; render(); };
+      });
+    }
+    if(prev) prev.style.visibility = step<=0 ? 'hidden' : 'visible';
+    if(next) next.textContent = step>=STEPS.length-1 ? '¡A JUGAR! 🚀' : 'SIGUIENTE →';
+  }
+
+  function go(dir){
+    if(dir>0 && step>=STEPS.length-1){ closeTut(true); return; }
+    step=Math.max(0, Math.min(STEPS.length-1, step+dir));
+    render();
+  }
+
+  function openTut(force){
+    ensure();
+    step=0;
+    render();
+    var ov=document.getElementById('techTutorialOverlay');
+    ov.classList.add('is-open');
+    try{ document.body.style.overflow='hidden'; }catch(e){}
+  }
+
+  function closeTut(mark){
+    var ov=document.getElementById('techTutorialOverlay');
+    if(ov) ov.classList.remove('is-open');
+    try{ document.body.style.overflow=''; }catch(e){}
+    if(mark) markSeen();
+  }
+
+  window.openTechTutorial=function(force){ openTut(!!force); };
+  window.closeTechTutorial=function(){ closeTut(true); };
+
+  function boot(){
+    ensure();
+    // Primera vez: mostrar tras un pequeño delay para que cargue el menú
+    if(!seen()){
+      setTimeout(function(){
+        try{
+          // No interrumpir si ya hay partida
+          if(typeof gameRunning!=='undefined' && gameRunning) return;
+          openTut(false);
+        }catch(e){ openTut(false); }
+      }, 700);
+    }
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
 })();
 </script>
 
