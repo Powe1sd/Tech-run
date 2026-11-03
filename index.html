@@ -1,3 +1,7 @@
+git init
+git add .
+git commit -m "first commi 
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -14925,7 +14929,14 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   <div class="tv-pin-card">
     <h2>Acceso restringido</h2>
     <p>Introduce el código</p>
-    <input id="tvPinInput" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="••••" />
+    <input
+      id="tvPinInput"
+      type="password"
+      inputmode="text"
+      maxlength="64"
+      autocomplete="off"
+      placeholder="Introduce tu contraseña"
+    />
     <div class="tv-pin-err" id="tvPinErr"></div>
     <button type="button" id="tvPinOk">Entrar</button>
     <button type="button" class="tv-pin-cancel" id="tvPinCancel">Cancelar</button>
@@ -14958,7 +14969,8 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   const SUPABASE_URL = 'https://bkfpvwsahffrrkckjfre.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_89MkxFSiW8Et_qNZXzhXSA_6ouvoKgI';
   const TABLE = 'visitas_tech_run';
-  const PIN = '1327';
+  const PIN_HASH = 'fe1302a2a86f4ebf77a8fc1e36c9ff0ac7be26447ce861b95b0f107b1dce7cce';
+  const PIN_SALT = 'TECH-RUN-visitas-2026-v1';
   const UNLOCK_KEY = 'techVisitsUnlockedV1';
   const LIVE_MS = 90 * 1000; /* activo si last_seen < 90 s */
   const HEARTBEAT_MS = 25 * 1000;
@@ -15180,15 +15192,30 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   }
   function closePanel(){ const p=$('techVisitsPanel'); if(p) p.classList.remove('show'); }
 
-  function tryUnlock(){
-    const inp=$('tvPinInput');
-    const code=String((inp&&inp.value)||'').trim();
-    if(code===PIN){
-      try{ sessionStorage.setItem(UNLOCK_KEY,'1'); }catch(e){}
-      openPanel();
-    } else {
-      const err=$('tvPinErr'); if(err) err.textContent='Código incorrecto';
-      if(inp){ inp.value=''; inp.focus(); }
+  async function tryUnlock(){
+    const inp = $('tvPinInput');
+    const code = String((inp && inp.value) || '');
+
+    try {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(PIN_SALT + code);
+      const digest = await crypto.subtle.digest('SHA-256', data);
+      const hash = Array.from(new Uint8Array(digest))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+
+      if(hash === PIN_HASH){
+        try { sessionStorage.setItem(UNLOCK_KEY, '1'); } catch(e){}
+        openPanel();
+      } else {
+        const err = $('tvPinErr');
+        if(err) err.textContent = 'Contraseña incorrecta';
+        if(inp){ inp.value = ''; inp.focus(); }
+      }
+    } catch(error) {
+      const err = $('tvPinErr');
+      if(err) err.textContent = 'No se pudo verificar la contraseña. Abre la página mediante HTTPS.';
+      console.error('[TECH visitas] Error verificando contraseña:', error);
     }
   }
   function requestAccess(){
