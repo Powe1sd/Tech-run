@@ -1,177 +1,76 @@
-git init
-git add .
-git commit -m "first commi 
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TECH RUN — Juego</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop stop-color='%237cf7ff'/%3E%3Cstop offset='1' stop-color='%237b61ff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath fill='url(%23g)' stroke='%23fff' stroke-width='1.5' d='M32 3C20 13 17 27 19 39l-9 11 14-3 8 12 8-12 14 3-9-11C47 27 44 13 32 3Z'/%3E%3Ccircle cx='32' cy='27' r='6' fill='%230b1630' stroke='%23fff' stroke-width='2'/%3E%3Cpath fill='%23ff9f43' d='m25 43 7 15 7-15-7 5z'/%3E%3C/svg%3E">
+<link rel="icon" href="logo-no-background (2).png" type="image/x-icon">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-
-<button type="button" onclick="toggleProgrammerBallVideo(event)" class="boton-foto" aria-label="Reproducir o pausar video del programador">
-  <video class="video-perfil-en-bola" playsinline webkit-playsinline disablepictureinpicture controlslist="nodownload noplaybackrate noremoteplayback" preload="auto">
-    <source src="software.mp4" type="video/mp4">
-  </video>
-  <span class="video-perfil-icon" aria-hidden="true">▶</span>
+<link rel="icon" href="nave.png" type="image/x-icon">   
+<button type="button" onclick="openProgrammerModal()" class="boton-foto" aria-label="Ver perfil del programador">
+  <img src="yo.jpeg" alt="Brahyan" class="foto-perfil">
 </button>
-
-<script id="programmer-ball-video-script">
-(function(){
-  var button, video, icon, preview, frameReady = false, capturing = false;
-
-  function setPlaying(playing){
-    if(!button) return;
-    button.classList.toggle('video-reproduciendo', !!playing);
-    if(icon) icon.style.display = playing ? 'none' : 'flex';
-    if(preview) preview.style.display = playing ? 'none' : (frameReady ? 'block' : 'none');
-  }
-
-  function saveCurrentFrame(){
-    if(!video || !video.videoWidth || !video.videoHeight || !preview) return false;
-    try {
-      var canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      var ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      preview.src = canvas.toDataURL('image/jpeg', 0.92);
-      frameReady = true;
-      preview.style.display = video.paused ? 'block' : 'none';
-      return true;
-    } catch(e) { return false; }
-  }
-
-  // Decodifica el primer fotograma en silencio y lo conserva como imagen fija.
-  // Así no dependemos de que el navegador pinte el fotograma inicial del <video>.
-  function captureFirstFrame(){
-    if(!video || capturing || frameReady) return;
-    capturing = true;
-    var oldMuted = video.muted;
-    var oldTime = video.currentTime || 0;
-    video.muted = true;
-    video.play().then(function(){
-      var capture = function(){
-        saveCurrentFrame();
-        video.pause();
-        video.muted = oldMuted;
-        try { video.currentTime = 0; } catch(e) {}
-        capturing = false;
-        setPlaying(false);
-      };
-      if(video.requestVideoFrameCallback){
-        video.requestVideoFrameCallback(capture);
-      } else {
-        video.addEventListener('timeupdate', function once(){
-          video.removeEventListener('timeupdate', once);
-          capture();
-        });
-      }
-    }).catch(function(){
-      video.muted = oldMuted;
-      capturing = false;
-    });
-  }
-
-  window.toggleProgrammerBallVideo = function(event){
-    if(event) event.stopPropagation();
-    if(!video) return;
-    if(video.paused){
-      video.muted = false;
-      video.volume = 1;
-      var playPromise = video.play();
-      if(playPromise && playPromise.catch) playPromise.catch(function(){ setPlaying(false); });
-    } else {
-      video.pause();
-      try { video.currentTime = 0; } catch(e) {}
-      setPlaying(false);
-    }
-  };
-
-  function init(){
-    button = document.querySelector('button.boton-foto');
-    if(!button) return;
-    video = button.querySelector('video.video-perfil-en-bola');
-    icon = button.querySelector('.video-perfil-icon');
-    if(!video) return;
-
-    preview = document.createElement('img');
-    preview.className = 'video-perfil-preview';
-    preview.alt = '';
-    preview.setAttribute('aria-hidden','true');
-    preview.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;border-radius:50%;display:none;pointer-events:none;z-index:2;';
-    button.insertBefore(preview, video);
-
-    video.controls = false;
-    video.playsInline = true;
-    video.setAttribute('playsinline','');
-    video.setAttribute('webkit-playsinline','');
-    video.setAttribute('disablepictureinpicture','');
-    video.setAttribute('preload','auto');
-    video.muted = false;
-    video.volume = 1;
-
-    video.addEventListener('playing', function(){ setPlaying(true); });
-    video.addEventListener('pause', function(){ setPlaying(false); });
-    video.addEventListener('ended', function(){
-      // Mantiene visible la imagen capturada y reinicia el video detrás de ella.
-      setPlaying(false);
-      try { video.currentTime = 0; } catch(e) {}
-    });
-    video.addEventListener('loadeddata', captureFirstFrame, {once:true});
-    video.addEventListener('error', function(){ setPlaying(false); });
-    setPlaying(false);
-    if(video.readyState >= 2) captureFirstFrame();
-    else video.addEventListener('loadedmetadata', captureFirstFrame, {once:true});
-  }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
-  else init();
-})();
-</script>
-
-
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2946228508432690"
-     crossorigin="anonymous"></script>
-
 
 <style>
 
 
-/* Acceso al video del programador */
+/* Foto de perfil: tamaño adaptable */
 .boton-foto {
-  position: fixed; top: 10px; left: 10px; z-index: 99999;
-  width: 100px; height: 100px; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: 5px;
-  color: #fff; background: radial-gradient(circle at 35% 25%, #183b65, #080d19 72%);
-  border: 3px solid #fff; border-radius: 50%;
-  outline: 3px solid #fff; box-shadow: 0 0 20px rgba(255,255,255,.35);
-  cursor: pointer; font-family: 'Orbitron', sans-serif;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 99999;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
 }
-.video-perfil-icon { display:flex; align-items:center; justify-content:center;
-  width:42px; height:42px; padding-left:4px; border-radius:50%;
-  color:#fff; background:#111827; border:2px solid #fff; font-size:20px;
-  box-shadow:0 0 15px rgba(255,255,255,.35);
+
+.foto-perfil {
+  display: block;
+  width: 100px;
+  height: 100px;
+  max-width: calc(100vw - 24px);
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
 }
-.boton-foto:hover { transform:scale(1.05); }
-@media screen and (max-width:600px) {
-  .boton-foto { top:8px; left:8px; width:58px; height:58px; border-width:2px; outline-width:2px; gap:2px; }
-  .video-perfil-icon { width:27px; height:27px; font-size:13px; }
+
+/* Celulares */
+@media screen and (max-width: 600px) {
+  .boton-foto {
+    top: 8px;
+    left: 8px;
+  }
+
+  .foto-perfil {
+    width: 55px;
+    height: 55px;
+    border-width: 2px;
+  }
 }
+
+/* Foto del icono: solo en menú de inicio, nunca durante la partida */
 .tech-game.is-playing ~ .boton-foto,
 body:has(.tech-game.is-playing) .boton-foto {
-  display:none !important; visibility:hidden !important; pointer-events:none !important;
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
+
+
+
 
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;background:#03050c;font-family:'Orbitron',sans-serif;color:#fff;overflow-x:hidden;min-height:100vh;-webkit-tap-highlight-color:transparent}
 body::before{content:"";position:fixed;width:100%;height:200%;background-image:radial-gradient(circle,rgba(255,255,255,.28) 1px,transparent 1px),radial-gradient(circle,rgba(0,56,168,.18) 1px,transparent 1px),radial-gradient(circle,rgba(255,205,0,.1) 1px,transparent 1px);background-size:50px 50px,72px 72px,96px 96px;animation:stars 100s linear infinite;z-index:-1}
 @keyframes stars{to{transform:translateY(-50%)}}
-.tech-game-section{width:100%;max-width:1200px;margin:4px auto 0;padding:0 25px;max-height:none;overflow-x:hidden;overflow-y:visible;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(0,200,255,.8) rgba(5,12,28,.85);-webkit-overflow-scrolling:touch}
+.tech-game-section{width:100%;max-width:1200px;margin:8px auto 10px;padding:0 25px;max-height:calc(100dvh - 8px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(0,200,255,.8) rgba(5,12,28,.85);-webkit-overflow-scrolling:touch}
 .tech-game{position:relative;width:100%;height:420px;overflow:hidden;border-radius:20px;background:radial-gradient(ellipse at 50% 0%,#0a1228 0%,#000 70%);border:1px solid rgba(255,205,0,.28);box-shadow:0 0 0 1px rgba(0,56,168,.35),0 0 32px rgba(206,17,38,.12),0 12px 40px rgba(0,0,0,.55);touch-action:none}
 .tech-game::before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:36px 36px;pointer-events:none;z-index:1;opacity:.35}
 .tech-game::after{content:"";position:absolute;inset:0;border-radius:20px;pointer-events:none;z-index:1;box-shadow:inset 0 0 40px rgba(0,56,168,.08),inset 0 1px 0 rgba(255,205,0,.08)}
@@ -221,6 +120,7 @@ body::before{content:"";position:fixed;width:100%;height:200%;background-image:r
 @keyframes colorCycle{0%{border-left-color:#CE1126;filter:drop-shadow(0 0 12px #CE1126)}25%{border-left-color:#FFCD00;filter:drop-shadow(0 0 12px #FFCD00)}50%{border-left-color:#0038A8;filter:drop-shadow(0 0 12px #0038A8)}75%{border-left-color:#00A0E9;filter:drop-shadow(0 0 12px #00A0E9)}100%{border-left-color:#CE1126;filter:drop-shadow(0 0 12px #CE1126)}}
 .floating-name{position:fixed;bottom:12px;right:14px;font-size:.8rem;color:#CE1126;z-index:50}
 @media(max-width:600px){.tech-game-section{padding:0 10px;margin-top:4px}.tech-game{height:min(78vh,520px);min-height:420px}.game-top{left:42px;right:140px;top:8px}.game-title{font-size:10px}.game-score{font-size:11px;text-align:left}.game-score span{font-size:12px}.game-help{font-size:9px}.game-panel{width:94%;max-width:94%;padding:14px 12px;max-height:95%}.game-panel h2{font-size:22px}.cyber-hero h1{font-size:1.7rem}}
+
 
 .touch-pad{display:none;max-width:1200px;margin:10px auto 18px;padding:0 10px;user-select:none;-webkit-user-select:none}
 .touch-pad-inner{display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -1466,9 +1366,8 @@ body:has(.tech-game.is-playing) #techAccountExit{
 /* Modal de perfil del programador: foto ampliada y bordes blancos/rojos */
 #programmerProfileModal{position:fixed;inset:0;z-index:1000000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.88);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
 #programmerProfileModal.is-open{display:flex}
-#programmerProfileModal .programmer-profile-card{position:relative;width:min(430px,92vw);padding:18px 18px 22px;text-align:center;background:linear-gradient(160deg,#090d18,#16070b);border:3px solid #fff;border-radius:22px;box-shadow:0 0 0 3px #fff,0 0 28px rgba(255,255,255,.3),0 18px 60px rgba(0,0,0,.8)}
-#programmerProfileModal .programmer-profile-video{display:block;width:100%;max-width:680px;max-height:70vh;aspect-ratio:16/9;object-fit:contain;background:#000;margin:0 auto 18px;border:4px solid #fff;outline:3px solid #fff;border-radius:14px;box-shadow:0 0 24px rgba(255,255,255,.35)}
-#programmerProfileModal .programmer-profile-card{width:min(760px,94vw)}
+#programmerProfileModal .programmer-profile-card{position:relative;width:min(430px,92vw);padding:18px 18px 22px;text-align:center;background:linear-gradient(160deg,#090d18,#16070b);border:3px solid #fff;border-radius:22px;box-shadow:0 0 0 3px #CE1126,0 0 28px rgba(206,17,38,.65),0 18px 60px rgba(0,0,0,.8)}
+#programmerProfileModal .programmer-profile-photo{display:block;width:min(320px,75vw);height:min(320px,75vw);max-height:55vh;object-fit:cover;object-position:center;margin:0 auto 18px;border:5px solid #fff;outline:4px solid #CE1126;border-radius:18px;box-shadow:0 0 0 2px #fff,0 0 24px rgba(206,17,38,.6)}
 #programmerProfileModal .programmer-profile-title{margin:8px 0 0;color:#fff!important;-webkit-text-fill-color:#fff!important;font-family:'Orbitron',sans-serif;font-weight:800;font-size:clamp(17px,4vw,23px);letter-spacing:1.5px;text-shadow:0 0 12px rgba(206,17,38,.8)}
 #programmerProfileModal .programmer-profile-close{position:absolute;top:8px;right:8px;width:38px;height:38px;border:2px solid #fff;border-radius:50%;background:#CE1126;color:#fff;font-size:24px;line-height:1;cursor:pointer;z-index:2}
 @media(max-width:600px){#programmerProfileModal{padding:12px}#programmerProfileModal .programmer-profile-card{padding:16px 12px 20px}}
@@ -2750,7 +2649,7 @@ let starsBG=[];
 let level=1,phase="meteors",phaseTimer=0,waveNumber=1,waveCount=0;
 let scenario=1,scenarioTransition=0,scenarioMsg="";
 const METEOR_DURATION=18*60,WARNING_DURATION=1.5*60; /* oleada cada 18 s */
-let ammo=100,shield=0,bounceShield=0,rapidFire=0,tripleShot=0,laser=0,pierce=0,invisible=0,magnet=0,missilePower=0,allyPower=0,storm=0,overdrive=0,nova=0,reflect=0,burst=0,repair=0,freezeEnemies=0,barrier=0,bazooka=0,vortex=0,ion=0,emp=0,laserGrace=0,specialCharges=3,powersCollected=0,lives=1,powerMode=lsGet("techPowerMode","auto"),coins=Number(lsGet("techCoinsV2",lsGet("techCoins",0)))||0,ownedWeapons=(function(){try{var w=JSON.parse(lsGet('techWeapons','["basic"]'));return Array.isArray(w)?w:['basic']}catch(e){return['basic']}})(),currentWeapon=lsGet('techWeapon','basic')||'basic';
+let ammo=100,shield=0,bounceShield=0,rapidFire=0,tripleShot=0,slowMo=0,laser=0,pierce=0,invisible=0,magnet=0,missilePower=0,allyPower=0,storm=0,overdrive=0,nova=0,reflect=0,burst=0,repair=0,freezeEnemies=0,barrier=0,bazooka=0,vortex=0,ion=0,emp=0,laserGrace=0,specialCharges=3,powersCollected=0,lives=1,powerMode=lsGet("techPowerMode","auto"),coins=Number(lsGet("techCoinsV2",lsGet("techCoins",0)))||0,ownedWeapons=(function(){try{var w=JSON.parse(lsGet('techWeapons','["basic"]'));return Array.isArray(w)?w:['basic']}catch(e){return['basic']}})(),currentWeapon=lsGet('techWeapon','basic')||'basic';
 let showGokuFormsBar=lsGet("techShowForms","1")!=="0";
 window.showMinimap=lsGet("techShowMinimap","1")!=="0";
 window.showOnlineRank=lsGet("techShowOnlineRank","1")!=="0";
@@ -2811,7 +2710,6 @@ let orbitalMines=[],chainFX=[];
 let runStartTime=0;
 const keys={up:false,down:false,left:false,right:false};
 let sensMouse=Number(lsGet("techSensMouse",0.85)); if(isNaN(sensMouse)||sensMouse<=0)sensMouse=0.85;
-let mouseCursorStyle=lsGet("techMouseCursorStyle","arrow"); if(!["arrow","chevron","diamond","spark"].includes(mouseCursorStyle))mouseCursorStyle="arrow";
 let sensKeys=Number(lsGet("techSensKeys",1)); if(isNaN(sensKeys)||sensKeys<=0)sensKeys=1;
 let sensPad=Number(lsGet("techSensPadV7",0.15)); if(isNaN(sensPad))sensPad=0.15; if(sensPad<0)sensPad=0;
 /* Volúmenes por defecto bajos */
@@ -2849,9 +2747,6 @@ window.isPvpMode=isPvpMode;
 let kamehameha=0; /* frames del rayo Kamehameha */
 let combo=0,comboTimer=0,comboMult=1;
 let screenShake=0,hitSparks=[];
-let impactEffectsOn=lsGet("techImpactEffects","1")!=="0";
-let impactShakeOn=lsGet("techImpactShake","0")==="1";
-let impactFlashOn=lsGet("techImpactFlash","1")!=="0";
 let feverMode=0,feverAnnounced=false,lastSupplyDrop=0,supplyCrates=[];
 let damageFlash=0,introTimer=0;
 let lowPower=(function(){
@@ -3050,7 +2945,6 @@ function promptGokuAccessAsync(){
 let shipName=(lsGet("techShipName","Br7")||"Br7").slice(0,10);
 
 let selectedWorld=Math.min(24,Math.max(1,Number(lsGet("techWorld","1"))||1)); // 1-24 mundos
-if(selectedWorld===5){selectedWorld=6;try{lsSet("techWorld",6)}catch(e){}} // Halloween eliminado
 
 let metaCoins=Number(lsGet("techCoins",0))||0;
 let upgSpeed=Number(lsGet("techUpgSpeed",0))||0;
@@ -3561,13 +3455,6 @@ function getConfigHTML(){
 <p style="color:#FFCD00;font-size:11px;margin:6px 0 2px">${T("sensMouse")}</p>
 <input type="range" id="sensMouse" min="0.2" max="2.0" step="0.05" value="${sensMouse}" style="width:90%;accent-color:#FFCD00">
 <p id="sensMouseVal" style="color:#aaa;font-size:10px">${Number(sensMouse).toFixed(2)}x</p>
-<p style="color:#FFCD00;font-size:11px;margin:8px 0 4px">🖱️ Diseño de flecha del mouse</p>
-<select id="cursorStyleSelect" style="width:90%;padding:8px;border-radius:8px;background:#111;color:#fff;border:1px solid #444">
-<option value="arrow" ${mouseCursorStyle==="arrow"?"selected":""}>➤ Flecha clásica</option>
-<option value="chevron" ${mouseCursorStyle==="chevron"?"selected":""}>➦ Flecha doble</option>
-<option value="diamond" ${mouseCursorStyle==="diamond"?"selected":""}>◆ Diamante</option>
-<option value="spark" ${mouseCursorStyle==="spark"?"selected":""}>✦ Estrella</option>
-</select>
 <p style="color:#FFCD00;font-size:11px;margin:6px 0 2px">${T("sensKeys")}</p>
 <input type="range" id="sensKeys" min="0.3" max="2.2" step="0.05" value="${sensKeys}" style="width:90%;accent-color:#0038A8">
 <p id="sensKeysVal" style="color:#aaa;font-size:10px">${Number(sensKeys).toFixed(2)}x</p>
@@ -3590,17 +3477,6 @@ function getConfigHTML(){
 </label>
 <label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
 <input type="checkbox" id="vibrateShootToggle" ${vibrateShoot?"checked":""} style="accent-color:#00C8FF"> ${T("vibShoot")}
-</label>
-<hr style="border:none;border-top:1px solid rgba(0,200,255,.22);margin:12px 0">
-<p style="color:#00C8FF;font-size:12px;margin:6px 0">💥 EFECTOS DE IMPACTO</p>
-<label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
-<input type="checkbox" id="impactEffectsToggle" ${impactEffectsOn?"checked":""} style="accent-color:#00C8FF"> Explosiones y partículas mejoradas
-</label>
-<label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
-<input type="checkbox" id="impactShakeToggle" ${impactShakeOn?"checked":""} style="accent-color:#FFCD00"> Vibración visual de pantalla
-</label>
-<label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
-<input type="checkbox" id="impactFlashToggle" ${impactFlashOn?"checked":""} style="accent-color:#FF3333"> Destellos al recibir impactos
 </label>
 <label style="display:block;margin:8px 0;color:#ddd;font-size:12px;cursor:pointer">
 <input type="checkbox" id="lowPowerToggle" ${lowPower?"checked":""} style="accent-color:#00C8FF"> ${T("lowPower")}
@@ -3921,21 +3797,20 @@ function checkAchievements(){
   if(feverMode>0&&combo>=8)unlockAch("fever",L("achFever","Fiebre de combo"));
 }
 function diffMult(){
-  if(difficulty==="easy")return 0.85;
-  if(difficulty==="hard")return 1.2;
+  if(difficulty==="easy")return 0.7;
+  if(difficulty==="hard")return 1.45;
   return 1;
 }
 function diffSpawnMult(){
-  /* Fácil: menos oleadas; Normal: ritmo estándar; Difícil: más presión. */
-  if(difficulty==="easy")return 0.72;
-  if(difficulty==="hard")return 1.38;
-  return 1.0;
+  /* más enemigos / oleadas más densas según modo */
+  if(difficulty==="easy")return 0.85;
+  if(difficulty==="hard")return 1.55;
+  return 1.15;
 }
 function diffSpeedMult(){
-  /* Afecta la velocidad real de enemigos y obstáculos. */
-  if(difficulty==="easy")return 0.78;
-  if(difficulty==="hard")return 1.30;
-  return 1.0;
+  if(difficulty==="easy")return 0.9;
+  if(difficulty==="hard")return 1.25;
+  return 1.05;
 }
 function addScoreCombo(pts){
   combo++;comboTimer=150;comboMult=1+Math.min(2,Math.floor(combo/5)*0.25);
@@ -4526,6 +4401,11 @@ function fireRedLBeam(){
 
 function applyNewPowerPickup(type){
   powersCollected++;
+  if(type==="chain"){
+    if(powerMode==="manual"){specialCharges=Math.min(9,specialCharges+1);playSfx("power");scenarioMsg="⚡ Cadena lista";scenarioTransition=45}
+    else activateChainLightning();
+    return true;
+  }
   if(type==="phase"){
     if(powerMode==="manual"){specialCharges=Math.min(9,specialCharges+1);playSfx("power");scenarioMsg="👻 Phase listo";scenarioTransition=45}
     else activatePhaseShift();
@@ -4559,7 +4439,7 @@ function useSpecialPower(){
     fireKamehameha();
     return;
   }
-  const opts=["bomb","burst","shield","missile","phase","orbmine","vacuum","railgun","redL","invisible","invisible"];
+  const opts=["hammer","bomb","burst","shield","missile","chain","phase","orbmine","vacuum","railgun","redL","redL"];
   const pick=opts[Math.floor(Math.random()*opts.length)];
   if(pick==="hammer"){activateHammer();playSfx("hammer");if(!SFX.hammer)playSfx("power");try{playSfx("explode")}catch(e){}}
   else if(pick==="nova"){activateNova();playSfx("nova");if(!SFX.nova)playSfx("explode")}
@@ -4574,9 +4454,7 @@ function useSpecialPower(){
   else if(pick==="vacuum"){activateLootVacuum()}
   else if(pick==="railgun"){activateRailgunBuff()}
   else if(pick==="redL"){fireRedLBeam()}
-  else if(pick==="invisible"){invisible=Math.max(invisible,540);playSfx("power");try{createExplosion(player.x,player.y,28,"255,220,80")}catch(e){}}
-  if(pick==="invisible"){scenarioMsg="★ INVULNERABILIDAD 9s";scenarioTransition=90}
-  else{scenarioMsg="⚡ "+String(pick).toUpperCase();scenarioTransition=50}
+  scenarioMsg="⚡ "+String(pick).toUpperCase();scenarioTransition=50;
 }
 
 
@@ -5121,15 +4999,7 @@ const vt=document.getElementById("vibrateToggle");
 if(vt)vt.onchange=()=>{vibrateOn=vt.checked;if(vibrateOn)doVibrate(30)};
 const vst=document.getElementById("vibrateShootToggle");
 if(vst)vst.onchange=()=>{vibrateShoot=vst.checked;if(vibrateShoot)doVibrate(15)};
-const iet=document.getElementById("impactEffectsToggle");
-if(iet)iet.onchange=()=>{impactEffectsOn=iet.checked;lsSet("techImpactEffects",impactEffectsOn?"1":"0")};
-const ist=document.getElementById("impactShakeToggle");
-if(ist)ist.onchange=()=>{impactShakeOn=ist.checked;lsSet("techImpactShake",impactShakeOn?"1":"0");if(!impactShakeOn)screenShake=0};
-const ift=document.getElementById("impactFlashToggle");
-if(ift)ift.onchange=()=>{impactFlashOn=ift.checked;lsSet("techImpactFlash",impactFlashOn?"1":"0");if(!impactFlashOn)damageFlash=0};
 const lp=document.getElementById("lowPowerToggle");if(lp)lp.onchange=()=>{lowPower=lp.checked;try{resizeCanvas()}catch(e){}};
-const cursorSel=document.getElementById("cursorStyleSelect");
-if(cursorSel){cursorSel.value=mouseCursorStyle;cursorSel.onchange=()=>{mouseCursorStyle=cursorSel.value;lsSet("techMouseCursorStyle",mouseCursorStyle);if(window.__techMouseCursor)window.__techMouseCursor.textContent=({arrow:"➤",chevron:"➦",diamond:"◆",spark:"✦"})[mouseCursorStyle]||"➤";};}
 const vds=document.getElementById("viewDistanceSelect");
 if(vds){vds.value=viewDistance;vds.onchange=()=>{viewDistance=String(vds.value||"standard");if(!["close","standard","far"].includes(viewDistance))viewDistance="standard";lsSet("techViewDistance",viewDistance);try{resizeCanvas()}catch(e){}}};
 const gy=document.getElementById("gyroToggle");if(gy)gy.onchange=()=>{gyroOn=gy.checked;if(gyroOn&&window.DeviceOrientationEvent){
@@ -5162,7 +5032,7 @@ if(pms){pms.value=powerMode;pms.onchange=()=>{powerMode=pms.value;lsSet("techPow
 const btnMan=document.getElementById("btnManual");if(btnMan)btnMan.onclick=()=>showUserManual();
 
 document.getElementById("closeConfig").onclick=()=>{
-  lsSet("techSensMouse",sensMouse);lsSet("techMouseCursorStyle",mouseCursorStyle);lsSet("techSensKeys",sensKeys);lsSet("techSensPadV7",sensPad);
+  lsSet("techSensMouse",sensMouse);lsSet("techSensKeys",sensKeys);lsSet("techSensPadV7",sensPad);
   lsSet("techVolMusicV3",volMusic);lsSet("techVolSfxV3",volSfx);lsSet("techAudioMuted",audioMuted?"1":"0");
   lsSet("techVibrate",vibrateOn?"1":"0");lsSet("techVibrateShoot",vibrateShoot?"1":"0");lsSet("techLowPower",lowPower?"1":"0");lsSet("techViewDistance",viewDistance||"standard");lsSet("techGyro",gyroOn?"1":"0");lsSet("techLang",lang);lsSet("techTouchLayout",touchLayout||"left");lsSet("techPowerMode",powerMode);lsSet("techShowMinimap",window.showMinimap?"1":"0");lsSet("techShowOnlineRank",window.showOnlineRank?"1":"0");try{applyTouchLayout();applyUILanguage();refreshHudToggleIcons()}catch(e){}
   cfg.classList.remove("config-panel-open");cfg.style.setProperty("display","none","important");
@@ -5350,6 +5220,7 @@ if(startPanel&&!document.getElementById("startExtras")){
       <button type="button" data-world="2" class="${selectedWorld===2?"active":""}">2 Nieve</button>
       <button type="button" data-world="3" class="${selectedWorld===3?"active":""}">3 Fuego</button>
       <button type="button" data-world="4" class="${selectedWorld===4?"active":""}">4 Cristal</button>
+      <button type="button" data-world="5" class="${selectedWorld===5?"active":""}">5 Halloween</button>
       <button type="button" data-world="6" class="${selectedWorld===6?"active":""}">6 Neón</button>
       <button type="button" data-world="7" class="${selectedWorld===7?"active":""}">7 Tóxico</button>
       <button type="button" data-world="8" class="${selectedWorld===8?"active":""}">8 Vacío</button>
@@ -5550,9 +5421,7 @@ if(startPanel&&!document.getElementById("startExtras")){
       sni.onchange=()=>{ if(!window.techAuthIsLoggedIn || !window.techAuthIsLoggedIn()){sni.value="Usuario";shipName="Usuario";return;} };
     }
     box.querySelectorAll("[data-world]").forEach(b=>b.onclick=()=>{
-      let w=Number(b.getAttribute("data-world"))||1;
-      if(w===5) w=6; // Halloween eliminado
-      selectedWorld=w;lsSet("techWorld",selectedWorld);renderStart();
+      selectedWorld=Number(b.getAttribute("data-world"))||1;lsSet("techWorld",selectedWorld);renderStart();
     });
     /* Config en menú inicio */
     const ssp=box.querySelector("#startSensPad"), sspv=box.querySelector("#startSensPadVal");
@@ -5831,32 +5700,15 @@ window.addEventListener("resize",_onResizeDebounced,{passive:true});
 try{ window.visualViewport && window.visualViewport.addEventListener("resize",_onResizeDebounced,{passive:true}); }catch(e){}
 resizeCanvas(true);
 
-let _lastMouseAimAt=0;
-(function setupCustomMouseCursor(){
-  try{
-    const cursorGameBox=document.querySelector(".tech-game");
-    if(!cursorGameBox || window.matchMedia('(pointer:coarse)').matches)return;
-    let cur=document.getElementById("techGameMouseCursor");
-    if(!cur){cur=document.createElement("div");cur.id="techGameMouseCursor";cur.setAttribute("aria-hidden","true");cur.style.cssText="position:absolute;left:0;top:0;z-index:40;pointer-events:none;display:none;font: bold 25px/1 Arial,sans-serif;color:#fff;text-shadow:0 0 4px #00c8ff,0 0 9px #00c8ff,1px 1px 2px #000;transform:translate(-2px,-2px);";cursorGameBox.appendChild(cur);}
-    window.__techMouseCursor=cur;
-    cur.textContent=({arrow:"➤",chevron:"➦",diamond:"◆",spark:"✦"})[mouseCursorStyle]||"➤";
-    canvas.addEventListener("mouseenter",()=>{if(gameRunning)cur.style.display="block"});
-    canvas.addEventListener("mouseleave",()=>{cur.style.display="none"});
-    canvas.addEventListener("mousemove",ev=>{const b=cursorGameBox.getBoundingClientRect();cur.style.left=(ev.clientX-b.left)+"px";cur.style.top=(ev.clientY-b.top)+"px";if(gameRunning)cur.style.display="block"},{passive:true});
-  }catch(e){}
-})();
 canvas.addEventListener("mousemove",e=>{
-  /* Limita el cálculo del cursor a ~60 actualizaciones por segundo. */
-  const now=performance.now();
-  if(now-_lastMouseAimAt<16)return;
-  _lastMouseAimAt=now;
   const r=canvas.getBoundingClientRect();
   const scaleX=canvas.width/Math.max(1,r.width), scaleY=canvas.height/Math.max(1,r.height);
-  const tx=(e.clientX-r.left)*scaleX, ty=Math.max(0,(e.clientY-r.top-20)*scaleY);
-  const k=Math.max(0.2,Math.min(1.5,sensMouse));
+  const tx=(e.clientX-r.left)*scaleX, ty=(e.clientY-r.top)*scaleY;
+  /* sensMouse 0.2–2: qué tanto sigue al cursor (1 = natural) */
+  const k=Math.max(0.15,Math.min(1.5,sensMouse));
   mouse.x=player.x+(tx-player.x)*k;
   mouse.y=player.y+(ty-player.y)*k;
-},{passive:true});
+});
 canvas.addEventListener("mousedown",function(ev){
   try{
     if(gameRunning&&!gamePaused&&window.__hudHit){
@@ -6241,7 +6093,9 @@ function createEnemy(etype,role){
   else if(etype==="armored"){size=(15+Math.random()*5)*sc;hp=7;spd=0.9}
   else if(etype==="strafer"){size=(11+Math.random()*4)*sc;hp=2;spd=2.0}
   else if(etype==="missile_ship"){size=(12+Math.random()*4)*sc;hp=3;spd=1.3}
-  else if(etype==="ghost"||etype==="pumpkin"||etype==="witch_e"){etype="hunter";size=(12+Math.random()*5)*sc;hp=3;spd=1.4}
+  else if(etype==="ghost"){size=(12+Math.random()*5)*sc;hp=2;spd=1.5}
+  else if(etype==="pumpkin"){size=(13+Math.random()*5)*sc;hp=3;spd=1.1}
+  else if(etype==="witch_e"){size=(11+Math.random()*4)*sc;hp=3;spd=1.7}
   else if(etype==="creature"||etype==="alien"){size=(16+Math.random()*6)*sc;hp=5;spd=1.3}
   else if(etype==="alien_small"){size=(9+Math.random()*4)*sc;hp=2;spd=2.0}
   else if(etype==="alien_flyer"){size=(12+Math.random()*5)*sc;hp=3;spd=1.7}
@@ -6262,7 +6116,7 @@ function createEnemy(etype,role){
 
 function createBoss(btype){
   const sc=getScale();
-  if(btype==="boss_witch"||btype==="boss_pumpkin"||btype==="boss_alien_halloween")btype="boss_alien_neon";
+  if(btype==="boss_witch")btype="boss_pumpkin";
   if(btype==="boss_pumpkin"){
     const size=Math.min(canvas.width*.28,90*sc);
     const hp=55+Math.floor((waveCount||1)*5);
@@ -6308,7 +6162,7 @@ function spawnShipWave(){
   const dm=diffSpawnMult();
   const mob=typeof isMobile==="function"?isMobile():false;
   /* Límite de oleada para no saturar (evita trabones) */
-  const hw=false; /* Halloween eliminado */
+  const hw=(selectedWorld===5||scenario===5);
   const nTop=Math.min(hw?(mob?2:3):(mob?4:6), Math.floor((2+Math.min(2,Math.floor(waveCount*0.15)))*dm*(hw?0.7:1)));
   let poolTop=["hunter","hunter","ship","sniper","kamikaze","ship","hunter","drone","drone"];
   if(waveCount>=1)poolTop.push("ship","hunter","sniper","drone","strafer");
@@ -6316,6 +6170,11 @@ function spawnShipWave(){
   if(waveCount>=3||scenario>=3)poolTop.push("bigship","hunter","kamikaze","armored","missile_ship");
   if(scenario>=3)poolTop.push("sniper","teleport","bigship","turret","strafer");
   if(waveCount>=4)poolTop.push("bomber","armored","missile_ship","drone");
+  /* Mundo Halloween: pocos fantasmas/calabazas (rendimiento) */
+  if((selectedWorld===5||scenario===5)){
+    poolTop=["ghost","pumpkin","ghost"];
+    if(waveCount>=3)poolTop.push("pumpkin");
+  }
   for(let i=0;i<nTop;i++)setTimeout(()=>{
     if(!gameRunning||gamePaused||phase!=="ships")return;
     createEnemy(poolTop[Math.floor(Math.random()*poolTop.length)],"top");
@@ -6361,7 +6220,7 @@ function nextBossType(){
     2:"boss_alien_ice",
     3:"boss_alien_fire",
     4:"boss_alien_crystal",
-    5:"boss_alien_neon",
+    5:"boss_pumpkin",
     6:"boss_alien_neon",
     7:"boss_alien_toxic",
     8:"boss_alien_void"
@@ -6378,7 +6237,7 @@ function advanceLevel(){
   level=1;
 }
 function startMeteorPhase(){phase="meteors";phaseTimer=METEOR_DURATION;obstacles=obstacles.filter(o=>isWaveHazard(o.type));
-  /* Halloween eliminado: sin forzar lowPower */}
+  if((selectedWorld===5||scenario===5)&&typeof isMobile==="function"&&isMobile()){try{lowPower=true}catch(e){}}}
 function startWarning(){phase="warning";phaseTimer=WARNING_DURATION;try{playSfx("warning")}catch(e){}}
 function startShipPhase(){phase="ships";phaseTimer=0;obstacles=obstacles.filter(o=>!isWaveHazard(o.type));try{playSfx("wave")}catch(e){}spawnShipWave()}
 function startBossPhase(){phase="boss";phaseTimer=0;obstacles=[];enemyBullets=[];try{playSfx("boss")}catch(e){try{playSfx("warning")}catch(_){}}createBoss(nextBossType())}
@@ -6569,50 +6428,36 @@ function enemyShoot(o){
   }
 }
 
-function triggerShake(amt){
-  if(!impactShakeOn||lowPower){screenShake=0;return}
-  screenShake=Math.min(10,Math.max(screenShake,Number(amt)||0));
-}
+function triggerShake(amt){ /* desactivado: el mapa no se mueve */ screenShake=0; }
 function addHitSpark(x,y,col){
-  if(!impactEffectsOn)return;
-  const mobile=isMobile(),cap=mobile?10:32;
-  if(hitSparks.length>=cap)return;
-  const n=mobile?3:6;
-  for(let i=0;i<n&&hitSparks.length<cap;i++){
-    const a=(Math.PI*2*i/n)+(Math.random()-.5)*.45;
-    const sp=(mobile?1.2:2)+Math.random()*(mobile?2.2:4.2);
-    hitSparks.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:8+Math.random()*7,max:15,color:col||"255,200,50",size:1.4+Math.random()*2.8});
+  if(isMobile())return; /* chispas solo PC: menos carga */
+  if(hitSparks.length>16)return;
+  const n=3;
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,sp=1.5+Math.random()*3.5;
+    hitSparks.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:10+Math.random()*8,max:16,color:col||"255,200,50",size:1.5+Math.random()*2});
   }
 }
 function updateHitSparks(){
-  if(!impactEffectsOn){hitSparks.length=0;return}
   for(let i=hitSparks.length-1;i>=0;i--){
     const p=hitSparks[i];
-    p.x+=p.vx;p.y+=p.vy;p.vx*=0.95;p.vy*=0.95;p.life--;
-    const a=Math.max(0,p.life/(p.max||25));
+    p.x+=p.vx;p.y+=p.vy;p.vx*=0.94;p.vy*=0.94;p.life--;
+    const a=Math.max(0,p.life/(p.max||18));
     ctx.fillStyle=`rgba(${p.color},${a})`;
     ctx.beginPath();ctx.arc(p.x,p.y,p.size*a,0,Math.PI*2);ctx.fill();
     if(p.life<=0)hitSparks.splice(i,1);
   }
 }
 function createExplosion(x,y,size,color){
-  const col=color||(Math.random()>.5?"255,90,45":"255,205,70");
-  if(size>=8)playSfx("explode");
-  if(size>=10)triggerShake(Math.min(10,3+size*0.12));
-  if(size>=12)addHitSpark(x,y,col);
-  if(!impactEffectsOn){
-    if(explosions.length>(isMobile()?1:8))explosions.splice(0,explosions.length-1);
-    explosions.push({x,y,vx:0,vy:0,size:Math.max(2,size*.32),opacity:1,color:col,kind:"simple"});
-    return;
-  }
-  const mobile=isMobile(),cap=mobile?8:30;
-  const count=Math.min(mobile?4:8,Math.max(mobile?2:4,Math.floor(size*(mobile?.28:.42))));
-  for(let i=0;i<count&&explosions.length<cap;i++){
-    const a=Math.random()*Math.PI*2,speed=(mobile?1.1:1.7)+Math.random()*(mobile?2:4.2);
-    explosions.push({x,y,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,size:(mobile?1.8:2.4)+Math.random()*(mobile?2.2:4.5),opacity:1,color:col,kind:"particle",gravity:0.025+Math.random()*.035});
-  }
-  if(size>=14&&!mobile&&explosions.length<cap)explosions.push({x,y,vx:0,vy:0,size:size*.48,opacity:.65,color:col,kind:"ring"});
+  if(size>=8)playSfx("explode"); /* SONIDO EXPLOSIÓN METEORO/ENEMIGO */
+  if(size>=10)triggerShake(Math.min(14,4+size*0.15));
+  if(size>=12)addHitSpark(x,y,color||"255,180,40");
+  if(explosions.length>(isMobile()?1:8))explosions.splice(0,explosions.length-1);
+  const n=isMobile()?1:Math.min(2,1+Math.floor(size/12));
+  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=1+Math.random()*2.5;explosions.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,size:2+Math.random()*2.5,opacity:1,color:color||(Math.random()>.5?"255,80,40":"255,200,50")})}
 }
+
+/* Suelta un poder al azar (máx. pocos en pantalla) */
 function maybeSpawnPickup(x,y){
   /* Poderes en TODOS los mundos (1–14), sin filtro por escenario */
   if(pickups.length>=(isMobile()?2:4))return;
@@ -6621,7 +6466,7 @@ function maybeSpawnPickup(x,y){
   /* pool de poderes especiales (hammer, chrono, barrier, stormbolt, bazooka, etc.) */
   if(r<.72){
     /* L y ┘ ponderados: aparecen con más frecuencia */
-    const pool=["ammo","shield","bounce","missile","allies","overdrive","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","invisible","invisible","drone","barrier","bazooka","vortex","ion","phase","orbmine","vacuum","railgun","redL","redL","redL"];
+    const pool=["ammo","hammer","shield","bounce","missile","allies","overdrive","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","invisible","drone","barrier","stormbolt","bazooka","vortex","ion","emp","chain","phase","orbmine","vacuum","railgun","redL","redL","redL"];
     const type=pool[Math.floor(Math.random()*pool.length)];
     pickups.push({x,y,type,size:s,vy:1.5});
   }
@@ -6685,7 +6530,7 @@ function openSupplyCrate(x,y){
   createExplosion(x,y,18,"206,17,38");
   try{playSfx("power")}catch(e){}
   try{doVibrate(25)}catch(e){}
-  const rewards=["ammo","shield","coin","coin","missile","life","overdrive","chain","phase","orbmine","vacuum","railgun","redL","redL","redL","laser","laser","laser","invisible","invisible"];
+  const rewards=["ammo","shield","coin","coin","missile","life","overdrive","chain","phase","orbmine","vacuum","railgun","redL","redL","redL","laser","laser","laser"];
   const n=2+Math.floor(Math.random()*2);
   for(let k=0;k<n;k++){
     const type=rewards[Math.floor(Math.random()*rewards.length)];
@@ -6787,7 +6632,7 @@ function formatMatchDate(ts){
   }catch(e){return "—"}
 }
 function worldNameHist(w){
-  const n={1:"Espacio",2:"Nieve",3:"Fuego",4:"Cristal",5:"Neón",6:"Neón",7:"Tóxico",8:"Vacío",9:"Océano",10:"Desierto",11:"Tormenta",12:"Aurora",13:"Volcán",14:"Glitch"};
+  const n={1:"Espacio",2:"Nieve",3:"Fuego",4:"Cristal",5:"Halloween",6:"Neón",7:"Tóxico",8:"Vacío",9:"Océano",10:"Desierto",11:"Tormenta",12:"Aurora",13:"Volcán",14:"Glitch"};
   return n[w]||("M"+w);
 }
 function formatMatchHistoryHtml(limit){
@@ -7159,7 +7004,7 @@ function spawnTrap(){
   else if(roll<.80)traps.push({type:"shrapnel",x:50+Math.random()*(canvas.width-100),y:-30,size:16*s,vy:(1.8+Math.random())*getSpeedScale(),armed:true});
   else if(roll<.86)traps.push({type:"spike",x:30+Math.random()*(canvas.width-60),y:canvas.height+10,size:16*s,vy:-(2.2+Math.random()*1.5)*getSpeedScale(),wiggle:0});
   else if(roll<.88)traps.push({type:"vortex",x:50+Math.random()*(canvas.width-100),y:-30,size:20*s,vy:(1.2+Math.random()*.8)*getSpeedScale(),spin:0});
-  else if(roll<.92)traps.push({type:"blade",x:40+Math.random()*(canvas.width-80),y:-25,size:22*s,vy:2.6+Math.random()*1.2,spin:0,spawnWave:waveCount||0,spawnScore:score||0}); /* sierra horizontal */
+  else if(roll<.92)traps.push({type:"blade",x:40+Math.random()*(canvas.width-80),y:-25,size:22*s,vy:(2.6+Math.random()*1.2)*getSpeedScale(),spin:0}); /* sierra horizontal */
   else if(roll<.96)traps.push({type:"net",x:canvas.width*(.2+Math.random()*.6),y:-20,w:90*s,h:14*s,vy:(1.5+Math.random())*getSpeedScale(),life:260}); /* red que frena */
   else traps.push({type:"cluster",x:50+Math.random()*(canvas.width-100),y:-30,size:14*s,vy:(1.7+Math.random())*getSpeedScale(),armed:true}); /* bomba racimo */
 }
@@ -7440,11 +7285,10 @@ function teleportWorld(){
   let next=selectedWorld;
   /* siguiente mundo (ciclo) */
   next = (selectedWorld % 24) + 1;
-  if(next===5) next=6; // Halloween eliminado
   selectedWorld=next;
   lsSet("techWorld",selectedWorld);
   scenario=selectedWorld;
-  const names={1:"ESPACIO",2:"NIEVE",3:"FUEGO",4:"CRISTAL",5:"NEÓN",6:"NEÓN",7:"TÓXICO",8:"VACÍO",9:"OCÉANO",10:"DESIERTO",11:"TORMENTA",12:"AURORA",13:"VOLCÁN",14:"GLITCH",15:"RÁFAGAS DE LAVA",16:"FUEGO ETERNO",17:"PIROTECNIA",18:"INFIERNO SOLAR",19:"NÚCLEO MAGMA",20:"LUNA",21:"HIELO",22:"DESOLACIÓN",23:"OTRA DIMENSIÓN",24:"LLUVIA"};
+  const names={1:"ESPACIO",2:"NIEVE",3:"FUEGO",4:"CRISTAL",5:"HALLOWEEN",6:"NEÓN",7:"TÓXICO",8:"VACÍO",9:"OCÉANO",10:"DESIERTO",11:"TORMENTA",12:"AURORA",13:"VOLCÁN",14:"GLITCH",15:"RÁFAGAS DE LAVA",16:"FUEGO ETERNO",17:"PIROTECNIA",18:"INFIERNO SOLAR",19:"NÚCLEO MAGMA",20:"LUNA",21:"HIELO",22:"DESOLACIÓN",23:"OTRA DIMENSIÓN",24:"LLUVIA"};
   scenarioMsg="🌍 TELEPORTE → "+(names[selectedWorld]||("MUNDO "+selectedWorld));
   try{if(typeof setWorldAmbient==="function")setWorldAmbient(selectedWorld)}catch(e){}
   scenarioTransition=100;
@@ -8736,8 +8580,7 @@ function updateExtraTraps(){
   for(let i=traps.length-1;i>=0;i--){
     const t=traps[i];
     if(t.type==="blade"){
-      const bladeProgress=1+Math.min(2.2,Math.max(0,(waveCount||0)*0.10+(score||0)*0.002));
-      t.y+=Math.max(t.vy||2.6, 2.6)*((typeof getSpeedScale==="function")?getSpeedScale():1)*bladeProgress;
+      t.y+=Math.max(t.vy||2.2, 2.4)*((typeof getSpeedScale==="function")?getSpeedScale():1);
       t.spin=(t.spin||0)+0.28;
       ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.spin);
       ctx.fillStyle="#FFD700";ctx.fillRect(-t.size, -3, t.size*2, 6);
@@ -8864,8 +8707,8 @@ function updateEnemyBullets(){
   }
 }
 
-function updatePickups(){for(let i=pickups.length-1;i>=0;i--){if(pickups[i]&&(pickups[i].type==="chrono"||pickups[i].type==="slow"||pickups[i].type==="hammer"||pickups[i].type==="chain"||pickups[i].type==="freeze"||pickups[i].type==="stormbolt"||pickups[i].type==="emp")){pickups.splice(i,1)}}const labels={redL:"┘",ammo:"+40",coin:"⭐",shield:"S",bounce:"↻",rapid:"R",triple:"3",laser:"L",bomb:"💣",pierce:"P",life:"♥",invisible:"INV",magnet:"M",missile:"🚀",allies:"✈",overdrive:"⚡",nova:"✸",reflect:"↺",burst:"✸✸",repair:"+",drone:"🛸",chrono:"⏱",barrier:"⬡",bazooka:"🚀",vortex:"🌀",ion:"💠",phase:"👻",orbmine:"💣",vacuum:"🧲",railgun:"══"};
-const colors={redL:"#FF1738",ammo:"#FFCD00",coin:"#FFD700",shield:"#00C8FF",bounce:"#AAFFFF",rapid:"#00FF88",triple:"#66CCFF",laser:"#00FFFF",bomb:"#FF4400",pierce:"#AADD00",life:"#FF3333",invisible:"#FFE566",magnet:"#FFAA00",missile:"#FF8800",allies:"#44FFAA",overdrive:"#FF2244",nova:"#FFAA00",reflect:"#66FFEE",burst:"#FF8800",repair:"#88FF88",drone:"#88DDFF",chrono:"#FFE066",barrier:"#66CCFF",bazooka:"#FF8844",vortex:"#CC66FF",ion:"#66FFEE",phase:"#CCDDEE",orbmine:"#FF9944",vacuum:"#FFD700",railgun:"#FFE566"};
+function updatePickups(){for(let i=pickups.length-1;i>=0;i--){if(pickups[i]&&(pickups[i].type==="chrono"||pickups[i].type==="slow")){pickups.splice(i,1)}}const labels={redL:"┘",ammo:"+40",coin:"⭐",shield:"S",bounce:"↻",rapid:"R",triple:"3",slow:"⏱",laser:"L",bomb:"💣",pierce:"P",life:"♥",invisible:"★",magnet:"M",hammer:"🔨",missile:"🚀",allies:"✈",overdrive:"⚡",nova:"✸",reflect:"↺",burst:"✸✸",repair:"+",drone:"🛸",freeze:"❄",chrono:"⏱",barrier:"⬡",stormbolt:"⚡",bazooka:"🚀",vortex:"🌀",ion:"💠",emp:"💥",chain:"⚡⚡",phase:"👻",orbmine:"💣",vacuum:"🧲",railgun:"══"};
+const colors={redL:"#FF1738",ammo:"#FFCD00",coin:"#FFD700",shield:"#00C8FF",bounce:"#AAFFFF",rapid:"#00FF88",triple:"#66CCFF",slow:"#AA88FF",laser:"#00FFFF",bomb:"#FF4400",pierce:"#AADD00",life:"#FF3333",invisible:"#FFD700",magnet:"#FFAA00",hammer:"#E8F0FF",missile:"#FF8800",allies:"#44FFAA",overdrive:"#FF2244",nova:"#FFAA00",reflect:"#66FFEE",burst:"#FF8800",repair:"#88FF88",drone:"#88DDFF",freeze:"#AADDFF",chrono:"#FFE066",barrier:"#66CCFF",stormbolt:"#FFEE88",bazooka:"#FF8844",vortex:"#CC66FF",ion:"#66FFEE",emp:"#FFEE66",chain:"#66EEFF",phase:"#CCDDEE",orbmine:"#FF9944",vacuum:"#FFD700",railgun:"#FFE566"};
 for(let i=pickups.length-1;i>=0;i--){const p=pickups[i];
 if(magnet>0){const dx=player.x-p.x,dy=player.y-p.y,d=Math.hypot(dx,dy)||1;p.x+=(dx/d)*2.5;p.y+=(dy/d)*2.5}
 p.y+=p.vy;
@@ -8883,20 +8726,31 @@ if(p.type==="redL"){
 }else if(["chain","phase","orbmine","vacuum","railgun","redL"].includes(p.type)){applyNewPowerPickup(p.type)}
 else if(p.type==="ammo"){ammo=Math.min(ammo+40,250);playSfx("power")}
 else if(p.type==="coin"){coins+=(p.value||5)*2;lsSet("techCoinsV2",coins);playSfx("power");scenarioMsg="⭐ +"+(p.value||5)*2+" puntosjuego";scenarioTransition=40}
-else if(powerMode==="manual"&&["hammer","bomb","burst","shield","bounce","missile","laser","pierce","reflect","vortex","ion","chain","phase","orbmine","vacuum","railgun","redL"].includes(p.type)){
+else if(powerMode==="manual"&&["hammer","bomb","burst","shield","bounce","missile","laser","pierce","reflect","vortex","ion","emp","chain","phase","orbmine","vacuum","railgun","redL"].includes(p.type)){
   specialCharges=Math.min(9,specialCharges+1);powersCollected++;playSfx("power");
 }else if(p.type==="shield"){shield=320;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("shield");if(!SFX.shield)playSfx("power")}
 else if(p.type==="bounce"){bounceShield=420;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("reflect");if(!SFX.reflect)playSfx("shield");scenarioMsg="↻ ESCUDO REBOTE";scenarioTransition=70}
 else if(p.type==="vortex"){vortex=360;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("power");scenarioMsg="🌀 VÓRTICE";scenarioTransition=70}
 else if(p.type==="ion"){ion=300;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("laser");if(!SFX.laser)playSfx("power");scenarioMsg="💠 CAÑÓN IÓNICO";scenarioTransition=70}
+else if(p.type==="emp"){emp=1;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("nova");if(!SFX.nova)playSfx("explode");
+  /* EMP: aturde enemigos y borra balas enemigas */
+  enemyBullets=[];
+  obstacles.forEach(o=>{if(!String(o.type||"").startsWith("boss")&&!["meteor","hard"].includes(o.type)){o.shootTimer=90;o.speed*=0.4}});
+  createExplosion(player.x,player.y,80,"255,255,100");scenarioMsg="💥 EMP";scenarioTransition=80}
+
 else if(p.type==="rapid"){rapidFire=400;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("rapid");if(!SFX.rapid)playSfx("power")}
 else if(p.type==="triple"){tripleShot=340;playSfx("triple");if(!SFX.triple)playSfx("power")}
 else if(p.type==="laser"){laser=220;playSfx("laser");if(!SFX.laser)playSfx("power")}
 else if(p.type==="bomb"){activateBomb();playSfx("bomb");if(!SFX.bomb)playSfx("explode")}
 else if(p.type==="pierce"){pierce=360;playSfx("power")}
 else if(p.type==="life"){lives=Math.min(lives+1,3);updateLivesUI();playSfx("power")}
-else if(p.type==="invisible"){invisible=Math.max(invisible,540);powersCollected++;playSfx("power");scenarioMsg="★ INVULNERABILIDAD 9s";scenarioTransition=90;try{doVibrate(25)}catch(e){};try{createExplosion(player.x,player.y,28,"255,220,80")}catch(e){}}
+else if(p.type==="invisible"){invisible=Math.max(invisible,420);playSfx("power");scenarioMsg="★ INVULNERABLE";scenarioTransition=75;try{doVibrate(20)}catch(e){}}
 else if(p.type==="magnet"){magnet=400;playSfx("power")}
+else if(p.type==="hammer"){
+  powersCollected++;
+  if(powerMode==="manual"){specialCharges=Math.min(6,specialCharges+1);playSfx("power");scenarioMsg="🔨 Martillo listo";scenarioTransition=50}
+  else{activateHammer();playSfx("hammer");if(!SFX.hammer)playSfx("power");playSfx("explode");scenarioMsg="🔨 MARTILLAZO";scenarioTransition=70}
+}
 else if(p.type==="missile"){missilePower=420;playSfx("missile");if(!SFX.missile)playSfx("power");for(let k=0;k<3;k++)setTimeout(()=>{if(gameRunning&&!gamePaused)fireMissile()},k*120)}
 else if(p.type==="allies"){spawnAllies();playSfx("allies");if(!SFX.allies)playSfx("power")}
 else if(p.type==="overdrive"){overdrive=360;playSfx("overdrive");if(!SFX.overdrive)playSfx("power")}
@@ -8907,20 +8761,7 @@ else if(p.type==="repair"){if(lives<3){lives++;updateLivesUI()}else shield=Math.
 else playSfx("power");
 createExplosion(p.x,p.y,10,"255,255,100");pickups.splice(i,1)}else if(p.y>canvas.height+30)pickups.splice(i,1)}}
 
-function updateExplosions(){
-  for(let i=explosions.length-1;i>=0;i--){
-    const e=explosions[i];e.x+=e.vx||0;e.y+=e.vy||0;
-    if(e.kind==="ring"){
-      e.size*=1.12;e.opacity-=.075;
-      ctx.save();ctx.globalAlpha=Math.max(0,e.opacity);ctx.strokeStyle=`rgb(${e.color})`;
-      ctx.lineWidth=Math.max(1.2,e.size*.045);ctx.beginPath();ctx.arc(e.x,e.y,e.size,0,Math.PI*2);ctx.stroke();ctx.restore();
-    }else{
-      e.vy+=(e.gravity||0);e.vx*=.985;e.vy*=.985;e.opacity-=e.kind==="simple"?.055:.035;e.size*=e.kind==="simple"?.96:.975;
-      ctx.fillStyle=`rgba(${e.color},${Math.max(0,e.opacity)})`;ctx.beginPath();ctx.arc(e.x,e.y,Math.max(.5,e.size),0,Math.PI*2);ctx.fill();
-    }
-    if(e.opacity<=0)explosions.splice(i,1);
-  }
-}
+function updateExplosions(){for(let i=explosions.length-1;i>=0;i--){const e=explosions[i];e.x+=e.vx;e.y+=e.vy;e.opacity-=.04;e.size*=.96;ctx.fillStyle=`rgba(${e.color},${e.opacity})`;ctx.beginPath();ctx.arc(e.x,e.y,e.size,0,Math.PI*2);ctx.fill();if(e.opacity<=0)explosions.splice(i,1)}}
 function updateParticles(){for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.y+=p.speed;p.opacity-=.03;ctx.fillStyle=`rgba(${p.color},${p.opacity})`;ctx.fillRect(p.x,p.y,p.size,p.size);if(p.opacity<=0)particles.splice(i,1)}}
 function checkCollision(o){return Math.hypot(player.x-(o.x+o.size/2),player.y-(o.y+o.size/2))<player.size*1.05+o.size*.55}
 
@@ -9278,15 +9119,27 @@ function drawSpaceBG(){
     if(!lite)dustLayer(nFx,.03,"180,160,255",.8);
     vignette(.32);
   } else if(w===5){
-    /* (Halloween eliminado — usa estilo Neón) */
-    baseGradient("#040010","#0a0024","#001018");
+    /* HALLOWEEN */
+    baseGradient("#070308","#120800","#0a0400");
+    nebula(W*.5,H*.3,W*.5,"rgba(80,30,0,A)",.1);
+    // luna + cráter
+    const mx=W*.84, my=H*.13, mr=mobile?13:24;
+    const moon=ctx.createRadialGradient(mx-mr*.3,my-mr*.3,2,mx,my,mr);
+    moon.addColorStop(0,"rgba(255,240,200,.55)");moon.addColorStop(1,"rgba(255,200,120,.15)");
+    ctx.fillStyle=moon;ctx.beginPath();ctx.arc(mx,my,mr,0,Math.PI*2);ctx.fill();
     if(!lite){
-      nebula(W*.3,H*.3,W*.4,"rgba(255,0,180,A)",.1);
-      nebula(W*.75,H*.6,W*.35,"rgba(0,255,220,A)",.1);
+      ctx.fillStyle="rgba(20,10,5,.25)";
+      ctx.beginPath();ctx.arc(mx+mr*.25,my+mr*.1,mr*.22,0,Math.PI*2);ctx.fill();
+      // silueta suelo
+      ctx.fillStyle="rgba(12,6,2,.5)";
+      ctx.beginPath();ctx.moveTo(0,H*.88);
+      for(let x=0;x<=W;x+=40)ctx.lineTo(x,H*.88-Math.sin(x*.02+t/2000)*8-(x%80===0?12:0));
+      ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.fill();
+    } else {
+      ctx.fillStyle="rgba(15,8,4,.4)";ctx.fillRect(0,H*.9,W,H*.1);
     }
-    farStars("0,255,255");
-    if(!lite)dustLayer(nFx,.06,"255,0,200",.7);
-    vignette(.36);
+    farStars("255,210,150");
+    vignette(.4);
   } else if(w===6){
     /* NEÓN */
     baseGradient("#040010","#0a0024","#001018");
@@ -9684,7 +9537,7 @@ function drawSpaceBG(){
 function trimArr(arr,max){if(arr&&arr.length>max)arr.splice(0,arr.length-max)}
 function gcEntities(){
   const m=typeof isMobile==="function"?isMobile():false;
-  const hw=false; /* Halloween eliminado */
+  const hw=(selectedWorld===5||scenario===5);
   /* Límites equilibrados: fluido en móvil pero sin vaciar enemigos/trampas */
   const lim=m?(hw?0.5:0.7):1;
   trimArr(obstacles,Math.floor((m?8:22)*lim));
@@ -9715,18 +9568,13 @@ try{
   ctx.imageSmoothingEnabled=false;
   if(!_isMobLoop){ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality=(typeof lowPower!=="undefined"&&lowPower)?"low":"medium"}
 }catch(e){}
-/* Temblor breve y configurable al producirse impactos fuertes */
-if(!impactShakeOn||lowPower)screenShake=0;
+/* Sin temblor de cámara: el mapa se queda fijo (también en PC reduce mareo) */
+screenShake=0;
 ctx.save();
-if(screenShake>0){
-  const amount=screenShake;
-  ctx.translate((Math.random()-.5)*amount,(Math.random()-.5)*amount);
-  screenShake=Math.max(0,screenShake*.78-.35);
-}
 drawSpaceBG();
 /* mob-no-shadow: las GPUs móviles odian shadowBlur */
 if(_isMobLoop||(typeof lowPower!=="undefined"&&lowPower)){try{ctx.shadowBlur=0;ctx.shadowColor="transparent"}catch(e){}}
-if(impactFlashOn&&damageFlash>0){ctx.fillStyle=`rgba(180,0,0,${Math.min(.28,0.08+damageFlash*0.008)})`;ctx.fillRect(0,0,canvas.width,canvas.height)}
+if(damageFlash>0){ctx.fillStyle=`rgba(180,0,0,${0.12+damageFlash*0.01})`;ctx.fillRect(0,0,canvas.width,canvas.height)}
 /* fiebre: sin barras laterales (evita mareo) */
 if(introTimer>0){
   const a=Math.min(1,introTimer/24);
@@ -9737,7 +9585,7 @@ if(introTimer>0){
   ctx.fillText(difficulty.toUpperCase(),canvas.width/2,canvas.height/2+16);
 }
 
-if(shield>0)shield--;if(bounceShield>0)bounceShield--;if(vortex>0)vortex--;if(ion>0)ion--;if(emp>0)emp--;if(laserGrace>0)laserGrace--;if(rapidFire>0)rapidFire--;if(tripleShot>0)tripleShot--;if(laser>0)laser--;if(pierce>0)pierce--;if(invisible>0)invisible--;if(magnet>0)magnet--;if(missilePower>0)missilePower--;if(allyPower>0)allyPower--;if(storm>0)storm--;if(overdrive>0)overdrive--;if(nova>0)nova=0;if(reflect>0)reflect--;if(burst>0)burst=0;if(freezeEnemies>0)freezeEnemies--;if(barrier>0)barrier--;if(phaseShift>0)phaseShift--;if(railgun>0)railgun--;
+if(shield>0)shield--;if(bounceShield>0)bounceShield--;if(vortex>0)vortex--;if(ion>0)ion--;if(emp>0)emp--;if(laserGrace>0)laserGrace--;if(rapidFire>0)rapidFire--;if(tripleShot>0)tripleShot--;if(slowMo>0)slowMo--;if(laser>0)laser--;if(pierce>0)pierce--;if(invisible>0)invisible--;if(magnet>0)magnet--;if(missilePower>0)missilePower--;if(allyPower>0)allyPower--;if(storm>0)storm--;if(overdrive>0)overdrive--;if(nova>0)nova=0;if(reflect>0)reflect--;if(burst>0)burst=0;if(freezeEnemies>0)freezeEnemies--;if(barrier>0)barrier--;if(phaseShift>0)phaseShift--;if(railgun>0)railgun--;
 if(comboTimer>0){comboTimer--}else{combo=0;comboMult=1}
 if(feverMode>0){
   feverMode--;
@@ -9771,8 +9619,8 @@ const keyDrive=typeof keys!=="undefined"&&(keys.left||keys.right||keys.up||keys.
 /* Disparar también cuenta como control: no retrocede al mantener FIRE */
 const controlling=touchDriving||stickActive||canvasShootId!==null||keyDrive||isShooting||fireTouchId!==null;
 const _ps3Slow=!!(typeof pollGamepad!=='undefined'&&pollGamepad._moving);
-const baseSmooth=_ps3Slow?0.12:(stickActive||touchDriving?(overdrive>0?0.7:0.62):(overdrive>0?0.55:0.50));
-const smooth=_ps3Slow?0.12:Math.min(0.86,baseSmooth*Math.max(1,Math.min(1.6,(stickActive||touchDriving?Math.max(sensPad,0.35):sensMouse)+0.15)));
+const baseSmooth=_ps3Slow?0.12:(stickActive||touchDriving?(overdrive>0?0.7:0.58):(overdrive>0?0.4:0.34));
+const smooth=_ps3Slow?0.12:Math.min(0.82,baseSmooth*Math.max(1,Math.min(1.6,(stickActive||touchDriving?Math.max(sensPad,0.35):sensMouse)+0.15)));
 const _psb=(typeof playerSpeedBonus==='function')?playerSpeedBonus():1;player.x+=(mouse.x-player.x)*smooth*_psb;player.y+=(mouse.y-player.y)*smooth*_psb;
 /* Solo al SOLTAR (ni mover ni disparar): retrocede */
 if(!controlling){
@@ -9927,7 +9775,7 @@ if(phase==="meteors"&&gameRunning&&!gamePaused){
     if(Math.random()<0.55)spawnSupplyCrate();
   }
 }
-updateExplosions();if(lightningFX&&lightningFX.length){updateLightning()}else if(true /* Halloween eliminado */&&(!(typeof mob==="function"?mob():isMobile())||!lowPower)){updateLightning()}updateAllies();updateDrones();drawPlayer();
+updateExplosions();if(lightningFX&&lightningFX.length){updateLightning()}else if(!((selectedWorld===5||scenario===5)&&(typeof isMobile==="function"&&isMobile()))&&(!(typeof mob==="function"?mob():isMobile())||!lowPower)){updateLightning()}updateAllies();updateDrones();drawPlayer();
 try{updateEngineSound()}catch(e){}
 
 /* Vórtice: atrae enemigos */
@@ -10028,7 +9876,7 @@ try{if(typeof showLiveGameControls==="function")showLiveGameControls(true);else{
   var ex=document.getElementById("techAccountExit");if(ex){ex.classList.remove("is-visible");ex.style.setProperty("display","none","important")}
 }}catch(e){}
 obstacles=[];particles=[];bullets=[];enemyBullets=[];pickups=[];explosions=[];traps=[];missiles=[];lightningFX=[];allies=[];gravZones=[];drones=[];
-score=0;meteorsDestroyed=0;shipsDestroyed=0;ki=0;kiReady=false;kamehameha=0;dashCd=0;dashInvuln=0;dashTrail=[];shieldCd=0;activeShield=0;chargeShot=0;worldTeleportCd=0;droneCd=0;bounceShot=0;bounceShotCd=0;freezeCd=0;phaseShift=0;railgun=0;lootVacuum=0;orbitalMines=[];chainFX=[];ammo=100;shield=0;rapidFire=0;tripleShot=0;laser=0;pierce=0;invisible=0;magnet=0;missilePower=0;allyPower=0;storm=0;overdrive=0;nova=0;reflect=0;burst=0;repair=0;freezeEnemies=0;barrier=0;bazooka=0;specialCharges=3;powersCollected=0;lives=1;level=1;waveCount=0;waveNumber=1;scenario=selectedWorld||1;scenarioTransition=0;scenarioMsg="";gamePaused=false;lastEnemySpawn=0;
+score=0;meteorsDestroyed=0;shipsDestroyed=0;ki=0;kiReady=false;kamehameha=0;dashCd=0;dashInvuln=0;dashTrail=[];shieldCd=0;activeShield=0;chargeShot=0;worldTeleportCd=0;droneCd=0;bounceShot=0;bounceShotCd=0;freezeCd=0;phaseShift=0;railgun=0;lootVacuum=0;orbitalMines=[];chainFX=[];ammo=100;shield=0;rapidFire=0;tripleShot=0;slowMo=0;laser=0;pierce=0;invisible=0;magnet=0;missilePower=0;allyPower=0;storm=0;overdrive=0;nova=0;reflect=0;burst=0;repair=0;freezeEnemies=0;barrier=0;bazooka=0;specialCharges=3;powersCollected=0;lives=1;level=1;waveCount=0;waveNumber=1;scenario=selectedWorld||1;scenarioTransition=0;scenarioMsg="";gamePaused=false;lastEnemySpawn=0;
 keys.up=keys.down=keys.left=keys.right=false;
 if(scoreElement)scoreElement.textContent="0";
 record=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;if(recordElement)recordElement.textContent=record;
@@ -10692,27 +10540,27 @@ function storyOnWaveComplete(){
 /* === Parche final i18n: traducción completa del menú de inicio y textos dinámicos === */
 (function(){
   const LANGS = {
-    es:{label:'Idioma',choose:'Elige dificultad y nave · Desliza para ver más',start:'🚀 Iniciar',easy:'Fácil',normal:'NORMAL',hard:'Difícil',mode:'Modo de juego',classic:'Clásico',infinite:'Infinito',infiniteDesc:'Infinito: oleadas interminables, sin jefes; la velocidad y la dificultad aumentan con cada oleada.',upgrades:'Mejoras permanentes',speed:'Velocidad',ammo:'Munición',lives:'Vidas',damage:'Daño',world:'Mundo',space:'Espacio',snow:'Nieve',fire:'Fuego',crystal:'Cristal',halloween:'Neón',neon:'Neón',toxic:'Tóxico',void:'Vacío',selectShip:'Seleccionar nave',allShips:'Todas las naves',scroll:'◀ ▶ o desliza · o elige abajo',max:'Máx. 10 letras · se ve en la nave',color:'🎨 Color',white:'Blanca',black:'Negra',gold:'Oro',cyan:'Cian',crimson:'Carmesí',violet:'Violeta',lime:'Lima',steel:'Acero',orange:'Naranja',points:'⭐ Puntosjuego:',basic:'Básica',double:'Doble',piercing:'Perfora',spread:'Abanico',bonuses:'Bonos por récord',record:'Récord:',bullets:'balas',life:'vida',agile:'ágil',manual:'📖 Manual de usuario',equipment:'🛡️ Equipamiento',missions:'📋 Misiones diarias',boss:'Derrota de jefes',combo:'Maestro del combo',top:'TOP: Sin récords aún',history:'📜 Historial de partidas',noHistory:'Sin partidas aún. ¡Juega una!',clear:'🗑 Borrar historial',settings:'Ajustes en ⚙ Config (arriba a la izquierda)',continue:'💾 Continuar partida',story:'📖 Modo historia',controls:'⌨️ Flechas · Espacio · 🎮 Mando · ⚙ Config · Pausa',shown:'se ve en la nave'},
-    en:{label:'Language',choose:'Choose difficulty and ship · Scroll for more',start:'🚀 Start',easy:'Easy',normal:'NORMAL',hard:'Hard',mode:'Game mode',classic:'Classic',infinite:'Infinite',infiniteDesc:'Infinite: endless waves, no bosses; speed and difficulty rise with each wave.',upgrades:'Permanent upgrades',speed:'Speed',ammo:'Ammo',lives:'Lives',damage:'Damage',world:'World',space:'Space',snow:'Snow',fire:'Fire',crystal:'Crystal',halloween:'Neón',neon:'Neon',toxic:'Toxic',void:'Void',selectShip:'Select ship',allShips:'All ships',scroll:'◀ ▶ or swipe · or choose below',max:'Max. 10 characters · shown on the ship',color:'🎨 Color',white:'White',black:'Black',gold:'Gold',cyan:'Cyan',crimson:'Crimson',violet:'Violet',lime:'Lime',steel:'Steel',orange:'Orange',points:'⭐ Game points:',basic:'Basic',double:'Double',piercing:'Piercing',spread:'Spread',bonuses:'Record bonuses',record:'Record:',bullets:'bullets',life:'life',agile:'agile',manual:'📖 User manual',equipment:'🛡️ Equipment',missions:'📋 Daily missions',boss:'Boss hunter',combo:'Combo master',top:'TOP: No records yet',history:'📜 Match history',noHistory:'No matches yet. Play one!',clear:'🗑 Clear history',settings:'Settings in ⚙ Config (top left)',continue:'💾 Continue game',story:'📖 Story mode',controls:'⌨️ Arrows · Space · 🎮 Gamepad · ⚙ Settings · Pause',shown:'shown on the ship'},
-    fr:{label:'Langue',choose:'Choisissez la difficulté et le vaisseau · Faites défiler',start:'🚀 Démarrer',easy:'FACILE',normal:'NORMAL',hard:'DIFFICILE',mode:'Mode de jeu',classic:'Classique',infinite:'Infini',infiniteDesc:'Infini : vagues sans fin sans boss, difficulté croissante',upgrades:'Améliorations permanentes',speed:'Vitesse',ammo:'Munitions',lives:'Vies',damage:'Dégâts',world:'Monde',space:'Espace',snow:'Neige',fire:'Feu',crystal:'Cristal',halloween:'Neón',neon:'Néon',toxic:'Toxique',void:'Vide',selectShip:'Choisir un vaisseau',allShips:'Tous les vaisseaux',scroll:'◀ ▶ ou glissez · ou choisissez ci-dessous',max:'10 caractères max. · visible sur le vaisseau',color:'🎨 Couleur',white:'Blanche',black:'Noire',gold:'Or',cyan:'Cyan',crimson:'Cramoisi',violet:'Violet',lime:'Vert citron',steel:'Acier',orange:'Orange',points:'⭐ Points de jeu :',basic:'Basique',double:'Double',piercing:'Perforant',spread:'Éventail',bonuses:'Bonus de record',record:'Record :',bullets:'balles',life:'vie',agile:'agile',manual:'📖 Manuel utilisateur',equipment:'🛡️ Équipement',missions:'📋 Missions quotidiennes',boss:'Chasseur de boss',combo:'Maître du combo',top:'TOP : aucun record',history:'📜 Historique des parties',noHistory:'Aucune partie. Jouez-en une !',clear:'🗑 Effacer l’historique',settings:'Réglages dans ⚙ Config (en haut à gauche)',continue:'💾 Continuer la partie',story:'📖 Mode histoire',controls:'⌨️ Flèches · Espace · 🎮 Manette · ⚙ Réglages · Pause',shown:'visible sur le vaisseau'},
-    ja:{label:'言語',choose:'難易度と機体を選択 · 下へスクロール',start:'🚀 スタート',easy:'かんたん',normal:'ふつう',hard:'むずかしい',mode:'ゲームモード',classic:'クラシック',infinite:'無限',infiniteDesc:'無限：ボスなしでウェーブが続き、難易度が上がります',upgrades:'恒久アップグレード',speed:'速度',ammo:'弾薬',lives:'ライフ',damage:'ダメージ',world:'世界',space:'宇宙',snow:'雪',fire:'炎',crystal:'クリスタル',halloween:'Neón',neon:'ネオン',toxic:'毒',void:'虚無',selectShip:'機体を選択',allShips:'すべての機体',scroll:'◀ ▶ またはスワイプ・下から選択',max:'最大10文字・機体に表示',color:'🎨 色',white:'白',black:'黒',gold:'金',cyan:'シアン',crimson:'深紅',violet:'紫',lime:'ライム',steel:'スチール',orange:'オレンジ',points:'⭐ ゲームポイント：',basic:'基本',double:'ダブル',piercing:'貫通',spread:'拡散',bonuses:'記録ボーナス',record:'記録：',bullets:'弾',life:'ライフ',agile:'敏捷',manual:'📖 ユーザーマニュアル',equipment:'🛡️ 装備',missions:'📋 デイリーミッション',boss:'ボスハンター',combo:'コンボマスター',top:'TOP：記録なし',history:'📜 プレイ履歴',noHistory:'まだプレイ記録がありません。プレイしましょう！',clear:'🗑 履歴を削除',settings:'設定は左上の ⚙ Config',continue:'💾 ゲームを続ける',story:'📖 ストーリーモード',controls:'⌨️ 矢印 · スペース · 🎮 コントローラー · ⚙ 設定 · 一時停止',shown:'機体に表示'},
-    zh:{label:'语言',choose:'选择难度和飞船 · 向下滚动查看更多',start:'🚀 开始',easy:'简单',normal:'普通',hard:'困难',mode:'游戏模式',classic:'经典',infinite:'无限',infiniteDesc:'无限模式：没有首领的连续波次，难度不断提高',upgrades:'永久升级',speed:'速度',ammo:'弹药',lives:'生命',damage:'伤害',world:'世界',space:'太空',snow:'雪地',fire:'火焰',crystal:'水晶',halloween:'Neón',neon:'霓虹',toxic:'毒域',void:'虚空',selectShip:'选择飞船',allShips:'所有飞船',scroll:'◀ ▶ 或滑动 · 也可在下方选择',max:'最多10个字符·显示在飞船上',color:'🎨 颜色',white:'白色',black:'黑色',gold:'金色',cyan:'青色',crimson:'深红色',violet:'紫色',lime:'青柠绿',steel:'钢色',orange:'橙色',points:'⭐ 游戏积分：',basic:'基础',double:'双发',piercing:'穿透',spread:'散射',bonuses:'纪录奖励',record:'纪录：',bullets:'子弹',life:'生命',agile:'敏捷',manual:'📖 用户手册',equipment:'🛡️ 装备',missions:'📋 每日任务',boss:'首领猎手',combo:'连击大师',top:'TOP：暂无记录',history:'📜 对局记录',noHistory:'还没有对局，来玩一局吧！',clear:'🗑 清除记录',settings:'设置位于左上角 ⚙ Config',continue:'💾 继续游戏',story:'📖 故事模式',controls:'⌨️ 方向键 · 空格 · 🎮 手柄 · ⚙ 设置 · 暂停',shown:'显示在飞船上'}
+    es:{label:'Idioma',choose:'Elige dificultad y nave · Desliza para ver más',start:'🚀 Iniciar',easy:'Fácil',normal:'NORMAL',hard:'Difícil',mode:'Modo de juego',classic:'Clásico',infinite:'Infinito',infiniteDesc:'Infinito: oleadas interminables, sin jefes; la velocidad y la dificultad aumentan con cada oleada.',upgrades:'Mejoras permanentes',speed:'Velocidad',ammo:'Munición',lives:'Vidas',damage:'Daño',world:'Mundo',space:'Espacio',snow:'Nieve',fire:'Fuego',crystal:'Cristal',halloween:'Halloween',neon:'Neón',toxic:'Tóxico',void:'Vacío',selectShip:'Seleccionar nave',allShips:'Todas las naves',scroll:'◀ ▶ o desliza · o elige abajo',max:'Máx. 10 letras · se ve en la nave',color:'🎨 Color',white:'Blanca',black:'Negra',gold:'Oro',cyan:'Cian',crimson:'Carmesí',violet:'Violeta',lime:'Lima',steel:'Acero',orange:'Naranja',points:'⭐ Puntosjuego:',basic:'Básica',double:'Doble',piercing:'Perfora',spread:'Abanico',bonuses:'Bonos por récord',record:'Récord:',bullets:'balas',life:'vida',agile:'ágil',manual:'📖 Manual de usuario',equipment:'🛡️ Equipamiento',missions:'📋 Misiones diarias',boss:'Derrota de jefes',combo:'Maestro del combo',top:'TOP: Sin récords aún',history:'📜 Historial de partidas',noHistory:'Sin partidas aún. ¡Juega una!',clear:'🗑 Borrar historial',settings:'Ajustes en ⚙ Config (arriba a la izquierda)',continue:'💾 Continuar partida',story:'📖 Modo historia',controls:'⌨️ Flechas · Espacio · 🎮 Mando · ⚙ Config · Pausa',shown:'se ve en la nave'},
+    en:{label:'Language',choose:'Choose difficulty and ship · Scroll for more',start:'🚀 Start',easy:'Easy',normal:'NORMAL',hard:'Hard',mode:'Game mode',classic:'Classic',infinite:'Infinite',infiniteDesc:'Infinite: endless waves, no bosses; speed and difficulty rise with each wave.',upgrades:'Permanent upgrades',speed:'Speed',ammo:'Ammo',lives:'Lives',damage:'Damage',world:'World',space:'Space',snow:'Snow',fire:'Fire',crystal:'Crystal',halloween:'Halloween',neon:'Neon',toxic:'Toxic',void:'Void',selectShip:'Select ship',allShips:'All ships',scroll:'◀ ▶ or swipe · or choose below',max:'Max. 10 characters · shown on the ship',color:'🎨 Color',white:'White',black:'Black',gold:'Gold',cyan:'Cyan',crimson:'Crimson',violet:'Violet',lime:'Lime',steel:'Steel',orange:'Orange',points:'⭐ Game points:',basic:'Basic',double:'Double',piercing:'Piercing',spread:'Spread',bonuses:'Record bonuses',record:'Record:',bullets:'bullets',life:'life',agile:'agile',manual:'📖 User manual',equipment:'🛡️ Equipment',missions:'📋 Daily missions',boss:'Boss hunter',combo:'Combo master',top:'TOP: No records yet',history:'📜 Match history',noHistory:'No matches yet. Play one!',clear:'🗑 Clear history',settings:'Settings in ⚙ Config (top left)',continue:'💾 Continue game',story:'📖 Story mode',controls:'⌨️ Arrows · Space · 🎮 Gamepad · ⚙ Settings · Pause',shown:'shown on the ship'},
+    fr:{label:'Langue',choose:'Choisissez la difficulté et le vaisseau · Faites défiler',start:'🚀 Démarrer',easy:'FACILE',normal:'NORMAL',hard:'DIFFICILE',mode:'Mode de jeu',classic:'Classique',infinite:'Infini',infiniteDesc:'Infini : vagues sans fin sans boss, difficulté croissante',upgrades:'Améliorations permanentes',speed:'Vitesse',ammo:'Munitions',lives:'Vies',damage:'Dégâts',world:'Monde',space:'Espace',snow:'Neige',fire:'Feu',crystal:'Cristal',halloween:'Halloween',neon:'Néon',toxic:'Toxique',void:'Vide',selectShip:'Choisir un vaisseau',allShips:'Tous les vaisseaux',scroll:'◀ ▶ ou glissez · ou choisissez ci-dessous',max:'10 caractères max. · visible sur le vaisseau',color:'🎨 Couleur',white:'Blanche',black:'Noire',gold:'Or',cyan:'Cyan',crimson:'Cramoisi',violet:'Violet',lime:'Vert citron',steel:'Acier',orange:'Orange',points:'⭐ Points de jeu :',basic:'Basique',double:'Double',piercing:'Perforant',spread:'Éventail',bonuses:'Bonus de record',record:'Record :',bullets:'balles',life:'vie',agile:'agile',manual:'📖 Manuel utilisateur',equipment:'🛡️ Équipement',missions:'📋 Missions quotidiennes',boss:'Chasseur de boss',combo:'Maître du combo',top:'TOP : aucun record',history:'📜 Historique des parties',noHistory:'Aucune partie. Jouez-en une !',clear:'🗑 Effacer l’historique',settings:'Réglages dans ⚙ Config (en haut à gauche)',continue:'💾 Continuer la partie',story:'📖 Mode histoire',controls:'⌨️ Flèches · Espace · 🎮 Manette · ⚙ Réglages · Pause',shown:'visible sur le vaisseau'},
+    ja:{label:'言語',choose:'難易度と機体を選択 · 下へスクロール',start:'🚀 スタート',easy:'かんたん',normal:'ふつう',hard:'むずかしい',mode:'ゲームモード',classic:'クラシック',infinite:'無限',infiniteDesc:'無限：ボスなしでウェーブが続き、難易度が上がります',upgrades:'恒久アップグレード',speed:'速度',ammo:'弾薬',lives:'ライフ',damage:'ダメージ',world:'世界',space:'宇宙',snow:'雪',fire:'炎',crystal:'クリスタル',halloween:'ハロウィン',neon:'ネオン',toxic:'毒',void:'虚無',selectShip:'機体を選択',allShips:'すべての機体',scroll:'◀ ▶ またはスワイプ・下から選択',max:'最大10文字・機体に表示',color:'🎨 色',white:'白',black:'黒',gold:'金',cyan:'シアン',crimson:'深紅',violet:'紫',lime:'ライム',steel:'スチール',orange:'オレンジ',points:'⭐ ゲームポイント：',basic:'基本',double:'ダブル',piercing:'貫通',spread:'拡散',bonuses:'記録ボーナス',record:'記録：',bullets:'弾',life:'ライフ',agile:'敏捷',manual:'📖 ユーザーマニュアル',equipment:'🛡️ 装備',missions:'📋 デイリーミッション',boss:'ボスハンター',combo:'コンボマスター',top:'TOP：記録なし',history:'📜 プレイ履歴',noHistory:'まだプレイ記録がありません。プレイしましょう！',clear:'🗑 履歴を削除',settings:'設定は左上の ⚙ Config',continue:'💾 ゲームを続ける',story:'📖 ストーリーモード',controls:'⌨️ 矢印 · スペース · 🎮 コントローラー · ⚙ 設定 · 一時停止',shown:'機体に表示'},
+    zh:{label:'语言',choose:'选择难度和飞船 · 向下滚动查看更多',start:'🚀 开始',easy:'简单',normal:'普通',hard:'困难',mode:'游戏模式',classic:'经典',infinite:'无限',infiniteDesc:'无限模式：没有首领的连续波次，难度不断提高',upgrades:'永久升级',speed:'速度',ammo:'弹药',lives:'生命',damage:'伤害',world:'世界',space:'太空',snow:'雪地',fire:'火焰',crystal:'水晶',halloween:'万圣节',neon:'霓虹',toxic:'毒域',void:'虚空',selectShip:'选择飞船',allShips:'所有飞船',scroll:'◀ ▶ 或滑动 · 也可在下方选择',max:'最多10个字符·显示在飞船上',color:'🎨 颜色',white:'白色',black:'黑色',gold:'金色',cyan:'青色',crimson:'深红色',violet:'紫色',lime:'青柠绿',steel:'钢色',orange:'橙色',points:'⭐ 游戏积分：',basic:'基础',double:'双发',piercing:'穿透',spread:'散射',bonuses:'纪录奖励',record:'纪录：',bullets:'子弹',life:'生命',agile:'敏捷',manual:'📖 用户手册',equipment:'🛡️ 装备',missions:'📋 每日任务',boss:'首领猎手',combo:'连击大师',top:'TOP：暂无记录',history:'📜 对局记录',noHistory:'还没有对局，来玩一局吧！',clear:'🗑 清除记录',settings:'设置位于左上角 ⚙ Config',continue:'💾 继续游戏',story:'📖 故事模式',controls:'⌨️ 方向键 · 空格 · 🎮 手柄 · ⚙ 设置 · 暂停',shown:'显示在飞船上'}
   };
   Object.assign(LANGS, {
-    pt:{...LANGS.es,label:'Idioma',choose:'Escolha a dificuldade e a nave · Deslize para ver mais',start:'🚀 Iniciar',easy:'Fácil',normal:'NORMAL',hard:'Difícil',mode:'Modo de jogo',classic:'Clássico',infinite:'Infinito',infiniteDesc:'Infinito: ondas sem chefes, dificuldade crescente',upgrades:'Melhorias permanentes',speed:'Velocidade',ammo:'Munição',lives:'Vidas',damage:'Dano',world:'Mundo',space:'Espaço',snow:'Neve',fire:'Fogo',crystal:'Cristal',halloween:'Neón',neon:'Neon',toxic:'Tóxico',void:'Vazio',selectShip:'Selecionar nave',allShips:'Todas as naves',scroll:'◀ ▶ ou deslize · ou escolha abaixo',max:'Máx. 10 caracteres · aparece na nave',color:'🎨 Cor',white:'Branca',black:'Preta',gold:'Ouro',cyan:'Ciano',crimson:'Carmesim',violet:'Violeta',lime:'Lima',steel:'Aço',orange:'Laranja',points:'⭐ Pontos do jogo:',basic:'Básica',double:'Dupla',piercing:'Perfurante',spread:'Dispersão',bonuses:'Bônus de recorde',record:'Recorde:',bullets:'balas',life:'vida',agile:'ágil',manual:'📖 Manual do usuário',equipment:'🛡️ Equipamento',missions:'📋 Missões diárias',boss:'Caçador de chefes',combo:'Mestre do combo',top:'TOP: Ainda sem recordes',history:'📜 Histórico de partidas',noHistory:'Nenhuma partida ainda. Jogue uma!',clear:'🗑 Limpar histórico',settings:'Configurações em ⚙ Config (canto superior esquerdo)',continue:'💾 Continuar partida',story:'📖 MODO HISTÓRIA',controls:'⌨️ Setas · Espaço · 🎮 Controle · ⚙ Config · Pausa',shown:'aparece na nave'},
-    de:{...LANGS.en,label:'Sprache',choose:'Schwierigkeit und Schiff wählen · Für mehr scrollen',start:'🚀 Start',easy:'EINFACH',normal:'NORMAL',hard:'SCHWER',mode:'Spielmodus',classic:'Klassisch',infinite:'Endlos',infiniteDesc:'Endlos: Wellen ohne Bosse, der Schwierigkeitsgrad steigt ständig',upgrades:'Dauerhafte Verbesserungen',speed:'Geschwindigkeit',ammo:'Munition',lives:'Leben',damage:'Schaden',world:'Welt',space:'Weltraum',snow:'Schnee',fire:'Feuer',crystal:'Kristall',halloween:'Neón',neon:'Neon',toxic:'Giftig',void:'Leere',selectShip:'Schiff auswählen',allShips:'Alle Schiffe',scroll:'◀ ▶ oder wischen · oder unten auswählen',max:'Max. 10 Zeichen · auf dem Schiff sichtbar',color:'🎨 Farbe',white:'Weiß',black:'Schwarz',gold:'Gold',cyan:'Cyan',crimson:'Karmesinrot',violet:'Violett',lime:'Limette',steel:'Stahl',orange:'Orange',points:'⭐ Spielpunkte:',basic:'Basis',double:'Doppelt',piercing:'Durchschlag',spread:'Streuung',bonuses:'Rekordboni',record:'Rekord:',bullets:'Kugeln',life:'Leben',agile:'agil',manual:'📖 Benutzerhandbuch',equipment:'🛡️ Ausrüstung',missions:'📋 Tagesmissionen',boss:'Bossjäger',combo:'Combo-Meister',top:'TOP: Noch keine Rekorde',history:'📜 Spielverlauf',noHistory:'Noch keine Spiele. Spiele jetzt!',clear:'🗑 Verlauf löschen',settings:'Einstellungen unter ⚙ Config (oben links)',continue:'💾 Spiel fortsetzen',story:'📖 STORY-MODUS',controls:'⌨️ Pfeile · Leertaste · 🎮 Controller · ⚙ Config · Pause',shown:'auf dem Schiff sichtbar'}
+    pt:{...LANGS.es,label:'Idioma',choose:'Escolha a dificuldade e a nave · Deslize para ver mais',start:'🚀 Iniciar',easy:'Fácil',normal:'NORMAL',hard:'Difícil',mode:'Modo de jogo',classic:'Clássico',infinite:'Infinito',infiniteDesc:'Infinito: ondas sem chefes, dificuldade crescente',upgrades:'Melhorias permanentes',speed:'Velocidade',ammo:'Munição',lives:'Vidas',damage:'Dano',world:'Mundo',space:'Espaço',snow:'Neve',fire:'Fogo',crystal:'Cristal',halloween:'Halloween',neon:'Neon',toxic:'Tóxico',void:'Vazio',selectShip:'Selecionar nave',allShips:'Todas as naves',scroll:'◀ ▶ ou deslize · ou escolha abaixo',max:'Máx. 10 caracteres · aparece na nave',color:'🎨 Cor',white:'Branca',black:'Preta',gold:'Ouro',cyan:'Ciano',crimson:'Carmesim',violet:'Violeta',lime:'Lima',steel:'Aço',orange:'Laranja',points:'⭐ Pontos do jogo:',basic:'Básica',double:'Dupla',piercing:'Perfurante',spread:'Dispersão',bonuses:'Bônus de recorde',record:'Recorde:',bullets:'balas',life:'vida',agile:'ágil',manual:'📖 Manual do usuário',equipment:'🛡️ Equipamento',missions:'📋 Missões diárias',boss:'Caçador de chefes',combo:'Mestre do combo',top:'TOP: Ainda sem recordes',history:'📜 Histórico de partidas',noHistory:'Nenhuma partida ainda. Jogue uma!',clear:'🗑 Limpar histórico',settings:'Configurações em ⚙ Config (canto superior esquerdo)',continue:'💾 Continuar partida',story:'📖 MODO HISTÓRIA',controls:'⌨️ Setas · Espaço · 🎮 Controle · ⚙ Config · Pausa',shown:'aparece na nave'},
+    de:{...LANGS.en,label:'Sprache',choose:'Schwierigkeit und Schiff wählen · Für mehr scrollen',start:'🚀 Start',easy:'EINFACH',normal:'NORMAL',hard:'SCHWER',mode:'Spielmodus',classic:'Klassisch',infinite:'Endlos',infiniteDesc:'Endlos: Wellen ohne Bosse, der Schwierigkeitsgrad steigt ständig',upgrades:'Dauerhafte Verbesserungen',speed:'Geschwindigkeit',ammo:'Munition',lives:'Leben',damage:'Schaden',world:'Welt',space:'Weltraum',snow:'Schnee',fire:'Feuer',crystal:'Kristall',halloween:'Halloween',neon:'Neon',toxic:'Giftig',void:'Leere',selectShip:'Schiff auswählen',allShips:'Alle Schiffe',scroll:'◀ ▶ oder wischen · oder unten auswählen',max:'Max. 10 Zeichen · auf dem Schiff sichtbar',color:'🎨 Farbe',white:'Weiß',black:'Schwarz',gold:'Gold',cyan:'Cyan',crimson:'Karmesinrot',violet:'Violett',lime:'Limette',steel:'Stahl',orange:'Orange',points:'⭐ Spielpunkte:',basic:'Basis',double:'Doppelt',piercing:'Durchschlag',spread:'Streuung',bonuses:'Rekordboni',record:'Rekord:',bullets:'Kugeln',life:'Leben',agile:'agil',manual:'📖 Benutzerhandbuch',equipment:'🛡️ Ausrüstung',missions:'📋 Tagesmissionen',boss:'Bossjäger',combo:'Combo-Meister',top:'TOP: Noch keine Rekorde',history:'📜 Spielverlauf',noHistory:'Noch keine Spiele. Spiele jetzt!',clear:'🗑 Verlauf löschen',settings:'Einstellungen unter ⚙ Config (oben links)',continue:'💾 Spiel fortsetzen',story:'📖 STORY-MODUS',controls:'⌨️ Pfeile · Leertaste · 🎮 Controller · ⚙ Config · Pause',shown:'auf dem Schiff sichtbar'}
   });
   Object.assign(LANGS, {
-    it:{label:'Lingua',choose:'Scegli difficoltà e nave · Scorri per altro',start:'🚀 AVVIA',easy:'FACILE',normal:'NORMALE',hard:'DIFFICILE',mode:'Modalità di gioco',classic:'Classico',infinite:'Infinito',infiniteDesc:'Infinito: ondate senza boss, difficoltà in aumento',upgrades:'Migliorie permanenti',speed:'Velocità',ammo:'Munizioni',lives:'Vite',damage:'Danno',world:'Mondo',space:'Spazio',snow:'Neve',fire:'Fuoco',crystal:'Cristallo',halloween:'Neón',neon:'Neon',toxic:'Tossico',void:'Vuoto',selectShip:'Seleziona nave',allShips:'Tutte le navi',scroll:'◀ ▶ o scorri · o scegli sotto',max:'Max. 10 caratteri · sulla nave',color:'🎨 Colore',white:'Bianca',black:'Nera',gold:'Oro',cyan:'Ciano',crimson:'Cremisi',violet:'Viola',lime:'Lime',steel:'Acciaio',orange:'Arancio',points:'⭐ Punti gioco:',basic:'Base',double:'Doppio',piercing:'Perforante',spread:'Ventaglio',bonuses:'Bonus record',record:'Record:',bullets:'proiettili',life:'vita',agile:'agile',manual:'📖 Manuale utente',equipment:'🛡️ Equipaggiamento',missions:'📋 Missioni giornaliere',boss:'Cacciatore di boss',combo:'Maestro del combo',top:'TOP: Nessun record',history:'📜 Cronologia partite',noHistory:'Nessuna partita. Giocane una!',clear:'🗑 Cancella cronologia',settings:'Impostazioni in ⚙ Config (in alto a sinistra)',continue:'💾 Continua partita',story:'📖 MODALITÀ STORIA',controls:'⌨️ Frecce · Spazio · 🎮 Pad · ⚙ Config · Pausa',shown:'sulla nave'},
-    ru:{label:'Язык',choose:'Выберите сложность и корабль',start:'🚀 СТАРТ',easy:'ЛЕГКО',normal:'НОРМА',hard:'СЛОЖНО',mode:'Режим игры',classic:'Классика',infinite:'Бесконечный',infiniteDesc:'Бесконечный: волны без боссов',upgrades:'Постоянные улучшения',speed:'Скорость',ammo:'Боеприпасы',lives:'Жизни',damage:'Урон',world:'Мир',space:'Космос',snow:'Снег',fire:'Огонь',crystal:'Кристалл',halloween:'Neón',neon:'Неон',toxic:'Токсик',void:'Пустота',selectShip:'Выбрать корабль',allShips:'Все корабли',scroll:'◀ ▶ или свайп',max:'Макс. 10 символов',color:'🎨 Цвет',white:'Белый',black:'Чёрный',gold:'Золото',cyan:'Голубой',crimson:'Алый',violet:'Фиолетовый',lime:'Лайм',steel:'Сталь',orange:'Оранжевый',points:'⭐ Очки:',basic:'Базовый',double:'Двойной',piercing:'Пробивной',spread:'Веер',bonuses:'Бонусы рекорда',record:'Рекорд:',bullets:'пули',life:'жизнь',agile:'ловкий',manual:'📖 Руководство',equipment:'🛡️ Снаряжение',missions:'📋 Ежедневные миссии',boss:'Охотник на боссов',combo:'Мастер комбо',top:'TOP: Нет рекордов',history:'📜 История',noHistory:'Пока нет партий',clear:'🗑 Очистить историю',settings:'Настройки в ⚙ Config',continue:'💾 Продолжить',story:'📖 РЕЖИМ ИСТОРИИ',controls:'⌨️ Стрелки · Пробел · 🎮 · ⚙ · Пауза',shown:'на корабле'},
-    ko:{label:'언어',choose:'난이도와 기체 선택',start:'🚀 시작',easy:'쉬움',normal:'보통',hard:'어려움',mode:'게임 모드',classic:'클래식',infinite:'무한',infiniteDesc:'무한: 보스 없이 웨이브 지속',upgrades:'영구 업그레이드',speed:'속도',ammo:'탄약',lives:'생명',damage:'데미지',world:'세계',space:'우주',snow:'눈',fire:'불',crystal:'크리스탈',halloween:'Neón',neon:'네온',toxic:'독성',void:'공허',selectShip:'기체 선택',allShips:'모든 기체',scroll:'◀ ▶ 또는 스와이프',max:'최대 10자',color:'🎨 색상',white:'흰색',black:'검정',gold:'금색',cyan:'시안',crimson:'진홍',violet:'보라',lime:'라임',steel:'강철',orange:'주황',points:'⭐ 포인트:',basic:'기본',double:'더블',piercing:'관통',spread:'확산',bonuses:'기록 보너스',record:'기록:',bullets:'탄',life:'생명',agile:'민첩',manual:'📖 매뉴얼',equipment:'🛡️ 장비',missions:'📋 일일 미션',boss:'보스 헌터',combo:'콤보 마스터',top:'TOP: 기록 없음',history:'📜 기록',noHistory:'아직 기록이 없습니다',clear:'🗑 기록 삭제',settings:'설정은 ⚙ Config',continue:'💾 이어하기',story:'📖 스토리 모드',controls:'⌨️ 방향키 · 스페이스 · 🎮 · ⚙ · 일시정지',shown:'기체에 표시'},
-    ar:{label:'اللغة',choose:'اختر الصعوبة والسفينة',start:'🚀 ابدأ',easy:'سهل',normal:'عادي',hard:'صعب',mode:'وضع اللعب',classic:'كلاسيكي',infinite:'لا نهائي',infiniteDesc:'لا نهائي: موجات بلا زعماء',upgrades:'ترقيات دائمة',speed:'السرعة',ammo:'الذخيرة',lives:'الأرواح',damage:'الضرر',world:'العالم',space:'فضاء',snow:'ثلج',fire:'نار',crystal:'بلور',halloween:'Neón',neon:'نيون',toxic:'سام',void:'فراغ',selectShip:'اختر سفينة',allShips:'كل السفن',scroll:'◀ ▶ أو اسحب',max:'حد أقصى 10 أحرف',color:'🎨 لون',white:'أبيض',black:'أسود',gold:'ذهبي',cyan:'سماوي',crimson:'قرمزي',violet:'بنفسجي',lime:'ليموني',steel:'فولاذي',orange:'برتقالي',points:'⭐ نقاط:',basic:'أساسي',double:'مزدوج',piercing:'ثاقب',spread:'منتشر',bonuses:'مكافآت الرقم القياسي',record:'رقم قياسي:',bullets:'رصاصات',life:'حياة',agile:'رشيق',manual:'📖 الدليل',equipment:'🛡️ المعدات',missions:'📋 مهام يومية',boss:'صياد الزعماء',combo:'سيد الكومبو',top:'TOP: لا سجلات',history:'📜 السجل',noHistory:'لا مباريات بعد',clear:'🗑 مسح السجل',settings:'الإعدادات في ⚙ Config',continue:'💾 متابعة',story:'📖 وضع القصة',controls:'⌨️ أسهم · مسافة · 🎮 · ⚙ · إيقاف',shown:'على السفينة'},
-    hi:{label:'भाषा',choose:'कठिनाई और जहाज चुनें',start:'🚀 शुरू',easy:'आसान',normal:'सामान्य',hard:'कठिन',mode:'गेम मोड',classic:'क्लासिक',infinite:'अनंत',infiniteDesc:'अनंत: बिना बॉस के लहरें',upgrades:'स्थायी अपग्रेड',speed:'गति',ammo:'गोला-बारूद',lives:'लाइव्स',damage:'नुकसान',world:'दुनिया',space:'अंतरिक्ष',snow:'बर्फ',fire:'आग',crystal:'क्रिस्टल',halloween:'Neón',neon:'नियॉन',toxic:'विषैला',void:'शून्य',selectShip:'जहाज चुनें',allShips:'सभी जहाज',scroll:'◀ ▶ या स्वाइप',max:'अधिकतम 10 अक्षर',color:'🎨 रंग',white:'सफेद',black:'काला',gold:'सोना',cyan:'सियान',crimson:'क्रिमसन',violet:'बैंगनी',lime:'लाइम',steel:'स्टील',orange:'नारंगी',points:'⭐ अंक:',basic:'बेसिक',double:'डबल',piercing:'भेदन',spread:'फैलाव',bonuses:'रिकॉर्ड बोनस',record:'रिकॉर्ड:',bullets:'गोलियां',life:'जीवन',agile:'चुस्त',manual:'📖 मैनुअल',equipment:'🛡️ उपकरण',missions:'📋 दैनिक मिशन',boss:'बॉस हंटर',combo:'कॉम्बो मास्टर',top:'TOP: कोई रिकॉर्ड नहीं',history:'📜 इतिहास',noHistory:'अभी कोई मैच नहीं',clear:'🗑 इतिहास मिटाएँ',settings:'सेटिंग्स ⚙ Config में',continue:'💾 जारी रखें',story:'📖 स्टोरी मोड',controls:'⌨️ तीर · स्पेस · 🎮 · ⚙ · पॉज़',shown:'जहाज पर'},
-    tr:{label:'Dil',choose:'Zorluk ve gemi seçin',start:'🚀 BAŞLAT',easy:'KOLAY',normal:'NORMAL',hard:'ZOR',mode:'Oyun modu',classic:'Klasik',infinite:'Sonsuz',infiniteDesc:'Sonsuz: bossuz dalgalar',upgrades:'Kalıcı yükseltmeler',speed:'Hız',ammo:'Cephane',lives:'Can',damage:'Hasar',world:'Dünya',space:'Uzay',snow:'Kar',fire:'Ateş',crystal:'Kristal',halloween:'Neón',neon:'Neon',toxic:'Zehirli',void:'Boşluk',selectShip:'Gemi seç',allShips:'Tüm gemiler',scroll:'◀ ▶ veya kaydır',max:'En fazla 10 karakter',color:'🎨 Renk',white:'Beyaz',black:'Siyah',gold:'Altın',cyan:'Camgöbeği',crimson:'Kırmızı',violet:'Mor',lime:'Limon',steel:'Çelik',orange:'Turuncu',points:'⭐ Puan:',basic:'Temel',double:'Çift',piercing:'Delici',spread:'Yayılım',bonuses:'Rekor bonusları',record:'Rekor:',bullets:'mermi',life:'can',agile:'çevik',manual:'📖 Kullanım kılavuzu',equipment:'🛡️ Ekipman',missions:'📋 Günlük görevler',boss:'Boss avcısı',combo:'Kombo ustası',top:'TOP: Rekor yok',history:'📜 Geçmiş',noHistory:'Henüz maç yok',clear:'🗑 Geçmişi sil',settings:'Ayarlar ⚙ Config',continue:'💾 Devam et',story:'📖 HİKÂYE MODU',controls:'⌨️ Oklar · Boşluk · 🎮 · ⚙ · Duraklat',shown:'gemide görünür'},
-    nl:{label:'Taal',choose:'Kies moeilijkheid en schip',start:'🚀 Start',easy:'MAKKELIJK',normal:'NORMAAL',hard:'MOEILIJK',mode:'Spelmodus',classic:'Klassiek',infinite:'Oneindig',infiniteDesc:'Oneindig: golven zonder bosses',upgrades:'Permanente upgrades',speed:'Snelheid',ammo:'Munitie',lives:'Levens',damage:'Schade',world:'Wereld',space:'Ruimte',snow:'Sneeuw',fire:'Vuur',crystal:'Kristal',halloween:'Neón',neon:'Neon',toxic:'Giftig',void:'Leegte',selectShip:'Kies schip',allShips:'Alle schepen',scroll:'◀ ▶ of veeg',max:'Max. 10 tekens',color:'🎨 Kleur',white:'Wit',black:'Zwart',gold:'Goud',cyan:'Cyaan',crimson:'Karmozijn',violet:'Violet',lime:'Limoen',steel:'Staal',orange:'Oranje',points:'⭐ Punten:',basic:'Basis',double:'Dubbel',piercing:'Doordringend',spread:'Spreiding',bonuses:'Recordbonussen',record:'Record:',bullets:'kogels',life:'leven',agile:'behendig',manual:'📖 Handleiding',equipment:'🛡️ Uitrusting',missions:'📋 Dagelijkse missies',boss:'Bossjager',combo:'Combomeester',top:'TOP: Geen records',history:'📜 Geschiedenis',noHistory:'Nog geen wedstrijden',clear:'🗑 Geschiedenis wissen',settings:'Instellingen in ⚙ Config',continue:'💾 Doorgaan',story:'📖 VERHAALMODUS',controls:'⌨️ Pijlen · Spatie · 🎮 · ⚙ · Pauze',shown:'op het schip'},
-    pl:{label:'Język',choose:'Wybierz poziom i statek',start:'🚀 Start',easy:'ŁATWY',normal:'NORMALNY',hard:'TRUDNY',mode:'Tryb gry',classic:'Klasyczny',infinite:'Nieskończony',infiniteDesc:'Nieskończony: fale bez bossów',upgrades:'Ulepszenia stałe',speed:'Prędkość',ammo:'Amunicja',lives:'Życia',damage:'Obrażenia',world:'Świat',space:'Kosmos',snow:'Śnieg',fire:'Ogień',crystal:'Kryształ',halloween:'Neón',neon:'Neon',toxic:'Toksyczny',void:'Pustka',selectShip:'Wybierz statek',allShips:'Wszystkie statki',scroll:'◀ ▶ lub przesuń',max:'Maks. 10 znaków',color:'🎨 Kolor',white:'Biały',black:'Czarny',gold:'Złoty',cyan:'Cyjan',crimson:'Karmazyn',violet:'Fiolet',lime:'Limonka',steel:'Stal',orange:'Pomarańcz',points:'⭐ Punkty:',basic:'Podstawowy',double:'Podwójny',piercing:'Przebijający',spread:'Wachlarz',bonuses:'Bonusy rekordu',record:'Rekord:',bullets:'pociski',life:'życie',agile:'zwinny',manual:'📖 Instrukcja',equipment:'🛡️ Ekwipunek',missions:'📋 Misje dzienne',boss:'Łowca bossów',combo:'Mistrz combo',top:'TOP: Brak rekordów',history:'📜 Historia',noHistory:'Brak partii',clear:'🗑 Wyczyść historię',settings:'Ustawienia w ⚙ Config',continue:'💾 Kontynuuj',story:'📖 TRYB FABUŁY',controls:'⌨️ Strzałki · Spacja · 🎮 · ⚙ · Pauza',shown:'na statku'},
-    vi:{label:'Ngôn ngữ',choose:'Chọn độ khó và tàu',start:'🚀 BẮT ĐẦU',easy:'DỄ',normal:'THƯỜNG',hard:'KHÓ',mode:'Chế độ chơi',classic:'Cổ điển',infinite:'Vô hạn',infiniteDesc:'Vô hạn: sóng không boss',upgrades:'Nâng cấp vĩnh viễn',speed:'Tốc độ',ammo:'Đạn',lives:'Mạng',damage:'Sát thương',world:'Thế giới',space:'Không gian',snow:'Tuyết',fire:'Lửa',crystal:'Pha lê',halloween:'Neón',neon:'Neon',toxic:'Độc',void:'Hư không',selectShip:'Chọn tàu',allShips:'Tất cả tàu',scroll:'◀ ▶ hoặc vuốt',max:'Tối đa 10 ký tự',color:'🎨 Màu',white:'Trắng',black:'Đen',gold:'Vàng',cyan:'Xanh cyan',crimson:'Đỏ thẫm',violet:'Tím',lime:'Chanh',steel:'Thép',orange:'Cam',points:'⭐ Điểm:',basic:'Cơ bản',double:'Đôi',piercing:'Xuyên',spread:'Lan',bonuses:'Thưởng kỷ lục',record:'Kỷ lục:',bullets:'đạn',life:'mạng',agile:'nhanh nhẹn',manual:'📖 Hướng dẫn',equipment:'🛡️ Trang bị',missions:'📋 Nhiệm vụ hàng ngày',boss:'Thợ săn boss',combo:'Bậc thầy combo',top:'TOP: Chưa có kỷ lục',history:'📜 Lịch sử',noHistory:'Chưa có trận nào',clear:'🗑 Xóa lịch sử',settings:'Cài đặt trong ⚙ Config',continue:'💾 Tiếp tục',story:'📖 CHẾ ĐỘ CỐT TRUYỆN',controls:'⌨️ Phím mũi tên · Space · 🎮 · ⚙ · Tạm dừng',shown:'hiện trên tàu'},
-    th:{label:'ภาษา',choose:'เลือกความยากและยาน',start:'🚀 เริ่ม',easy:'ง่าย',normal:'ปกติ',hard:'ยาก',mode:'โหมดเกม',classic:'คลาสสิก',infinite:'ไม่จำกัด',infiniteDesc:'ไม่จำกัด: คลื่นไม่มีบอส',upgrades:'อัปเกรดถาวร',speed:'ความเร็ว',ammo:'กระสุน',lives:'ชีวิต',damage:'ความเสียหาย',world:'โลก',space:'อวกาศ',snow:'หิมะ',fire:'ไฟ',crystal:'คริสตัล',halloween:'Neón',neon:'นีออน',toxic:'พิษ',void:'สุญญากาศ',selectShip:'เลือกยาน',allShips:'ยานทั้งหมด',scroll:'◀ ▶ หรือปัด',max:'สูงสุด 10 ตัวอักษร',color:'🎨 สี',white:'ขาว',black:'ดำ',gold:'ทอง',cyan:'ฟ้า',crimson:'แดงเข้ม',violet:'ม่วง',lime:'เขียวมะนาว',steel:'เหล็ก',orange:'ส้ม',points:'⭐ คะแนน:',basic:'พื้นฐาน',double:'คู่',piercing:'เจาะ',spread:'กระจาย',bonuses:'โบนัสสถิติ',record:'สถิติ:',bullets:'กระสุน',life:'ชีวิต',agile:'ว่องไว',manual:'📖 คู่มือ',equipment:'🛡️ อุปกรณ์',missions:'📋 ภารกิจรายวัน',boss:'นักล่าบอส',combo:'เซียนคอมโบ',top:'TOP: ยังไม่มีสถิติ',history:'📜 ประวัติ',noHistory:'ยังไม่มีแมตช์',clear:'🗑 ล้างประวัติ',settings:'ตั้งค่าใน ⚙ Config',continue:'💾 เล่นต่อ',story:'📖 โหมดเรื่องราว',controls:'⌨️ ลูกศร · Space · 🎮 · ⚙ · หยุด',shown:'แสดงบนยาน'}
+    it:{label:'Lingua',choose:'Scegli difficoltà e nave · Scorri per altro',start:'🚀 AVVIA',easy:'FACILE',normal:'NORMALE',hard:'DIFFICILE',mode:'Modalità di gioco',classic:'Classico',infinite:'Infinito',infiniteDesc:'Infinito: ondate senza boss, difficoltà in aumento',upgrades:'Migliorie permanenti',speed:'Velocità',ammo:'Munizioni',lives:'Vite',damage:'Danno',world:'Mondo',space:'Spazio',snow:'Neve',fire:'Fuoco',crystal:'Cristallo',halloween:'Halloween',neon:'Neon',toxic:'Tossico',void:'Vuoto',selectShip:'Seleziona nave',allShips:'Tutte le navi',scroll:'◀ ▶ o scorri · o scegli sotto',max:'Max. 10 caratteri · sulla nave',color:'🎨 Colore',white:'Bianca',black:'Nera',gold:'Oro',cyan:'Ciano',crimson:'Cremisi',violet:'Viola',lime:'Lime',steel:'Acciaio',orange:'Arancio',points:'⭐ Punti gioco:',basic:'Base',double:'Doppio',piercing:'Perforante',spread:'Ventaglio',bonuses:'Bonus record',record:'Record:',bullets:'proiettili',life:'vita',agile:'agile',manual:'📖 Manuale utente',equipment:'🛡️ Equipaggiamento',missions:'📋 Missioni giornaliere',boss:'Cacciatore di boss',combo:'Maestro del combo',top:'TOP: Nessun record',history:'📜 Cronologia partite',noHistory:'Nessuna partita. Giocane una!',clear:'🗑 Cancella cronologia',settings:'Impostazioni in ⚙ Config (in alto a sinistra)',continue:'💾 Continua partita',story:'📖 MODALITÀ STORIA',controls:'⌨️ Frecce · Spazio · 🎮 Pad · ⚙ Config · Pausa',shown:'sulla nave'},
+    ru:{label:'Язык',choose:'Выберите сложность и корабль',start:'🚀 СТАРТ',easy:'ЛЕГКО',normal:'НОРМА',hard:'СЛОЖНО',mode:'Режим игры',classic:'Классика',infinite:'Бесконечный',infiniteDesc:'Бесконечный: волны без боссов',upgrades:'Постоянные улучшения',speed:'Скорость',ammo:'Боеприпасы',lives:'Жизни',damage:'Урон',world:'Мир',space:'Космос',snow:'Снег',fire:'Огонь',crystal:'Кристалл',halloween:'Хэллоуин',neon:'Неон',toxic:'Токсик',void:'Пустота',selectShip:'Выбрать корабль',allShips:'Все корабли',scroll:'◀ ▶ или свайп',max:'Макс. 10 символов',color:'🎨 Цвет',white:'Белый',black:'Чёрный',gold:'Золото',cyan:'Голубой',crimson:'Алый',violet:'Фиолетовый',lime:'Лайм',steel:'Сталь',orange:'Оранжевый',points:'⭐ Очки:',basic:'Базовый',double:'Двойной',piercing:'Пробивной',spread:'Веер',bonuses:'Бонусы рекорда',record:'Рекорд:',bullets:'пули',life:'жизнь',agile:'ловкий',manual:'📖 Руководство',equipment:'🛡️ Снаряжение',missions:'📋 Ежедневные миссии',boss:'Охотник на боссов',combo:'Мастер комбо',top:'TOP: Нет рекордов',history:'📜 История',noHistory:'Пока нет партий',clear:'🗑 Очистить историю',settings:'Настройки в ⚙ Config',continue:'💾 Продолжить',story:'📖 РЕЖИМ ИСТОРИИ',controls:'⌨️ Стрелки · Пробел · 🎮 · ⚙ · Пауза',shown:'на корабле'},
+    ko:{label:'언어',choose:'난이도와 기체 선택',start:'🚀 시작',easy:'쉬움',normal:'보통',hard:'어려움',mode:'게임 모드',classic:'클래식',infinite:'무한',infiniteDesc:'무한: 보스 없이 웨이브 지속',upgrades:'영구 업그레이드',speed:'속도',ammo:'탄약',lives:'생명',damage:'데미지',world:'세계',space:'우주',snow:'눈',fire:'불',crystal:'크리스탈',halloween:'할로윈',neon:'네온',toxic:'독성',void:'공허',selectShip:'기체 선택',allShips:'모든 기체',scroll:'◀ ▶ 또는 스와이프',max:'최대 10자',color:'🎨 색상',white:'흰색',black:'검정',gold:'금색',cyan:'시안',crimson:'진홍',violet:'보라',lime:'라임',steel:'강철',orange:'주황',points:'⭐ 포인트:',basic:'기본',double:'더블',piercing:'관통',spread:'확산',bonuses:'기록 보너스',record:'기록:',bullets:'탄',life:'생명',agile:'민첩',manual:'📖 매뉴얼',equipment:'🛡️ 장비',missions:'📋 일일 미션',boss:'보스 헌터',combo:'콤보 마스터',top:'TOP: 기록 없음',history:'📜 기록',noHistory:'아직 기록이 없습니다',clear:'🗑 기록 삭제',settings:'설정은 ⚙ Config',continue:'💾 이어하기',story:'📖 스토리 모드',controls:'⌨️ 방향키 · 스페이스 · 🎮 · ⚙ · 일시정지',shown:'기체에 표시'},
+    ar:{label:'اللغة',choose:'اختر الصعوبة والسفينة',start:'🚀 ابدأ',easy:'سهل',normal:'عادي',hard:'صعب',mode:'وضع اللعب',classic:'كلاسيكي',infinite:'لا نهائي',infiniteDesc:'لا نهائي: موجات بلا زعماء',upgrades:'ترقيات دائمة',speed:'السرعة',ammo:'الذخيرة',lives:'الأرواح',damage:'الضرر',world:'العالم',space:'فضاء',snow:'ثلج',fire:'نار',crystal:'بلور',halloween:'هالوين',neon:'نيون',toxic:'سام',void:'فراغ',selectShip:'اختر سفينة',allShips:'كل السفن',scroll:'◀ ▶ أو اسحب',max:'حد أقصى 10 أحرف',color:'🎨 لون',white:'أبيض',black:'أسود',gold:'ذهبي',cyan:'سماوي',crimson:'قرمزي',violet:'بنفسجي',lime:'ليموني',steel:'فولاذي',orange:'برتقالي',points:'⭐ نقاط:',basic:'أساسي',double:'مزدوج',piercing:'ثاقب',spread:'منتشر',bonuses:'مكافآت الرقم القياسي',record:'رقم قياسي:',bullets:'رصاصات',life:'حياة',agile:'رشيق',manual:'📖 الدليل',equipment:'🛡️ المعدات',missions:'📋 مهام يومية',boss:'صياد الزعماء',combo:'سيد الكومبو',top:'TOP: لا سجلات',history:'📜 السجل',noHistory:'لا مباريات بعد',clear:'🗑 مسح السجل',settings:'الإعدادات في ⚙ Config',continue:'💾 متابعة',story:'📖 وضع القصة',controls:'⌨️ أسهم · مسافة · 🎮 · ⚙ · إيقاف',shown:'على السفينة'},
+    hi:{label:'भाषा',choose:'कठिनाई और जहाज चुनें',start:'🚀 शुरू',easy:'आसान',normal:'सामान्य',hard:'कठिन',mode:'गेम मोड',classic:'क्लासिक',infinite:'अनंत',infiniteDesc:'अनंत: बिना बॉस के लहरें',upgrades:'स्थायी अपग्रेड',speed:'गति',ammo:'गोला-बारूद',lives:'लाइव्स',damage:'नुकसान',world:'दुनिया',space:'अंतरिक्ष',snow:'बर्फ',fire:'आग',crystal:'क्रिस्टल',halloween:'हैलोवीन',neon:'नियॉन',toxic:'विषैला',void:'शून्य',selectShip:'जहाज चुनें',allShips:'सभी जहाज',scroll:'◀ ▶ या स्वाइप',max:'अधिकतम 10 अक्षर',color:'🎨 रंग',white:'सफेद',black:'काला',gold:'सोना',cyan:'सियान',crimson:'क्रिमसन',violet:'बैंगनी',lime:'लाइम',steel:'स्टील',orange:'नारंगी',points:'⭐ अंक:',basic:'बेसिक',double:'डबल',piercing:'भेदन',spread:'फैलाव',bonuses:'रिकॉर्ड बोनस',record:'रिकॉर्ड:',bullets:'गोलियां',life:'जीवन',agile:'चुस्त',manual:'📖 मैनुअल',equipment:'🛡️ उपकरण',missions:'📋 दैनिक मिशन',boss:'बॉस हंटर',combo:'कॉम्बो मास्टर',top:'TOP: कोई रिकॉर्ड नहीं',history:'📜 इतिहास',noHistory:'अभी कोई मैच नहीं',clear:'🗑 इतिहास मिटाएँ',settings:'सेटिंग्स ⚙ Config में',continue:'💾 जारी रखें',story:'📖 स्टोरी मोड',controls:'⌨️ तीर · स्पेस · 🎮 · ⚙ · पॉज़',shown:'जहाज पर'},
+    tr:{label:'Dil',choose:'Zorluk ve gemi seçin',start:'🚀 BAŞLAT',easy:'KOLAY',normal:'NORMAL',hard:'ZOR',mode:'Oyun modu',classic:'Klasik',infinite:'Sonsuz',infiniteDesc:'Sonsuz: bossuz dalgalar',upgrades:'Kalıcı yükseltmeler',speed:'Hız',ammo:'Cephane',lives:'Can',damage:'Hasar',world:'Dünya',space:'Uzay',snow:'Kar',fire:'Ateş',crystal:'Kristal',halloween:'Halloween',neon:'Neon',toxic:'Zehirli',void:'Boşluk',selectShip:'Gemi seç',allShips:'Tüm gemiler',scroll:'◀ ▶ veya kaydır',max:'En fazla 10 karakter',color:'🎨 Renk',white:'Beyaz',black:'Siyah',gold:'Altın',cyan:'Camgöbeği',crimson:'Kırmızı',violet:'Mor',lime:'Limon',steel:'Çelik',orange:'Turuncu',points:'⭐ Puan:',basic:'Temel',double:'Çift',piercing:'Delici',spread:'Yayılım',bonuses:'Rekor bonusları',record:'Rekor:',bullets:'mermi',life:'can',agile:'çevik',manual:'📖 Kullanım kılavuzu',equipment:'🛡️ Ekipman',missions:'📋 Günlük görevler',boss:'Boss avcısı',combo:'Kombo ustası',top:'TOP: Rekor yok',history:'📜 Geçmiş',noHistory:'Henüz maç yok',clear:'🗑 Geçmişi sil',settings:'Ayarlar ⚙ Config',continue:'💾 Devam et',story:'📖 HİKÂYE MODU',controls:'⌨️ Oklar · Boşluk · 🎮 · ⚙ · Duraklat',shown:'gemide görünür'},
+    nl:{label:'Taal',choose:'Kies moeilijkheid en schip',start:'🚀 Start',easy:'MAKKELIJK',normal:'NORMAAL',hard:'MOEILIJK',mode:'Spelmodus',classic:'Klassiek',infinite:'Oneindig',infiniteDesc:'Oneindig: golven zonder bosses',upgrades:'Permanente upgrades',speed:'Snelheid',ammo:'Munitie',lives:'Levens',damage:'Schade',world:'Wereld',space:'Ruimte',snow:'Sneeuw',fire:'Vuur',crystal:'Kristal',halloween:'Halloween',neon:'Neon',toxic:'Giftig',void:'Leegte',selectShip:'Kies schip',allShips:'Alle schepen',scroll:'◀ ▶ of veeg',max:'Max. 10 tekens',color:'🎨 Kleur',white:'Wit',black:'Zwart',gold:'Goud',cyan:'Cyaan',crimson:'Karmozijn',violet:'Violet',lime:'Limoen',steel:'Staal',orange:'Oranje',points:'⭐ Punten:',basic:'Basis',double:'Dubbel',piercing:'Doordringend',spread:'Spreiding',bonuses:'Recordbonussen',record:'Record:',bullets:'kogels',life:'leven',agile:'behendig',manual:'📖 Handleiding',equipment:'🛡️ Uitrusting',missions:'📋 Dagelijkse missies',boss:'Bossjager',combo:'Combomeester',top:'TOP: Geen records',history:'📜 Geschiedenis',noHistory:'Nog geen wedstrijden',clear:'🗑 Geschiedenis wissen',settings:'Instellingen in ⚙ Config',continue:'💾 Doorgaan',story:'📖 VERHAALMODUS',controls:'⌨️ Pijlen · Spatie · 🎮 · ⚙ · Pauze',shown:'op het schip'},
+    pl:{label:'Język',choose:'Wybierz poziom i statek',start:'🚀 Start',easy:'ŁATWY',normal:'NORMALNY',hard:'TRUDNY',mode:'Tryb gry',classic:'Klasyczny',infinite:'Nieskończony',infiniteDesc:'Nieskończony: fale bez bossów',upgrades:'Ulepszenia stałe',speed:'Prędkość',ammo:'Amunicja',lives:'Życia',damage:'Obrażenia',world:'Świat',space:'Kosmos',snow:'Śnieg',fire:'Ogień',crystal:'Kryształ',halloween:'Halloween',neon:'Neon',toxic:'Toksyczny',void:'Pustka',selectShip:'Wybierz statek',allShips:'Wszystkie statki',scroll:'◀ ▶ lub przesuń',max:'Maks. 10 znaków',color:'🎨 Kolor',white:'Biały',black:'Czarny',gold:'Złoty',cyan:'Cyjan',crimson:'Karmazyn',violet:'Fiolet',lime:'Limonka',steel:'Stal',orange:'Pomarańcz',points:'⭐ Punkty:',basic:'Podstawowy',double:'Podwójny',piercing:'Przebijający',spread:'Wachlarz',bonuses:'Bonusy rekordu',record:'Rekord:',bullets:'pociski',life:'życie',agile:'zwinny',manual:'📖 Instrukcja',equipment:'🛡️ Ekwipunek',missions:'📋 Misje dzienne',boss:'Łowca bossów',combo:'Mistrz combo',top:'TOP: Brak rekordów',history:'📜 Historia',noHistory:'Brak partii',clear:'🗑 Wyczyść historię',settings:'Ustawienia w ⚙ Config',continue:'💾 Kontynuuj',story:'📖 TRYB FABUŁY',controls:'⌨️ Strzałki · Spacja · 🎮 · ⚙ · Pauza',shown:'na statku'},
+    vi:{label:'Ngôn ngữ',choose:'Chọn độ khó và tàu',start:'🚀 BẮT ĐẦU',easy:'DỄ',normal:'THƯỜNG',hard:'KHÓ',mode:'Chế độ chơi',classic:'Cổ điển',infinite:'Vô hạn',infiniteDesc:'Vô hạn: sóng không boss',upgrades:'Nâng cấp vĩnh viễn',speed:'Tốc độ',ammo:'Đạn',lives:'Mạng',damage:'Sát thương',world:'Thế giới',space:'Không gian',snow:'Tuyết',fire:'Lửa',crystal:'Pha lê',halloween:'Halloween',neon:'Neon',toxic:'Độc',void:'Hư không',selectShip:'Chọn tàu',allShips:'Tất cả tàu',scroll:'◀ ▶ hoặc vuốt',max:'Tối đa 10 ký tự',color:'🎨 Màu',white:'Trắng',black:'Đen',gold:'Vàng',cyan:'Xanh cyan',crimson:'Đỏ thẫm',violet:'Tím',lime:'Chanh',steel:'Thép',orange:'Cam',points:'⭐ Điểm:',basic:'Cơ bản',double:'Đôi',piercing:'Xuyên',spread:'Lan',bonuses:'Thưởng kỷ lục',record:'Kỷ lục:',bullets:'đạn',life:'mạng',agile:'nhanh nhẹn',manual:'📖 Hướng dẫn',equipment:'🛡️ Trang bị',missions:'📋 Nhiệm vụ hàng ngày',boss:'Thợ săn boss',combo:'Bậc thầy combo',top:'TOP: Chưa có kỷ lục',history:'📜 Lịch sử',noHistory:'Chưa có trận nào',clear:'🗑 Xóa lịch sử',settings:'Cài đặt trong ⚙ Config',continue:'💾 Tiếp tục',story:'📖 CHẾ ĐỘ CỐT TRUYỆN',controls:'⌨️ Phím mũi tên · Space · 🎮 · ⚙ · Tạm dừng',shown:'hiện trên tàu'},
+    th:{label:'ภาษา',choose:'เลือกความยากและยาน',start:'🚀 เริ่ม',easy:'ง่าย',normal:'ปกติ',hard:'ยาก',mode:'โหมดเกม',classic:'คลาสสิก',infinite:'ไม่จำกัด',infiniteDesc:'ไม่จำกัด: คลื่นไม่มีบอส',upgrades:'อัปเกรดถาวร',speed:'ความเร็ว',ammo:'กระสุน',lives:'ชีวิต',damage:'ความเสียหาย',world:'โลก',space:'อวกาศ',snow:'หิมะ',fire:'ไฟ',crystal:'คริสตัล',halloween:'ฮาโลวีน',neon:'นีออน',toxic:'พิษ',void:'สุญญากาศ',selectShip:'เลือกยาน',allShips:'ยานทั้งหมด',scroll:'◀ ▶ หรือปัด',max:'สูงสุด 10 ตัวอักษร',color:'🎨 สี',white:'ขาว',black:'ดำ',gold:'ทอง',cyan:'ฟ้า',crimson:'แดงเข้ม',violet:'ม่วง',lime:'เขียวมะนาว',steel:'เหล็ก',orange:'ส้ม',points:'⭐ คะแนน:',basic:'พื้นฐาน',double:'คู่',piercing:'เจาะ',spread:'กระจาย',bonuses:'โบนัสสถิติ',record:'สถิติ:',bullets:'กระสุน',life:'ชีวิต',agile:'ว่องไว',manual:'📖 คู่มือ',equipment:'🛡️ อุปกรณ์',missions:'📋 ภารกิจรายวัน',boss:'นักล่าบอส',combo:'เซียนคอมโบ',top:'TOP: ยังไม่มีสถิติ',history:'📜 ประวัติ',noHistory:'ยังไม่มีแมตช์',clear:'🗑 ล้างประวัติ',settings:'ตั้งค่าใน ⚙ Config',continue:'💾 เล่นต่อ',story:'📖 โหมดเรื่องราว',controls:'⌨️ ลูกศร · Space · 🎮 · ⚙ · หยุด',shown:'แสดงบนยาน'}
   });
 
   const phrases={
@@ -10721,7 +10569,7 @@ function storyOnWaveComplete(){
     '♾ Modo de juego':'mode','Game mode':'mode','Mode de jeu':'mode','ゲームモード':'mode','Clásico':'classic','Classic':'classic','Classique':'classic','クラシック':'classic','经典':'classic','∞ Infinito':'infinite','Infinito':'infinite','Infinite':'infinite','Infini':'infinite','無限':'infinite','永久升级':'upgrades','Mejoras permanentes':'upgrades','Permanent upgrades':'upgrades','Améliorations permanentes':'upgrades','恒久アップグレード':'upgrades','永久升级':'upgrades',
     'Infinito: oleadas sin jefes, dificultad que sube sin parar':'infiniteDesc','Infinite: endless waves without bosses; difficulty keeps increasing':'infiniteDesc','Infinito : vagues sans fin sans boss, difficulté croissante':'infiniteDesc','無限：ボスなしでウェーブが続き、難易度が上がります':'infiniteDesc','无限模式：没有首领的连续波次，难度不断提高':'infiniteDesc',
     'Velocidad':'speed','Speed':'speed','Vitesse':'speed','速度':'speed','Munición':'ammo','Ammo':'ammo','Munitions':'ammo','弾薬':'ammo','弹药':'ammo','Vidas':'lives','Lives':'lives','Vies':'lives','ライフ':'lives','生命':'lives','Daño':'damage','Damage':'damage','Dégâts':'damage','ダメージ':'damage','伤害':'damage',
-    '🌍 Mundo':'world','World':'world','Monde':'world','世界':'world','1 Espacio':'space','Space':'space','Espace':'space','宇宙':'space','太空':'space','2 Nieve':'snow','Snow':'snow','Neige':'snow','雪':'snow','雪地':'snow','3 Fuego':'fire','Fire':'fire','Feu':'fire','炎':'fire','火焰':'fire','4 Cristal':'crystal','Crystal':'crystal','Cristal':'crystal','クリスタル':'crystal','水晶':'crystal','6 Neón':'neon','Neon':'neon','Néon':'neon','ネオン':'neon','霓虹':'neon','7 Tóxico':'toxic','Toxic':'toxic','Toxique':'toxic','毒':'toxic','毒域':'toxic','8 Vacío':'void','Void':'void','Vide':'void','虚無':'void','虚空':'void',
+    '🌍 Mundo':'world','World':'world','Monde':'world','世界':'world','1 Espacio':'space','Space':'space','Espace':'space','宇宙':'space','太空':'space','2 Nieve':'snow','Snow':'snow','Neige':'snow','雪':'snow','雪地':'snow','3 Fuego':'fire','Fire':'fire','Feu':'fire','炎':'fire','火焰':'fire','4 Cristal':'crystal','Crystal':'crystal','Cristal':'crystal','クリスタル':'crystal','水晶':'crystal','5 Halloween':'halloween','Halloween':'halloween','ハロウィン':'halloween','万圣节':'halloween','6 Neón':'neon','Neon':'neon','Néon':'neon','ネオン':'neon','霓虹':'neon','7 Tóxico':'toxic','Toxic':'toxic','Toxique':'toxic','毒':'toxic','毒域':'toxic','8 Vacío':'void','Void':'void','Vide':'void','虚無':'void','虚空':'void',
     '🚀 Seleccionar nave':'selectShip','Select ship':'selectShip','Choisir un vaisseau':'selectShip','機体を選択':'selectShip','选择飞船':'selectShip','🚀 Todas las naves':'allShips','All ships':'allShips','Tous les vaisseaux':'allShips','すべての機体':'allShips','所有飞船':'allShips','◀ ▶ o desliza · o elige abajo':'scroll','◀ ▶ or swipe · or choose below':'scroll','◀ ▶ ou glissez · ou choisissez ci-dessous':'scroll','◀ ▶ またはスワイプ・下から選択':'scroll','◀ ▶ 或滑动 · 也可在下方选择':'scroll',
     'Máx. 10 letras · se ve en la nave':'max','Max. 10 characters · shown on the ship':'max','10 caractères max. · visible sur le vaisseau':'max','最大10文字・機体に表示':'max','最多10个字符·显示在飞船上':'max','🎨 Color':'color','🎨 Couleur':'color','🎨 色':'color','🎨 颜色':'color','Blanca':'white','White':'white','Blanche':'white','白':'white','白色':'white','Negra':'black','Black':'black','Noire':'black','黒':'black','黑色':'black','Oro':'gold','Gold':'gold','Or':'gold','金':'gold','金色':'gold','Cian':'cyan','Cyan':'cyan','シアン':'cyan','青色':'cyan','Carmesí':'crimson','Crimson':'crimson','Cramoisi':'crimson','深紅':'crimson','深红色':'crimson','Violeta':'violet','Violet':'violet','紫':'violet','Lima':'lime','Lime':'lime','Vert citron':'lime','ライム':'lime','青柠绿':'lime','Acero':'steel','Steel':'steel','Acier':'steel','スチール':'steel','钢色':'steel','Naranja':'orange','Orange':'orange','オレンジ':'orange','橙色':'orange',
     '⭐ Puntosjuego:':'points','⭐ Game points:':'points','Puntosjuego:':'points','Game points:':'points','Points de jeu :':'points','ゲームポイント：':'points','游戏积分：':'points','Básica':'basic','Basic':'basic','Basique':'basic','基本':'basic','基础':'basic','Doble':'double','Double':'double','Perfora':'piercing','Piercing':'piercing','Perforante':'piercing','貫通':'piercing','穿透':'piercing','Abanico':'spread','Spread':'spread','Éventail':'spread','拡散':'spread','散射':'spread',
@@ -10980,8 +10828,8 @@ function storyOnWaveComplete(){
            .replace(/Goku Rose/gi,'\uE000GOKU_ROSE\uE000');
     // Proteger tokens de mundos e infinito (se fijan después por data-*)
     const protect=[];
-    out=out.replace(/\b\d{1,2}\s+(?:Espacio|Space|Nieve|Snow|Fuego|Fire|Cristal|Crystal|Neón|Neon|Tóxico|Toxic|Vacío|Void|Océano|Oceano|Ocean|Desierto|Deserto|Desert|Tormenta|Storm|Tempête|Aurora|Volcán|Volcan|Volcano|Glitch|Infinito|Infinite|Infini)\b/gi,function(m){protect.push(m);return '\uE001P'+ (protect.length-1) +'\uE001'});
-    out=out.replace(/\b(?:Espacio|Space|Nieve|Snow|Fuego|Fire|Cristal|Crystal|Neón|Neon|Tóxico|Toxic|Vacío|Void|Océano|Oceano|Ocean|Desierto|Deserto|Desert|Tormenta|Storm|Tempête|Aurora|Volcán|Volcan|Volcano|Glitch)\b/gi,function(m){protect.push(m);return '\uE001P'+ (protect.length-1) +'\uE001'});
+    out=out.replace(/\b\d{1,2}\s+(?:Espacio|Space|Nieve|Snow|Fuego|Fire|Cristal|Crystal|Halloween|Neón|Neon|Tóxico|Toxic|Vacío|Void|Océano|Oceano|Ocean|Desierto|Deserto|Desert|Tormenta|Storm|Tempête|Aurora|Volcán|Volcan|Volcano|Glitch|Infinito|Infinite|Infini)\b/gi,function(m){protect.push(m);return '\uE001P'+ (protect.length-1) +'\uE001'});
+    out=out.replace(/\b(?:Espacio|Space|Nieve|Snow|Fuego|Fire|Cristal|Crystal|Halloween|Neón|Neon|Tóxico|Toxic|Vacío|Void|Océano|Oceano|Ocean|Desierto|Deserto|Desert|Tormenta|Storm|Tempête|Aurora|Volcán|Volcan|Volcano|Glitch)\b/gi,function(m){protect.push(m);return '\uE001P'+ (protect.length-1) +'\uE001'});
     out=out.replace(/∞\s*(?:Infinito|Infinite|Infini|Endlos)/gi,function(m){protect.push(m);return '\uE001P'+ (protect.length-1) +'\uE001'});
 
     for(const [variant,key] of sortedPhrases){
@@ -11007,12 +10855,12 @@ function storyOnWaveComplete(){
     out=out.replace(/\uE000GOKU_BLACK\uE000/g,'Goku Black').replace(/\uE000GOKU_ROSE\uE000/g,'Goku Rose');
     // Restaurar protegidos y traducir mundos de forma segura
     const worldMap={
-      es:{1:'Espacio',2:'Nieve',3:'Fuego',4:'Cristal',5:'Neón',6:'Neón',7:'Tóxico',8:'Vacío',9:'Océano',10:'Desierto',11:'Tormenta',12:'Aurora',13:'Volcán',14:'Glitch'},
-      en:{1:'Space',2:'Snow',3:'Fire',4:'Crystal',5:'Neón',6:'Neon',7:'Toxic',8:'Void',9:'Ocean',10:'Desert',11:'Storm',12:'Aurora',13:'Volcano',14:'Glitch'},
-      fr:{1:'Espace',2:'Neige',3:'Feu',4:'Cristal',5:'Neón',6:'Néon',7:'Toxique',8:'Vide',9:'Océan',10:'Désert',11:'Tempête',12:'Aurore',13:'Volcan',14:'Glitch'},
+      es:{1:'Espacio',2:'Nieve',3:'Fuego',4:'Cristal',5:'Halloween',6:'Neón',7:'Tóxico',8:'Vacío',9:'Océano',10:'Desierto',11:'Tormenta',12:'Aurora',13:'Volcán',14:'Glitch'},
+      en:{1:'Space',2:'Snow',3:'Fire',4:'Crystal',5:'Halloween',6:'Neon',7:'Toxic',8:'Void',9:'Ocean',10:'Desert',11:'Storm',12:'Aurora',13:'Volcano',14:'Glitch'},
+      fr:{1:'Espace',2:'Neige',3:'Feu',4:'Cristal',5:'Halloween',6:'Néon',7:'Toxique',8:'Vide',9:'Océan',10:'Désert',11:'Tempête',12:'Aurore',13:'Volcan',14:'Glitch'},
       ja:{1:'宇宙',2:'雪',3:'火',4:'クリスタル',5:'ハロウィン',6:'ネオン',7:'有毒',8:'虚無',9:'海洋',10:'砂漠',11:'嵐',12:'オーロラ',13:'火山',14:'グリッチ'},
       zh:{1:'太空',2:'雪',3:'火',4:'水晶',5:'万圣节',6:'霓虹',7:'毒素',8:'虚空',9:'海洋',10:'沙漠',11:'风暴',12:'极光',13:'火山',14:'故障'},
-      pt:{1:'Espaço',2:'Neve',3:'Fogo',4:'Cristal',5:'Neón',6:'Neon',7:'Tóxico',8:'Vazio',9:'Oceano',10:'Deserto',11:'Tempestade',12:'Aurora',13:'Vulcão',14:'Glitch'}
+      pt:{1:'Espaço',2:'Neve',3:'Fogo',4:'Cristal',5:'Halloween',6:'Neon',7:'Tóxico',8:'Vazio',9:'Oceano',10:'Deserto',11:'Tempestade',12:'Aurora',13:'Vulcão',14:'Glitch'}
     };
     const wm=worldMap[code]||worldMap.es;
     out=out.replace(/\uE001P(\d+)\uE001/g,function(_,i){
@@ -11071,12 +10919,12 @@ function run(root){const code=current();window.__techLangCurrent=code; if(!root)
       });
       // Mundos por data-world (evita Desdesdesierto, etc.)
       const worldNames={
-        es:{1:'Espacio',2:'Nieve',3:'Fuego',4:'Cristal',5:'Neón',6:'Neón',7:'Tóxico',8:'Vacío',9:'Océano',10:'Desierto',11:'Tormenta',12:'Aurora',13:'Volcán',14:'Glitch'},
-        en:{1:'Space',2:'Snow',3:'Fire',4:'Crystal',5:'Neón',6:'Neon',7:'Toxic',8:'Void',9:'Ocean',10:'Desert',11:'Storm',12:'Aurora',13:'Volcano',14:'Glitch'},
-        fr:{1:'Espace',2:'Neige',3:'Feu',4:'Cristal',5:'Neón',6:'Néon',7:'Toxique',8:'Vide',9:'Océan',10:'Désert',11:'Tempête',12:'Aurore',13:'Volcan',14:'Glitch'},
+        es:{1:'Espacio',2:'Nieve',3:'Fuego',4:'Cristal',5:'Halloween',6:'Neón',7:'Tóxico',8:'Vacío',9:'Océano',10:'Desierto',11:'Tormenta',12:'Aurora',13:'Volcán',14:'Glitch'},
+        en:{1:'Space',2:'Snow',3:'Fire',4:'Crystal',5:'Halloween',6:'Neon',7:'Toxic',8:'Void',9:'Ocean',10:'Desert',11:'Storm',12:'Aurora',13:'Volcano',14:'Glitch'},
+        fr:{1:'Espace',2:'Neige',3:'Feu',4:'Cristal',5:'Halloween',6:'Néon',7:'Toxique',8:'Vide',9:'Océan',10:'Désert',11:'Tempête',12:'Aurore',13:'Volcan',14:'Glitch'},
         ja:{1:'宇宙',2:'雪',3:'火',4:'クリスタル',5:'ハロウィン',6:'ネオン',7:'有毒',8:'虚無',9:'海洋',10:'砂漠',11:'嵐',12:'オーロラ',13:'火山',14:'グリッチ'},
         zh:{1:'太空',2:'雪',3:'火',4:'水晶',5:'万圣节',6:'霓虹',7:'毒素',8:'虚空',9:'海洋',10:'沙漠',11:'风暴',12:'极光',13:'火山',14:'故障'},
-        pt:{1:'Espaço',2:'Neve',3:'Fogo',4:'Cristal',5:'Neón',6:'Neon',7:'Tóxico',8:'Vazio',9:'Oceano',10:'Deserto',11:'Tempestade',12:'Aurora',13:'Vulcão',14:'Glitch'}
+        pt:{1:'Espaço',2:'Neve',3:'Fogo',4:'Cristal',5:'Halloween',6:'Neon',7:'Tóxico',8:'Vazio',9:'Oceano',10:'Deserto',11:'Tempestade',12:'Aurora',13:'Vulcão',14:'Glitch'}
       };
       const wn=worldNames[code]||worldNames.es;
       root.querySelectorAll('[data-world]').forEach(btn=>{
@@ -14900,7 +14748,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
 .tv-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:12px}
 .tv-head h2{margin:0;font-size:clamp(18px,4vw,24px);color:#fff}
 .tv-close{width:38px;height:38px;border-radius:10px;border:1px solid #c9a0ff;background:#2a1848;color:#fff;font-size:18px;cursor:pointer}
-.tv-cards{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.tv-cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:12px}
 .tv-card{padding:11px;border-radius:12px;border:1px solid rgba(201,160,255,.2);background:rgba(30,18,50,.85)}
 .tv-card span{display:block;font-size:10px;color:#cbb8e8}
 .tv-card strong{font-size:clamp(16px,2.8vw,26px);font-family:monospace}
@@ -14917,7 +14765,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
 .tv-status{font-size:11px;color:#cbb8e8;margin-top:8px}
 .tv-tools{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
 .tv-tools button{border:1px solid rgba(201,160,255,.45);background:#2a1848;color:#fff;border-radius:9px;padding:8px 12px;font-size:11px;cursor:pointer}
-@media(max-width:900px){.tv-cards{grid-template-columns:repeat(3,minmax(0,1fr))}}\n@media(max-width:560px){.tv-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.tv-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .tv-live{color:#69f0ae;font-weight:800}
 .tv-off{color:#9a8ab8}
 .tv-dev{font-weight:700}
@@ -14928,14 +14776,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   <div class="tv-pin-card">
     <h2>Acceso restringido</h2>
     <p>Introduce el código</p>
-    <input
-      id="tvPinInput"
-      type="password"
-      inputmode="text"
-      maxlength="64"
-      autocomplete="off"
-      placeholder="Introduce tu contraseña"
-    />
+    <input id="tvPinInput" type="password" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="••••" />
     <div class="tv-pin-err" id="tvPinErr"></div>
     <button type="button" id="tvPinOk">Entrar</button>
     <button type="button" class="tv-pin-cancel" id="tvPinCancel">Cancelar</button>
@@ -14950,20 +14791,17 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
     <div class="tv-card"><span>🟢 En vivo ahora</span><strong id="tvLive">—</strong></div>
     <div class="tv-card"><span>Total visitas</span><strong id="tvTotal">—</strong></div>
     <div class="tv-card"><span>Hoy</span><strong id="tvToday">—</strong></div>
-    <div class="tv-card"><span>7 días</span><strong id="tvWeek">—</strong></div>\n    <div class="tv-card"><span>Visitantes únicos</span><strong id="tvUnique">—</strong></div>\n    <div class="tv-card"><span>PC / portátiles</span><strong id="tvComputers">—</strong></div>
+    <div class="tv-card"><span>7 días</span><strong id="tvWeek">—</strong></div>
   </div>
   <div class="tv-section"><h3>🟢 Sesiones activas (en el link ahora)</h3>
-    <div class="tv-table-wrap"><table class="tv-table"><thead><tr><th>Estado</th><th>Dispositivo</th><th>Usuario</th><th>Tipo de usuario</th><th>IP pública</th><th>Entró</th><th>Última señal</th></tr></thead><tbody id="tvLiveBody"></tbody></table></div>
+    <div class="tv-table-wrap"><table class="tv-table"><thead><tr><th>Estado</th><th>Dispositivo</th><th>Usuario</th><th>Entró</th><th>Última señal</th></tr></thead><tbody id="tvLiveBody"></tbody></table></div>
   </div>
-  <div class="tv-section"><h3>💻 Dispositivos y aperturas por computador/navegador</h3>
-    <div class="tv-table-wrap"><table class="tv-table"><thead><tr><th>Dispositivo identificado</th><th>Tipo</th><th>Sistema</th><th>N.º de aperturas</th><th>Última visita</th></tr></thead><tbody id="tvDeviceBody"></tbody></table></div>
-  </div>
-  <div class="tv-section"><h3>📊 Últimos 14 días</h3><div id="tvDailyBars"></div></div>
+  <div class="tv-section"><h3>Últimos 14 días</h3><div id="tvDailyBars"></div></div>
   <div class="tv-section"><h3>Historial de visitas</h3>
-    <div class="tv-table-wrap"><table class="tv-table"><thead><tr><th>Estado</th><th>Fecha y hora</th><th>Dispositivo</th><th>Usuario</th><th>Tipo</th><th>IP pública</th><th>Aperturas</th><th>Última señal</th><th>Origen</th></tr></thead><tbody id="tvTableBody"></tbody></table></div>
+    <div class="tv-table-wrap"><table class="tv-table"><thead><tr><th>Estado</th><th>Fecha y hora</th><th>Dispositivo</th><th>Usuario</th><th>Última señal</th><th>Origen</th></tr></thead><tbody id="tvTableBody"></tbody></table></div>
   </div>
   <div class="tv-tools"><button type="button" id="tvRefresh">↻ Actualizar</button></div>
-  <p class="tv-status" id="tvStatus"></p>\n  <p class="tv-status">Privacidad: la IP pública es un dato personal. Informa a tus visitantes y aplica una política de privacidad; la identificación por navegador no garantiza reconocer físicamente el mismo computador.</p>
+  <p class="tv-status" id="tvStatus"></p>
 </div>
 <script id="tech-site-visits">
 (function(){
@@ -14971,39 +14809,8 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   const SUPABASE_URL = 'https://bkfpvwsahffrrkckjfre.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_89MkxFSiW8Et_qNZXzhXSA_6ouvoKgI';
   const TABLE = 'visitas_tech_run';
-  const PIN_HASH = 'fe1302a2a86f4ebf77a8fc1e36c9ff0ac7be26447ce861b95b0f107b1dce7cce';
-  const PIN_SALT = 'TECH-RUN-visitas-2026-v1';
+  const PIN = '1327';
   const UNLOCK_KEY = 'techVisitsUnlockedV1';
-
-  // Respaldo SHA-256 para navegadores/contextos donde crypto.subtle no está disponible.
-  // Conserva exactamente el mismo algoritmo, sal y hash anteriores: no cambia la contraseña.
-  function sha256Fallback(input){
-    const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
-    const bytes=Array.from(new TextEncoder().encode(String(input))); const bitLen=bytes.length*8;
-    bytes.push(0x80); while(bytes.length%64!==56) bytes.push(0);
-    const hi=Math.floor(bitLen/0x100000000), lo=bitLen>>>0;
-    for(let i=3;i>=0;i--) bytes.push((hi>>>(i*8))&255);
-    for(let i=3;i>=0;i--) bytes.push((lo>>>(i*8))&255);
-    let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
-    const rotr=(x,n)=>(x>>>n)|(x<<(32-n));
-    for(let off=0;off<bytes.length;off+=64){
-      const w=new Array(64);
-      for(let i=0;i<16;i++){const j=off+i*4;w[i]=((bytes[j]<<24)|(bytes[j+1]<<16)|(bytes[j+2]<<8)|bytes[j+3])>>>0;}
-      for(let i=16;i<64;i++){const a=w[i-15],b=w[i-2],s0=rotr(a,7)^rotr(a,18)^(a>>>3),s1=rotr(b,17)^rotr(b,19)^(b>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)>>>0;}
-      let [a,b,c,d,e,f,g,h]=H;
-      for(let i=0;i<64;i++){const S1=rotr(e,6)^rotr(e,11)^rotr(e,25),ch=(e&f)^(~e&g),t1=(h+S1+ch+K[i]+w[i])>>>0;const S0=rotr(a,2)^rotr(a,13)^rotr(a,22),maj=(a&b)^(a&c)^(b&c),t2=(S0+maj)>>>0;h=g;g=f;f=e;e=(d+t1)>>>0;d=c;c=b;b=a;a=(t1+t2)>>>0;}
-      H=H.map((v,i)=>(v+[a,b,c,d,e,f,g,h][i])>>>0);
-    }
-    return H.map(v=>v.toString(16).padStart(8,'0')).join('');
-  }
-  async function hashPin(code){
-    const value=PIN_SALT+code;
-    if(window.crypto&&window.crypto.subtle){
-      const digest=await window.crypto.subtle.digest('SHA-256',new TextEncoder().encode(value));
-      return Array.from(new Uint8Array(digest)).map(b=>b.toString(16).padStart(2,'0')).join('');
-    }
-    return sha256Fallback(value);
-  }
   const LIVE_MS = 90 * 1000; /* activo si last_seen < 90 s */
   const HEARTBEAT_MS = 25 * 1000;
   let heartbeatTimer = null;
@@ -15027,52 +14834,8 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
       const ua=navigator.userAgent||'';
       if(/iPad|Tablet/i.test(ua)) return 'Tablet';
       if(/Mobi|Android|iPhone|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(ua)) return 'Celular';
-      return 'PC / portátil';
+      return 'PC';
     }catch(e){ return 'Desconocido'; }
-  }
-  function visitorId(){
-    try{
-      let id=localStorage.getItem('techVisitBrowserIdV1');
-      if(!id){
-        id='v_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);
-        localStorage.setItem('techVisitBrowserIdV1',id);
-      }
-      return id;
-    }catch(e){ return sessionId(); }
-  }
-  function browserInfo(){
-    const ua=navigator.userAgent||'';
-    let browser='Otro', os='Otro';
-    if(/Edg\//.test(ua)) browser='Edge';
-    else if(/OPR\//.test(ua)) browser='Opera';
-    else if(/Chrome\//.test(ua)) browser='Chrome';
-    else if(/Firefox\//.test(ua)) browser='Firefox';
-    else if(/Safari\//.test(ua)) browser='Safari';
-    if(/Windows/i.test(ua)) os='Windows';
-    else if(/Mac OS X|Macintosh/i.test(ua)) os='macOS';
-    else if(/Android/i.test(ua)) os='Android';
-    else if(/iPhone|iPad|iPod/i.test(ua)) os='iOS / iPadOS';
-    else if(/Linux/i.test(ua)) os='Linux';
-    return {browser:browser,os:os};
-  }
-  async function publicIp(){
-    try{
-      const ctrl=('AbortController' in window)?new AbortController():null;
-      const timer=ctrl?setTimeout(()=>ctrl.abort(),3500):null;
-      const res=await fetch('https://api.ipify.org?format=json',{cache:'no-store',signal:ctrl?ctrl.signal:undefined});
-      if(timer)clearTimeout(timer);
-      if(!res.ok)return null;
-      const data=await res.json();
-      return data&&data.ip?String(data.ip).slice(0,64):null;
-    }catch(e){return null;}
-  }
-  function visitCounter(){
-    try{
-      const key='techVisitOpenCountV1';
-      const n=Math.max(0,parseInt(localStorage.getItem(key)||'0',10)||0)+1;
-      localStorage.setItem(key,String(n));
-      return n;
-    }catch(e){return 1;}
   }
   function username(){
     try{ if(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn()&&window.techAuthUsername) return String(window.techAuthUsername()||'').slice(0,32)||null; }catch(e){}
@@ -15084,16 +14847,9 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   }
   function nowIso(){ return new Date().toISOString(); }
 
-  function visitPayload(online, ip, openCount){
-    const info=browserInfo();
+  function visitPayload(online){
     const body = {
       session_id: sessionId(),
-      visitor_id: visitorId(),
-      visit_count: openCount || 1,
-      ip_address: ip || null,
-      browser: info.browser,
-      os: info.os,
-      user_type: (username()?'Registrado':'Invitado'),
       path: (location.pathname||'/')+(location.search||''),
       referrer: (document.referrer||'').slice(0,400)||null,
       user_agent: (navigator.userAgent||'').slice(0,300)||null,
@@ -15114,9 +14870,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
         startHeartbeat();
         return;
       }
-      const ip=await publicIp();
-      const count=visitCounter();
-      const body = visitPayload(true, ip, count);
+      const body = visitPayload(true);
       const res = await fetch(SUPABASE_URL+'/rest/v1/'+TABLE, {
         method:'POST', headers:headers(true,'return=representation'), body:JSON.stringify(body), keepalive:true
       });
@@ -15195,7 +14949,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   function devicePretty(d){
     const x = String(d||'').toLowerCase();
     if(x==='celular'||x==='mobile') return '📱 Celular';
-    if(x==='pc'||x==='desktop'||x==='pc / portátil') return '💻 PC / portátil';
+    if(x==='pc'||x==='desktop') return '💻 PC';
     if(x==='tablet') return '📲 Tablet';
     return d ? ('📱 '+d) : '—';
   }
@@ -15204,7 +14958,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   async function fetchVisits(){
     setStatus('Cargando…');
     try{
-      const res=await fetch(SUPABASE_URL+'/rest/v1/'+TABLE+'?select=id,session_id,visitor_id,visit_count,ip_address,browser,os,user_type,visited_at,last_seen,online,path,referrer,username,device&order=last_seen.desc.nullslast&order=visited_at.desc&limit=2000',{headers:headers(false)});
+      const res=await fetch(SUPABASE_URL+'/rest/v1/'+TABLE+'?select=id,session_id,visited_at,last_seen,online,path,referrer,username,device&order=last_seen.desc.nullslast&order=visited_at.desc&limit=2000',{headers:headers(false)});
       const text=await res.text();
       let rows=[]; try{ rows=text?JSON.parse(text):[]; }catch(e){ rows=[]; }
       if(!res.ok){
@@ -15230,40 +14984,15 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
       $('tvToday').textContent=String(todayCount);
       $('tvWeek').textContent=String(weekCount);
 
-      const visitors={};
-      rows.forEach(function(r){
-        const key=r.visitor_id||r.session_id||('row_'+r.id);
-        if(!visitors[key] || Date.parse(r.visited_at||0)>Date.parse(visitors[key].visited_at||0)) visitors[key]=r;
-      });
-      const uniqueCount=Object.keys(visitors).length;
-      const computerCount=Object.values(visitors).filter(r=>r.device==='PC'||r.device==='PC / portátil'||r.device==='desktop').length;
-      $('tvUnique').textContent=String(uniqueCount);
-      $('tvComputers').textContent=String(computerCount);
-
-      const byDevice={};
-      rows.forEach(function(r){
-        const key=r.visitor_id||r.session_id||('row_'+r.id);
-        if(!byDevice[key]) byDevice[key]={id:key,device:r.device||'Desconocido',browser:r.browser||'—',os:r.os||'—',count:0,last:r.visited_at||r.last_seen};
-        byDevice[key].count=Math.max(byDevice[key].count,Number(r.visit_count)||1);
-        const t=Date.parse(r.visited_at||r.last_seen||0), old=Date.parse(byDevice[key].last||0);
-        if(t>old)byDevice[key].last=r.visited_at||r.last_seen;
-      });
-      const deviceRows=Object.values(byDevice).sort((a,b)=>b.count-a.count).slice(0,100);
-      $('tvDeviceBody').innerHTML=deviceRows.length?deviceRows.map(function(d){
-        return '<tr><td>'+esc(String(d.id).slice(0,18))+'</td><td>'+esc(devicePretty(d.device))+'</td><td>'+esc(d.os+' · '+d.browser)+'</td><td><b>'+esc(d.count)+'</b></td><td>'+esc(fmtDateTime(d.last))+'</td></tr>';
-      }).join(''):'<tr><td colspan="5">Sin datos de dispositivos</td></tr>';
-
       $('tvLiveBody').innerHTML = live.length ? live.map(function(r){
         return '<tr>'
           +'<td class="tv-live">🟢 En vivo</td>'
           +'<td class="tv-dev">'+esc(devicePretty(r.device))+'</td>'
           +'<td>'+esc(r.username||'invitado')+'</td>'
-          +'<td>'+esc(r.user_type||(r.username?'Registrado':'Invitado'))+'</td>'
-          +'<td>'+esc(r.ip_address||'No disponible')+'</td>'
           +'<td>'+esc(fmtDateTime(r.visited_at))+'</td>'
           +'<td>'+esc(fmtDateTime(r.last_seen||r.visited_at))+'</td>'
           +'</tr>';
-      }).join('') : '<tr><td colspan="7" class="tv-off">Nadie en el link en este momento</td></tr>';
+      }).join('') : '<tr><td colspan="5" class="tv-off">Nadie en el link en este momento</td></tr>';
 
       const days=[]; const now=Date.now();
       for(let i=13;i>=0;i--){ const d=new Date(now-i*24*3600*1000); const k=d.toISOString().slice(0,10); days.push({k,n:byDay[k]||0,label:k.slice(5)}); }
@@ -15279,13 +15008,10 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
           +'<td>'+esc(fmtDateTime(r.visited_at))+'</td>'
           +'<td class="tv-dev">'+esc(devicePretty(r.device))+'</td>'
           +'<td>'+esc(r.username||'invitado')+'</td>'
-          +'<td>'+esc(r.user_type||(r.username?'Registrado':'Invitado'))+'</td>'
-          +'<td>'+esc(r.ip_address||'No disponible')+'</td>'
-          +'<td>'+esc(r.visit_count||1)+'</td>'
           +'<td>'+esc(fmtDateTime(r.last_seen||r.visited_at))+'</td>'
           +'<td>'+esc(origin)+'</td>'
           +'</tr>';
-      }).join(''):'<tr><td colspan="9">Sin visitas aún</td></tr>';
+      }).join(''):'<tr><td colspan="6">Sin visitas aún</td></tr>';
       setStatus('Actualizado · '+live.length+' en vivo · '+rows.length+' registros', true);
     }catch(e){ setStatus('Error de red: '+(e.message||e), false); }
   }
@@ -15305,25 +15031,15 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
   }
   function closePanel(){ const p=$('techVisitsPanel'); if(p) p.classList.remove('show'); }
 
-  async function tryUnlock(){
-    const inp = $('tvPinInput');
-    const code = String((inp && inp.value) || '');
-
-    try {
-      const hash = await hashPin(code);
-
-      if(hash === PIN_HASH){
-        try { sessionStorage.setItem(UNLOCK_KEY, '1'); } catch(e){}
-        openPanel();
-      } else {
-        const err = $('tvPinErr');
-        if(err) err.textContent = 'Contraseña incorrecta';
-        if(inp){ inp.value = ''; inp.focus(); }
-      }
-    } catch(error) {
-      const err = $('tvPinErr');
-      if(err) err.textContent = 'No se pudo verificar la contraseña. Abre la página mediante HTTPS.';
-      console.error('[TECH visitas] Error verificando contraseña:', error);
+  function tryUnlock(){
+    const inp=$('tvPinInput');
+    const code=String((inp&&inp.value)||'').trim();
+    if(code===PIN){
+      try{ sessionStorage.setItem(UNLOCK_KEY,'1'); }catch(e){}
+      openPanel();
+    } else {
+      const err=$('tvPinErr'); if(err) err.textContent='Código incorrecto';
+      if(inp){ inp.value=''; inp.focus(); }
     }
   }
   function requestAccess(){
@@ -15375,21 +15091,8 @@ create table if not exists public.visitas_tech_run (
   username text,
   user_id uuid,
   device text,
-  is_new_session boolean default true,
-  visitor_id text,
-  visit_count integer default 1,
-  ip_address text,
-  browser text,
-  os text,
-  user_type text
+  is_new_session boolean default true
 );
-alter table public.visitas_tech_run add column if not exists visitor_id text;
-alter table public.visitas_tech_run add column if not exists visit_count integer default 1;
-alter table public.visitas_tech_run add column if not exists ip_address text;
-alter table public.visitas_tech_run add column if not exists browser text;
-alter table public.visitas_tech_run add column if not exists os text;
-alter table public.visitas_tech_run add column if not exists user_type text;
-create index if not exists visitas_tech_run_visitor_idx on public.visitas_tech_run (visitor_id);
 alter table public.visitas_tech_run add column if not exists last_seen timestamptz default now();
 alter table public.visitas_tech_run add column if not exists online boolean default true;
 create index if not exists visitas_tech_run_visited_at_idx on public.visitas_tech_run (visited_at desc);
@@ -15405,7 +15108,39 @@ create policy "visitas_update_all" on public.visitas_tech_run for update to anon
 })();
 </script>
 
-<script id="programmer-profile-modal-script">/* Modal eliminado: el video se reproduce dentro de la bolita. */</script>
+<script id="programmer-profile-modal-script">
+(function(){
+  function initProgrammerModal(){
+    if(document.getElementById('programmerProfileModal'))return;
+    var modal=document.createElement('div');
+    modal.id='programmerProfileModal';
+    modal.setAttribute('role','dialog');
+    modal.setAttribute('aria-modal','true');
+    modal.setAttribute('aria-label','Perfil del programador de software');
+    modal.innerHTML='<div class="programmer-profile-card"><button type="button" class="programmer-profile-close" aria-label="Cerrar">×</button><img class="programmer-profile-photo" src="yo.jpeg" alt="Brahyan, programador de software"><h2 class="programmer-profile-title">PROGRAMADOR DE SOFTWARE</h2></div>';
+    document.body.appendChild(modal);
+    modal.addEventListener('click',function(event){if(event.target===modal)closeProgrammerModal();});
+    modal.querySelector('.programmer-profile-close').addEventListener('click',closeProgrammerModal);
+    document.addEventListener('keydown',function(event){if(event.key==='Escape')closeProgrammerModal();});
+  }
+  window.openProgrammerModal=function(){
+    initProgrammerModal();
+    var modal=document.getElementById('programmerProfileModal');
+    var source=document.querySelector('.foto-perfil');
+    var photo=modal.querySelector('.programmer-profile-photo');
+    if(source&&source.getAttribute('src'))photo.setAttribute('src',source.getAttribute('src'));
+    modal.classList.add('is-open');
+    document.body.style.overflow='hidden';
+    modal.querySelector('.programmer-profile-close').focus();
+  };
+  window.closeProgrammerModal=function(){
+    var modal=document.getElementById('programmerProfileModal');
+    if(modal)modal.classList.remove('is-open');
+    document.body.style.overflow='';
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',initProgrammerModal);else initProgrammerModal();
+})();
+</script>
 
 <style id="tech-start-menu-layout-fix">
 /* Menú inicio: menos apeñuscado, mejor en pantallas grandes */
@@ -16643,44 +16378,36 @@ body.tech-playing .game-top{
 #startMobileTabs{
   display:none;
   position:sticky;top:0;z-index:30;
-  gap:8px;padding:8px 0 12px;margin:0 0 10px;
+  gap:6px;padding:6px 0 10px;margin:0 0 8px;
   background:linear-gradient(180deg,rgba(6,12,28,.98),rgba(6,12,28,.92));
-  border-bottom:1px solid rgba(93,229,255,.15);
 }
 #startMobileTabs.is-on{display:flex}
 #startMobileTabs button{
-  flex:1;min-height:44px;border-radius:12px;border:1px solid rgba(93,229,255,.28);
-  background:rgba(10,22,48,.9);color:#c8d6e8;font-family:Orbitron,sans-serif;
-  font-size:12px;font-weight:700;letter-spacing:.4px;cursor:pointer;
+  flex:1;min-height:40px;border-radius:11px;border:1px solid rgba(93,229,255,.25);
+  background:rgba(10,22,48,.85);color:#c8d6e8;font-family:Orbitron,sans-serif;
+  font-size:11px;font-weight:700;letter-spacing:.3px;cursor:pointer;
   -webkit-tap-highlight-color:transparent;
-  transition:border-color .15s, background .15s, color .15s;
 }
 #startMobileTabs button.active{
-  border-color:rgba(255,205,0,.65);
-  background:linear-gradient(160deg,rgba(255,205,0,.28),rgba(0,90,180,.35));
-  color:#fff;box-shadow:0 0 14px rgba(255,205,0,.2);
+  border-color:rgba(255,205,0,.55);
+  background:linear-gradient(160deg,rgba(255,205,0,.2),rgba(0,90,180,.3));
+  color:#fff;box-shadow:0 0 12px rgba(255,205,0,.15);
 }
-#startExtras > .tab-play,
-#startExtras > .tab-nave,
-#startExtras > .tab-extra{
-  min-height:40px;
-  padding-bottom:8px;
-}
-/* Solo el módulo activo es visible */
-#startExtras .tab-play,
-#startExtras .tab-nave,
-#startExtras .tab-extra{display:none!important}
-#startExtras[data-tab="play"] .tab-play,
-#startExtras:not([data-tab]) .tab-play{display:block!important}
-#startExtras[data-tab="nave"] .tab-nave{display:block!important}
-#startExtras[data-tab="extra"] .tab-extra{display:block!important}
-#startExtras .tab-play > *,
-#startExtras .tab-nave > *,
-#startExtras .tab-extra > *{display:revert}
+#startExtras[data-tab="play"] .tab-nave,
+#startExtras[data-tab="play"] .tab-extra{display:none!important}
+#startExtras[data-tab="nave"] .tab-play,
+#startExtras[data-tab="nave"] .tab-extra{display:none!important}
+#startExtras[data-tab="extra"] .tab-play,
+#startExtras[data-tab="extra"] .tab-nave{display:none!important}
 
-#startMobileTabs{display:flex!important}
 @media (min-width:901px) and (pointer:fine){
   #startMobileTabs{display:flex!important}
+  #startExtras .tab-play,
+  #startExtras .tab-nave,
+  #startExtras .tab-extra{display:contents!important}
+  #startExtras[data-tab] .tab-play,
+  #startExtras[data-tab] .tab-nave,
+  #startExtras[data-tab] .tab-extra{display:contents!important}
 }
 </style>
 <script id="tech-quality-mobile-menu-js">
@@ -16886,85 +16613,40 @@ body.tech-playing .game-top{
   function classifyExtras(){
     var box=document.getElementById('startExtras');
     if(!box) return;
-    /* Si ya está bien separado en 3 módulos y hay contenido, no repetir */
-    var existingPlay=box.querySelector(':scope > .tab-play');
-    var existingNave=box.querySelector(':scope > .tab-nave');
-    var existingExtra=box.querySelector(':scope > .tab-extra');
-    if(existingPlay && existingNave && existingExtra &&
-       (existingPlay.children.length + existingNave.children.length + existingExtra.children.length) > 0 &&
-       box.children.length === 3){
-      return;
-    }
+    /* Envolver nodos sueltos en grupos si aún no están clasificados */
+    if(box.__tabsClassified && box.querySelector('.tab-play')) return;
 
-    var play=document.createElement('div'); play.className='tab-play'; play.setAttribute('data-module','play');
-    var nave=document.createElement('div'); nave.className='tab-nave'; nave.setAttribute('data-module','nave');
-    var extra=document.createElement('div'); extra.className='tab-extra'; extra.setAttribute('data-module','extra');
+    var play=document.createElement('div'); play.className='tab-play';
+    var nave=document.createElement('div'); nave.className='tab-nave';
+    var extra=document.createElement('div'); extra.className='tab-extra';
 
-    /* Si ya había wrappers, aplanar sus hijos primero */
-    var flat=[];
-    Array.prototype.forEach.call(box.childNodes, function(node){
-      if(node.nodeType===1 && (node.classList.contains('tab-play') || node.classList.contains('tab-nave') || node.classList.contains('tab-extra'))){
-        Array.prototype.forEach.call(node.childNodes, function(c){ flat.push(c); });
-      } else {
-        flat.push(node);
-      }
-    });
-
+    var nodes=Array.prototype.slice.call(box.childNodes);
     var section='play';
-    flat.forEach(function(node){
+    nodes.forEach(function(node){
       if(node.nodeType!==1){
-        /* texto suelto: ir a la sección actual */
-        if(section==='nave') nave.appendChild(node);
-        else if(section==='extra') extra.appendChild(node);
-        else play.appendChild(node);
+        play.appendChild(node);
         return;
       }
-      var tag=(node.tagName||'').toUpperCase();
+      var tag=node.tagName;
       var text=(node.textContent||'').toLowerCase();
       var id=node.id||'';
-      var cls=(node.className&&String(node.className))||'';
 
-      /* Cambiar de sección al encontrar encabezados clave */
       if(tag==='H3'){
-        if(/seleccionar nave|todas las naves|fase de goku|color|skin|nave/.test(text) && !/mundo|modo|mejora|bono|misión|historial|ajuste|equip|manual|crédit|top:|arma|weapon|puntos/.test(text)){
-          section='nave';
-        } else if(/mundo/.test(text)){
-          section='play';
-        } else if(/modo de juego|mejora|bono|puntosjuego|top:|historial|ajust|equip|manual|crédit|misión|arma|weapon|récord|record/.test(text)){
-          if(/mejora|bono|puntosjuego|top:|historial|ajust|equip|manual|crédit|misión|arma|weapon|récord|record/.test(text))
-            section='extra';
-          else
-            section='play';
-        }
+        if(/nave|skin|color|goku|fase|modelo/.test(text)) section='nave';
+        else if(/mejora|bono|arma|misi|historial|ajust|equip|manual|crédit|top:|mundo|weapon|record/.test(text)) section='extra';
+        else if(/modo|dificult/.test(text)) section='play';
+        else if(/seleccionar nave|todas las naves/.test(text)) section='nave';
       }
-
-      /* IDs / bloques concretos */
-      if(id==='shipCarousel' || id==='gokuFormMenu' || id==='shipNameInput' ||
-         (node.querySelector && (node.querySelector('#shipCarousel') || node.querySelector('#gokuFormMenu')))){
-        section='nave';
-      }
-      if(id==='startInGameActions' || id==='btnLoadSave' || id==='btnDailyMissions' ||
-         id==='btnWeaponShop' || id==='btnManualStart' || id==='btnGameCredits' ||
-         id==='gameCreditsBox' || id==='guestDataNotice' || id==='openStoryMode' ||
-         id==='openStatistics' || id==='openOnlineRanking'){
-        section='extra';
-      }
-      if(id==='startGfxQuality' || (cls.indexOf('tech-gfx-box')>=0)){
-        section='extra';
-      }
-      /* botones de dificultad / modo al inicio */
-      if(node.classList && node.classList.contains('diff-btns') && section==='play'){
-        /* se quedan en play */
-      }
+      if(id==='shipCarousel' || id==='gokuFormMenu' || node.querySelector&&node.querySelector('#shipCarousel')) section='nave';
+      if(id==='startInGameActions' || id==='btnLoadSave' || id==='btnDailyMissions' || id==='btnWeaponShop') section='extra';
+      if(id==='guestDataNotice') section='extra';
 
       if(section==='nave') nave.appendChild(node);
       else if(section==='extra') extra.appendChild(node);
       else play.appendChild(node);
     });
 
-    /* Asegurar que Mundo (🌍) quede en Jugar: si quedó en nave por error, mover h3 mundo + siguientes diff-btns */
-    /* (la heurística de arriba ya manda "mundo" a play) */
-
+    /* Continuar partida y modos deben estar en Jugar */
     box.innerHTML='';
     box.appendChild(play);
     box.appendChild(nave);
@@ -16987,13 +16669,21 @@ body.tech-playing .game-top{
 
   function refreshMobileMenu(){
     var tabs=ensureTabs();
-    if(tabs) tabs.classList.add('is-on');
+    var mob=isMob();
+    if(tabs){
+      /* Mostrar las tres pestañas tanto en móvil como en PC */
+      tabs.classList.add('is-on');
+    }
     var box=document.getElementById('startExtras');
     if(!box) return;
-    classifyExtras();
-    var saved='play';
-    try{ saved=localStorage.getItem('techStartTab')||'play'; }catch(e){}
-    setTab(saved);
+    if(mob){
+      classifyExtras();
+      var saved='play';
+      try{ saved=localStorage.getItem('techStartTab')||'play'; }catch(e){}
+      setTab(saved);
+    } else {
+      box.removeAttribute('data-tab');
+    }
   }
 
   /* Hook renderStart refresh */
@@ -17022,7 +16712,7 @@ body.tech-playing .game-top{
       injectGfxControls();
       hookRender();
       patchGc();
-      refreshMobileMenu();
+      if(isMob()) refreshMobileMenu();
     }, 2000);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
@@ -17031,152 +16721,88 @@ body.tech-playing .game-top{
 </script>
 
 </bod
-<style id="programmer-video-inline-redesign">
-/* Reproductor compacto: aparece junto al botón, sin cubrir ni ampliar la página */
-#programmerProfileModal{
-  position:fixed !important;
-  inset:0 auto auto 0 !important;
-  width:auto !important;
-  height:auto !important;
-  min-height:0 !important;
-  display:none !important;
-  align-items:flex-start !important;
-  justify-content:flex-start !important;
-  padding:0 !important;
-  background:transparent !important;
-  backdrop-filter:none !important;
-  -webkit-backdrop-filter:none !important;
-  pointer-events:none !important;
-  z-index:1000000 !important;
-}
-#programmerProfileModal.is-open{
-  display:flex !important;
-}
-#programmerProfileModal .programmer-profile-card{
-  position:fixed !important;
-  top:18px !important;
-  left:122px !important;
-  width:min(360px,calc(100vw - 140px)) !important;
-  max-width:360px !important;
-  padding:38px 12px 12px !important;
-  border:1px solid rgba(255,255,255,.7) !important;
-  border-radius:16px !important;
-  background:linear-gradient(145deg,rgba(8,16,32,.98),rgba(2,5,12,.98)) !important;
-  box-shadow:0 14px 38px rgba(0,0,0,.55),0 0 22px rgba(255,255,255,.10) !important;
-  pointer-events:auto !important;
-  box-sizing:border-box !important;
-  animation:programmerPlayerIn .18s ease-out both;
-}
-#programmerProfileModal .programmer-profile-video{
-  display:block !important;
-  width:100% !important;
-  height:auto !important;
-  max-height: min(42vh,230px) !important;
-  aspect-ratio:16/9 !important;
-  object-fit:contain !important;
-  background:#000 !important;
-  border:1px solid rgba(255,255,255,.35) !important;
-  border-radius:10px !important;
-}
-#programmerProfileModal .programmer-profile-title{
-  margin:10px 0 0 !important;
-  font-size:12px !important;
-  letter-spacing:1px !important;
-  text-align:center !important;
-  text-shadow:none !important;
-}
-#programmerProfileModal .programmer-profile-close{
-  top:7px !important;
-  right:8px !important;
-  width:29px !important;
-  height:29px !important;
-  border:1px solid #fff !important;
-  border-radius:9px !important;
-  background:#17243a !important;
-  color:#fff !important;
-  font-size:21px !important;
-  line-height:1 !important;
-}
-@keyframes programmerPlayerIn{
-  from{opacity:0;transform:translateY(-7px) scale(.98)}
-  to{opacity:1;transform:translateY(0) scale(1)}
-}
-@media(max-width:600px){
-  #programmerProfileModal .programmer-profile-card{
-    top:76px !important;
-    left:8px !important;
-    width:min(330px,calc(100vw - 16px)) !important;
-    max-width:none !important;
-    padding:36px 9px 10px !important;
-  }
-  #programmerProfileModal .programmer-profile-video{
-    max-height:32vh !important;
-  }
-}
-/* El fondo ya no intercepta clics fuera del reproductor */
-#programmerProfileModal:not(.is-open){pointer-events:none !important}
+<!-- TECH RUN: acceso a Configuraciones validado por Edge Function. La contraseña NO está en este HTML. -->
+<style id="tech-config-gate-style">
+#techConfigGate{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;justify-content:center;padding:18px;background:rgba(1,6,20,.88);backdrop-filter:blur(8px)}
+#techConfigGate .tcg-card{width:min(360px,100%);padding:24px 20px;border:1px solid rgba(255,205,0,.55);border-radius:18px;background:linear-gradient(145deg,#07172e,#020813);box-shadow:0 0 35px rgba(0,170,255,.18);color:#fff;text-align:center;font-family:Arial,sans-serif}
+#techConfigGate h2{margin:0 0 8px;color:#ffcd00;font-size:21px}#techConfigGate p{margin:0 0 16px;color:#b9c8dc;font-size:13px;line-height:1.45}
+#techConfigGate input{box-sizing:border-box;width:100%;padding:13px;border:1px solid #42617f;border-radius:10px;background:#020b18;color:#fff;font-size:17px;text-align:center;letter-spacing:2px;outline:none}
+#techConfigGate .tcg-actions{display:flex;gap:9px;margin-top:14px}#techConfigGate button{flex:1;padding:12px;border:0;border-radius:10px;font-weight:800;cursor:pointer}#techConfigGate .tcg-enter{background:#ffcd00;color:#07101e}#techConfigGate .tcg-cancel{background:#20344d;color:#fff}#techConfigGate #tcgStatus{min-height:18px;margin-top:12px;color:#ffb6a9;font-size:12px}
 </style>
+<script id="tech-config-server-gate">
+(function(){
+ 'use strict';
+ const SUPABASE_URL='https://bkfpvwsahffrrkckjfre.supabase.co';
+ const SUPABASE_KEY='sb_publishable_89MkxFSiW8Et_qNZXzhXSA_6ouvoKgI';
+ const FUNCTION_URL=SUPABASE_URL+'/functions/v1/verify-config-password';
+ const SESSION_KEY='techRunConfigGateSessionV1';
+ const SESSION_MS=15*60*1000;
+ let pendingSource='';
+ let gate=null;
+ function sessionValid(){try{const v=JSON.parse(sessionStorage.getItem(SESSION_KEY)||'null');return !!(v&&v.token&&Number(v.expiresAt)>Date.now())}catch(e){return false}}
+ function showPanel(source){
+   const cfg=document.getElementById('configPanel');if(!cfg)return;
+   if(source==='pauseOpenFullCfg'||source==='pause'){
+     window.__configOpenedFromPause=true;
+     const pause=document.getElementById('pausePanel');if(pause)pause.style.setProperty('display','none','important');
+   }else if(typeof gameRunning!=='undefined'&&gameRunning){
+     window.__configOpenedFromPause=true;
+     if(typeof gamePaused!=='undefined'&&!gamePaused&&typeof togglePause==='function')try{togglePause(true)}catch(e){}
+   }
+   cfg.hidden=false;cfg.classList.add('config-panel-open');cfg.style.setProperty('display','block','important');
+ }
+ function buildGate(){
+   if(gate)return gate;
+   gate=document.createElement('div');gate.id='techConfigGate';
+   gate.innerHTML='<div class="tcg-card" role="dialog" aria-modal="true" aria-labelledby="tcgTitle"><h2 id="tcgTitle">🔐 Configuraciones protegidas</h2><p>Introduce la contraseña para continuar.</p><form id="tcgForm"><input id="tcgPassword" type="password" autocomplete="current-password" placeholder="Contraseña" required><div class="tcg-actions"><button class="tcg-cancel" id="tcgCancel" type="button">Cancelar</button><button class="tcg-enter" type="submit">ENTRAR</button></div></form><div id="tcgStatus" role="status" aria-live="polite"></div></div>';
+   document.body.appendChild(gate);
+   const input=gate.querySelector('#tcgPassword'),status=gate.querySelector('#tcgStatus'),form=gate.querySelector('#tcgForm');
+   function close(){gate.style.display='none';input.value='';status.textContent='';pendingSource='';}
+   gate.querySelector('#tcgCancel').addEventListener('click',close);
+   gate.addEventListener('click',e=>{if(e.target===gate)close()});
+   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&gate.style.display==='flex')close()});
+   form.addEventListener('submit',async e=>{
+     e.preventDefault();const password=input.value;
+     if(!password){status.textContent='Escribe la contraseña.';return;}
+     const submit=form.querySelector('button[type="submit"]');submit.disabled=true;submit.textContent='VERIFICANDO…';status.textContent='';
+     try{
+       const response=await fetch(FUNCTION_URL,{method:'POST',headers:{'Content-Type':'application/json','apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY},body:JSON.stringify({password})});
+       let data={};try{data=await response.json()}catch(_){ }
+       if(!response.ok||!data.ok||!data.sessionToken)throw new Error(data.error||'Contraseña incorrecta.');
+       sessionStorage.setItem(SESSION_KEY,JSON.stringify({token:data.sessionToken,expiresAt:Number(data.expiresAt)||Date.now()+SESSION_MS}));
+       const source=pendingSource;close();showPanel(source);
+     }catch(err){status.textContent=err&&err.message?err.message:'No se pudo validar. Comprueba la conexión.';input.select();}
+     finally{submit.disabled=false;submit.textContent='ENTRAR';}
+   });
+   return gate;
+ }
+ function requestAccess(source){
+   if(sessionValid()){showPanel(source);return;}
+   pendingSource=source||'config';const g=buildGate();g.style.display='flex';setTimeout(()=>{const i=g.querySelector('#tcgPassword');if(i)i.focus()},30);
+ }
+ window.techRequestConfigAccess=requestAccess;
+ // Captura todos los botones visibles que abren Configuraciones antes de sus manejadores originales.
+ const selectors=['#btnConfig','#pauseOpenFullCfg','#btnOpenFullConfig','#startGearShortcut'];
+ document.addEventListener('click',function(e){
+   const trigger=e.target&&e.target.closest?e.target.closest(selectors.join(',')):null;if(!trigger)return;
+   e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+   requestAccess(trigger.id);
+ },true);
+ // Evita que otros scripts abran el panel sin pasar por el control de acceso.
+ const guard=()=>{
+   const cfg=document.getElementById('configPanel');if(!cfg||sessionValid())return;
+   const open=cfg.classList.contains('config-panel-open')||(cfg.style.display&&cfg.style.display!=='none');
+   if(open){cfg.classList.remove('config-panel-open');cfg.style.setProperty('display','none','important');cfg.hidden=false;requestAccess('config');}
+ };
+ const observer=new MutationObserver(guard);
+ const startObserver=()=>{const cfg=document.getElementById('configPanel');if(cfg)observer.observe(cfg,{attributes:true,attributeFilter:['class','style','hidden']});};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startObserver,{once:true});else startObserver();
+ document.addEventListener('click',function(e){if(e.target&&e.target.closest&&e.target.closest('#closeConfig')){try{sessionStorage.removeItem(SESSION_KEY)}catch(_){} }},false);
+})();
+</script>
 
-<style id="programmer-video-only-inside-ball">
-.boton-foto{
-  position:fixed !important;
-  top:10px !important;
-  right:10px !important;
-  left:auto !important;
-  width:100px !important;
-  height:100px !important;
-  min-width:100px !important;
-  min-height:100px !important;
-  padding:0 !important;
-  overflow:hidden !important;
-  border-radius:50% !important;
-  isolation:isolate !important;
-  background:radial-gradient(circle at 35% 25%,#183b65,#080d19 72%) !important;
-  border:3px solid #fff !important;
-  outline:2px solid rgba(255,255,255,.85) !important;
-  box-shadow:0 0 20px rgba(255,255,255,.35) !important;
-  z-index:999999 !important;
-}
-.boton-foto .video-perfil-en-bola{
-  position:absolute !important;
-  inset:0 !important;
-  display:block !important;
-  width:100% !important;
-  height:100% !important;
-  max-width:none !important;
-  max-height:none !important;
-  object-fit:cover !important;
-  border:0 !important;
-  border-radius:50% !important;
-  outline:0 !important;
-  box-shadow:none !important;
-  background:#000 !important;
-  opacity:0 !important;
-  pointer-events:none !important;
-}
-.boton-foto.video-reproduciendo .video-perfil-en-bola{
-  opacity:1 !important;
-}
-.boton-foto .video-perfil-icon{
-  position:relative !important;
-  z-index:2 !important;
-  display:flex;
-  pointer-events:none !important;
-}
-#programmerProfileModal{display:none !important}
-@media(max-width:600px){
-  .boton-foto{
-    top:10px !important;
-    right:10px !important;
-    left:auto !important;
-    width:76px !important;
-    height:76px !important;
-    min-width:76px !important;
-    min-height:76px !important;
-  }
-}
-</style>
-
+y>
+</html>
 <style id="tech-run-desktop-large-final">
 /* PC: usar todo el ancho disponible y hacer el menú realmente legible */
 @media (min-width: 1101px) and (pointer: fine) {
@@ -17330,142 +16956,3 @@ body.tech-playing .game-top{
   clip-path: none !important;
 }
 </style>
-
-
-<style id="fix-video-hard-crop-circle">
-/* Recorte estricto: el único contenido visible es el interior de la bolita */
-button.boton-foto{
-  width:100px !important;
-  height:100px !important;
-  min-width:100px !important;
-  min-height:100px !important;
-  padding:0 !important;
-  overflow:hidden !important;
-  clip-path:circle(50%) !important;
-  -webkit-clip-path:circle(50%) !important;
-  border-radius:50% !important;
-  contain:paint !important;
-  transform:none !important;
-}
-button.boton-foto .video-perfil-en-bola{
-  position:absolute !important;
-  inset:0 !important;
-  display:block !important;
-  width:100% !important;
-  height:100% !important;
-  min-width:0 !important;
-  min-height:0 !important;
-  max-width:100% !important;
-  max-height:100% !important;
-  margin:0 !important;
-  padding:0 !important;
-  object-fit:cover !important;
-  object-position:center center !important;
-  border:0 !important;
-  outline:0 !important;
-  border-radius:50% !important;
-  clip-path:circle(50%) !important;
-  -webkit-clip-path:circle(50%) !important;
-  transform:none !important;
-  box-shadow:none !important;
-  pointer-events:none !important;
-  background:#000 !important;
-}
-button.boton-foto.video-reproduciendo .video-perfil-en-bola{
-  opacity:1 !important;
-}
-button.boton-foto .video-perfil-icon{
-  position:absolute !important;
-  inset:0 !important;
-  width:100% !important;
-  height:100% !important;
-  margin:auto !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  border:0 !important;
-  border-radius:50% !important;
-  background:transparent !important;
-  box-shadow:none !important;
-  z-index:5 !important;
-}
-@media(max-width:600px){
-  button.boton-foto{
-    width:76px !important;
-    height:76px !important;
-    min-width:76px !important;
-    min-height:76px !important;
-  }
-}
-</style>
-
-
-<style id="fix-video-thumbnail-visible">
-/* Mostrar siempre el fotograma del video, incluso cuando está pausado */
-button.boton-foto .video-perfil-en-bola,
-button.boton-foto.video-reproduciendo .video-perfil-en-bola {
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-button.boton-foto .video-perfil-en-bola {
-  background: transparent !important;
-}
-</style>
-
-
-
-<style id="programmer-video-final-overrides">
-button.boton-foto{overflow:hidden!important;border-radius:50%!important;clip-path:circle(50%)!important;-webkit-clip-path:circle(50%)!important;isolation:isolate!important;}
-button.boton-foto video.video-perfil-en-bola{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important;max-width:none!important;max-height:none!important;display:block!important;object-fit:cover!important;object-position:center!important;border:0!important;border-radius:50%!important;opacity:1!important;visibility:visible!important;pointer-events:none!important;z-index:1!important;background:transparent!important;}
-button.boton-foto .video-perfil-icon{position:absolute!important;inset:0!important;z-index:2!important;display:flex;align-items:center;justify-content:center;pointer-events:none!important;background:transparent!important;border:0!important;box-shadow:none!important;}
-button.boton-foto.video-reproduciendo .video-perfil-icon{display:none!important;}
-@media(max-width:600px){button.boton-foto{width:76px!important;height:76px!important;min-width:76px!important;min-height:76px!important;}}
-</style>
-
-
-<style id="programmer-video-preview-layer">
-button.boton-foto{position:fixed!important;isolation:isolate!important;}
-button.boton-foto img.video-perfil-preview{z-index:2!important;}
-button.boton-foto video.video-perfil-en-bola{z-index:1!important;}
-button.boton-foto .video-perfil-icon{z-index:3!important;}
-button.boton-foto.video-reproduciendo img.video-perfil-preview{display:none!important;}
-button.boton-foto:not(.video-reproduciendo) img.video-perfil-preview{display:block!important;}
-</style>
-
-<style id="tech-run-final-frame-cursor-fixes">
-/* Pantalla grande: el juego llena casi todo el alto y no deja franja negra abajo */
-.tech-game-section{
-  max-height:none!important;
-  overflow-x:hidden!important;
-  overflow-y:visible!important;
-  margin-top:4px!important;
-  margin-bottom:0!important;
-  padding-bottom:0!important;
-}
-.tech-game{
-  height:calc(100dvh - 16px)!important;
-  min-height:calc(100dvh - 16px)!important;
-  max-height:none!important;
-  width:100%!important;
-}
-#gameCanvas{cursor:none!important;}
-#techGameMouseCursor{user-select:none!important;-webkit-user-select:none!important;}
-@media(max-width:700px){
-  .tech-game{
-    height:calc(100dvh - 12px)!important;
-    min-height:calc(100dvh - 12px)!important;
-    max-height:none!important;
-  }
-  #techGameMouseCursor{display:none!important;}
-}
-@media (min-width:1101px) and (pointer:fine){
-  .tech-game{
-    height:calc(100dvh - 12px)!important;
-    min-height:calc(100dvh - 12px)!important;
-    max-height:none!important;
-  }
-}
-</style>
-
-</body>
-</html>
