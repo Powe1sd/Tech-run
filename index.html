@@ -358,7 +358,7 @@ body::before{content:"";position:fixed;width:100%;height:200%;background-image:r
 .goku-forms{display:none!important;justify-content:center;gap:5px;flex-wrap:wrap;margin-top:4px;width:100%}
 .goku-forms.show{display:flex!important}
 .goku-form-btn{padding:6px 10px;border-radius:8px;border:1px solid rgba(255,205,0,.35);background:rgba(0,20,50,.85);color:#FFCD00;font-family:Orbitron,sans-serif;font-size:10px;font-weight:700;cursor:pointer;transition:all .15s}
-.goku-form-btn.active{background:linear-gradient(135deg,#FFCD00,#FF8800);color:#111;border-color:#fff;box-shadow:0 0 12px rgba(255,205,0,.45)}
+.goku-form-btn.active{background:#536b82;color:#111;border-color:#fff;box-shadow:0 0 12px rgba(255,205,0,.45)}
 .goku-form-btn:active{transform:scale(.95)}
 @media(max-width:900px){
   .tech-game-section:fullscreen .goku-forms{display:none}
@@ -391,7 +391,7 @@ body::before{content:"";position:fixed;width:100%;height:200%;background-image:r
 .diff-btns button{padding:9px 14px;border-radius:10px;border:1px solid rgba(255,205,0,.4);background:linear-gradient(160deg,rgba(0,40,100,.8),rgba(0,12,36,.95));color:#e8f0ff;font-family:Orbitron,sans-serif;font-size:11px;cursor:pointer;transition:all .2s;box-shadow:0 2px 10px rgba(0,0,0,.3)}
 .diff-btns button:hover{border-color:#FFCD00;transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,205,0,.2)}
 .diff-btns button.active{background:linear-gradient(135deg,#FFCD00,#FFAA00);color:#111;font-weight:700;border-color:#fff;box-shadow:0 0 16px rgba(255,205,0,.4)}
-.touch-special{width:64px;height:64px;border-radius:50%;border:2px solid rgba(255,205,0,.55);background:radial-gradient(circle at 35% 30%,#ffe08a,#b8860b 60%,#5c4500);color:#111;font-family:Orbitron,sans-serif;font-weight:800;font-size:10px;touch-action:none}
+.touch-special{width:64px;height:64px;border-radius:50%;border:1px solid rgba(126,151,177,.38);background:radial-gradient(circle at 35% 30%,#ffe08a,#b8860b 60%,#5c4500);color:#111;font-family:Orbitron,sans-serif;font-weight:800;font-size:10px;touch-action:none}
 #startPanel{scrollbar-width:thin;scrollbar-color:#CE1126 transparent}
 #startPanel::-webkit-scrollbar{width:5px}
 #startPanel::-webkit-scrollbar-thumb{background:#CE1126;border-radius:5px}
@@ -538,7 +538,7 @@ body::before{content:"";position:fixed;width:100%;height:200%;background-image:r
   border-radius:18px;
   padding:22px 18px 16px;
   text-align:center;
-  box-shadow:0 0 0 1px rgba(206,17,38,.25),0 12px 40px rgba(0,0,0,.65);
+  box-shadow:0 0 0 1px rgba(75,91,112,.14),0 12px 40px rgba(0,0,0,.65);
 }
 .goku-pin-card h2{
   font-size:18px;margin:0 0 4px;
@@ -1583,7 +1583,7 @@ input,select,textarea{
 .btn-neoprimary:hover{
   transform:translateY(-2px) !important;
   filter:brightness(1.06);
-  box-shadow:0 12px 28px rgba(255,205,0,.22) !important;
+  box-shadow:0 12px 28px rgba(91,126,158,.13) !important;
 }
 .diff-btns button{
   background:linear-gradient(160deg,rgba(20,40,80,.9),rgba(8,16,32,.95)) !important;
@@ -2561,7 +2561,7 @@ html,body{width:100%;min-width:320px}
 </style>
 
 <style id="tech-ship-carousel-fix">
-#shipCarouselName{color:#FFCD00!important;-webkit-text-fill-color:#FFCD00!important;opacity:1!important;visibility:visible!important}
+#shipCarouselName{color:#b5c7d8!important;-webkit-text-fill-color:#b5c7d8!important;opacity:1!important;visibility:visible!important}
 #shipCarouselIndex{
   color:#fff!important;-webkit-text-fill-color:#fff!important;
   font-size:13px!important;font-weight:800!important;
@@ -2582,7 +2582,7 @@ html,body{width:100%;min-width:320px}
   <div class="game-title"><span class="hud-live-dot"></span> TECH RUN <small>MISSION HUD</small></div>
   <div class="game-score">
     <div class="hud-stat hud-score"><span class="hud-icon">✦</span><span class="hud-label">PUNTOS</span><strong id="gameScore">0</strong></div>
-    <div class="hud-stat hud-coins"><span class="hud-icon">⭐</span><span class="hud-label">PUNTOSJUEGO</span><strong id="gameCoins">0</strong></div>
+    <div class="hud-stat hud-coins"><span class="hud-icon">⭐</span><span class="hud-label">PUNTOS JUEGO</span><strong id="gameCoins">0</strong></div>
     <div class="hud-stat hud-record"><span class="hud-icon">★</span><span class="hud-label">RÉCORD</span><strong id="gameRecord">0</strong></div>
     <div class="hud-stat hud-lives"><span class="hud-icon">♥</span><span class="hud-label">VIDAS</span><strong id="gameLives">1</strong></div>
   </div>
@@ -2591,9 +2591,9 @@ html,body{width:100%;min-width:320px}
 <div class="game-panel" id="startPanel">
 <h2>⚡ TECH RUN</h2>
 <small>Elige dificultad y nave · Desliza para ver más</small>
-<div id="techCoinsBar" aria-label="Puntosjuego disponibles">
+<div id="techCoinsBar" aria-label="Puntos juego disponibles">
   <span class="tcb-star">⭐</span>
-  <span class="tcb-label">PUNTOSJUEGO</span>
+  <span class="tcb-label">PUNTOS JUEGO</span>
   <span class="tcb-value" id="techCoinsMainValue">0</span>
 </div>
 <button class="game-btn" id="openTechAccount" style="margin-top:8px;background:linear-gradient(135deg,#35205e,#6b39a8);border-color:#c9a4ff;color:#fff">Crear cuenta / Iniciar sesión</button>
@@ -3824,7 +3824,7 @@ function showDailyMissionsMenu(){
   <p style="text-align:center;color:#888;font-size:10px;margin:0 0 8px">Se renuevan cada día · Recompensa automática al completar</p>
   ${cards}
   <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,205,0,.25);text-align:center">
-    <p style="color:#aaa;font-size:11px;margin:4px 0">Puntosjuego: <b style="color:#FFD700">${coins}⭐</b></p>
+    <p style="color:#aaa;font-size:11px;margin:4px 0">Puntos juego: <b style="color:#FFD700">${coins}⭐</b></p>
     <button class="game-btn" id="closeDailyMissions" style="width:100%;margin-top:10px">CERRAR</button>
   </div>`;
   m.style.display="block";
@@ -3868,7 +3868,7 @@ function buyWeapon(id){
   if(ownedWeapons.includes(id)){
     currentWeapon=id;lsSet("techWeapon",id);return "equip";
   }
-  if(coins<item.price){alert("Necesitas "+item.price+" puntosjuego");return false}
+  if(coins<item.price){alert("Necesitas "+item.price+" puntos juego");return false}
   coins-=item.price;ownedWeapons.push(id);
   lsSet("techCoinsV2",coins);lsSet("techWeapons",JSON.stringify(ownedWeapons));try{if(typeof syncCoinsUI==="function")syncCoinsUI()}catch(e){}
   currentWeapon=id;lsSet("techWeapon",id);
@@ -3905,7 +3905,7 @@ function showWeaponShop(){
       </div>`;
     });
     m.innerHTML=`<h2 style="text-align:center;font-size:22px;margin-bottom:4px">🛡️ EQUIPAMIENTO</h2>
-    <p style="text-align:center;color:#FFD700;font-size:14px;margin:0 0 4px">⭐ ${coins} puntosjuego</p>
+    <p style="text-align:center;color:#FFD700;font-size:14px;margin:0 0 4px">⭐ ${coins} puntos juego</p>
     <p style="text-align:center;color:#888;font-size:10px;margin:0 0 12px">Compra y equipa armamento permanente</p>
     ${cards}
     <button class="game-btn" id="closeWeaponShop" style="width:100%;margin-top:12px">CERRAR</button>`;
@@ -4133,7 +4133,7 @@ function showUserManual(){
   <p style="color:#FFCD00;font-size:12px;margin:8px 0 4px">PODERES</p>
   <p style="font-size:11px;color:#ccc;line-height:1.5"><b>Automático:</b> al coger un poder se activa solo.<br><b>Manual:</b> se guardan (cargas) y se usan con <b>G</b> o ⚡ de forma aleatoria.<br>Empiezas con 3 cargas.</p>
   <p style="color:#FFCD00;font-size:12px;margin:8px 0 4px">MONEDAS Y ARMAS</p>
-  <p style="font-size:11px;color:#ccc;line-height:1.5">Recoge puntosjuego en el mapa. En Equipamiento puedes comprar y equipar armas (doble, perforante, misil).</p>
+  <p style="font-size:11px;color:#ccc;line-height:1.5">Recoge puntos juego en el mapa. En Equipamiento puedes comprar y equipar armas (doble, perforante, misil).</p>
   <p style="color:#FFCD00;font-size:12px;margin:8px 0 4px">JUEGO</p>
   <p style="font-size:11px;color:#ccc;line-height:1.5">Oleadas de drones, minas y naves. Esquiva, dispara, sube de puntuación. Escenarios cambian al avanzar. Comparte tu récord al terminar.</p>
   <p style="color:#FFCD00;font-size:12px;margin:8px 0 4px">NAVES</p>
@@ -5497,10 +5497,10 @@ if(startPanel&&!document.getElementById("startExtras")){
     </div>
     <div id="techCoinsBar" style="margin:12px auto">
   <span class="tcb-star">⭐</span>
-  <span class="tcb-label">PUNTOSJUEGO</span>
+  <span class="tcb-label">PUNTOS JUEGO</span>
   <span class="tcb-value" id="techCoinsMainValue">${coins}</span>
 </div>
-<h3 style="color:#FFCD00!important">⭐ Puntosjuego: ${coins}</h3>
+<h3 style="color:#FFCD00!important">⭐ Puntos juego: ${coins}</h3>
     <div class="diff-btns">
       <button type="button" data-w="basic" class="${currentWeapon==="basic"?"active":""}">Básica</button>
       <button type="button" data-w="double" class="${currentWeapon==="double"?"active":""}">Doble · 40</button>
@@ -5512,7 +5512,8 @@ if(startPanel&&!document.getElementById("startExtras")){
       🎯 Récord: <b style="color:#FFCD00">${Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0}</b>
       · 30+ balas · 60+ vida · 100+ ágil
     </p>
-    <button type="button" class="game-btn" id="btnManualStart" style="width:100%;margin-top:6px;padding:8px">📖 Manual de usuario</button>
+    <button type="button" class="game-btn" id="btnTutorialStart" style="width:100%;margin-top:8px;padding:11px;background:linear-gradient(135deg,#FFCD00,#FF8A00)!important;color:#101522!important;-webkit-text-fill-color:#101522!important;border:1px solid #fff!important;font-weight:900;letter-spacing:.7px">📘 TUTORIAL · GUÍA DEL JUEGO</button>
+    <button type="button" class="game-btn" id="btnManualStart" style="width:100%;margin-top:7px;padding:8px">📖 Manual de usuario</button>
     <button type="button" class="game-btn" id="btnGameCredits" style="width:100%;margin-top:6px;padding:8px;border-color:rgba(255,205,0,.55);color:#FFCD00">⚡ Créditos · Creador</button>
     <div id="gameCreditsBox" style="display:none;margin-top:8px;padding:12px 10px;border:1px solid rgba(255,205,0,.3);border-radius:10px;background:rgba(0,10,28,.75);text-align:center">
       <p style="color:#FFCD00;font-size:11px;font-weight:800;letter-spacing:1px;margin:0 0 6px;text-transform:none">Creador del juego</p>
@@ -5640,7 +5641,7 @@ if(startPanel&&!document.getElementById("startExtras")){
       const w=b.getAttribute("data-w");
       const prices={basic:0,double:40,pierce:60,spread:80,rapid:100,laser_gun:120,missile_gun:150,plasma:180,wave:200};
       if(!ownedWeapons.includes(w)){
-        if(coins<(prices[w]||0)){alert("Necesitas "+prices[w]+" puntosjuego");return}
+        if(coins<(prices[w]||0)){alert("Necesitas "+prices[w]+" puntos juego");return}
         coins-=prices[w];ownedWeapons.push(w);lsSet("techCoinsV2",coins);lsSet("techWeapons",JSON.stringify(ownedWeapons));
       }
       currentWeapon=w;lsSet("techWeapon",w);renderStart();
@@ -7143,7 +7144,7 @@ function destroyEnemy(o,i){
   }
   const pts={patrol_drone:1,space_mine:2,meteor:1,explosive:2,magnetic:2,ship:3,hunter:4,sniper:5,turret:6,kamikaze:3,swarm:1,thief:5,teleport:6,drone:2,bomber:5,armored:7,strafer:4,missile_ship:6,ghost:4,pumpkin:5,witch_e:6,creature:7,alien:5,alien_small:2,alien_flyer:4,alien_brute:8,alien_eye:6,bigship:6,boss_meteor:30,boss_mothership:40,boss_tentacle:35,boss_bh:45,boss_alien_space:40,boss_alien_ice:40,boss_alien_fire:42,boss_alien_crystal:42,boss_alien_halloween:45,boss_pumpkin:50,boss_witch:52,boss_alien_neon:43,boss_alien_toxic:44,boss_alien_void:48};
   addScoreCombo(pts[o.type]||2);
-  // Puntosjuego can be spent in the shop: every enemy grants 1, bosses grant 10.
+  // Puntos juego can be spent in the shop: every enemy grants 1, bosses grant 10.
   const currencyReward=String(o.type).startsWith("boss")?10:1;
   coins=Math.max(0,(Number(coins)||0)+currencyReward);
   lsSet("techCoinsV2",coins);
@@ -9284,7 +9285,7 @@ if(p.type==="redL"){
   for(let k=0;k<18;k++){const a=Math.random()*Math.PI*2;const d=12+Math.random()*55;createExplosion(p.x+Math.cos(a)*d,p.y+Math.sin(a)*d,5+Math.random()*9,"255,20,55")}
 }else if(["chain","phase","orbmine","vacuum","railgun","redL"].includes(p.type)){applyNewPowerPickup(p.type)}
 else if(p.type==="ammo"){ammo=Math.min(ammo+40,250);playSfx("power")}
-else if(p.type==="coin"){coins+=(p.value||5)*2;lsSet("techCoinsV2",coins);try{if(typeof syncCoinsUI==="function")syncCoinsUI()}catch(e){};playSfx("power");scenarioMsg="⭐ +"+(p.value||5)*2+" puntosjuego";scenarioTransition=40}
+else if(p.type==="coin"){coins+=(p.value||5)*2;lsSet("techCoinsV2",coins);try{if(typeof syncCoinsUI==="function")syncCoinsUI()}catch(e){};playSfx("power");scenarioMsg="⭐ +"+(p.value||5)*2+" puntos juego";scenarioTransition=40}
 else if(powerMode==="manual"&&["hammer","bomb","burst","shield","bounce","missile","laser","pierce","reflect","vortex","ion","emp","chain","phase","orbmine","vacuum","railgun","redL"].includes(p.type)){
   specialCharges=Math.min(9,specialCharges+1);powersCollected++;playSfx("power");
 }else if(p.type==="shield"){shield=320;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("shield");if(!SFX.shield)playSfx("power")}
@@ -9375,12 +9376,12 @@ ctx.fillStyle="rgba(0,0,0,.62)";ctx.fillRect(0,canvas.height-P(40),canvas.width,
 ctx.textAlign="left";ctx.font="bold "+P(11)+"px Orbitron";
 ctx.fillStyle=ammo>15?"#FFCD00":"#FF3333";
 ctx.fillText("MUNICIÓN "+ammo,P(8),canvas.height-P(10));
-/* Puntosjuego bien visibles */
+/* Puntos juego bien visibles */
 ctx.font="bold "+P(12)+"px Orbitron";
 ctx.fillStyle="#000";
-ctx.fillText("⭐ PUNTOSJUEGO "+(coins|0),P(9),canvas.height-P(23));
+ctx.fillText("⭐ PUNTOS JUEGO "+(coins|0),P(9),canvas.height-P(23));
 ctx.fillStyle="#FFCD00";
-ctx.fillText("⭐ PUNTOSJUEGO "+(coins|0),P(8),canvas.height-P(24));
+ctx.fillText("⭐ PUNTOS JUEGO "+(coins|0),P(8),canvas.height-P(24));
 ctx.fillStyle="#FFFFFF";ctx.font="bold "+P(9)+"px Orbitron";
 ctx.fillText("☄ "+meteorsDestroyed,P(8),canvas.height-P(36));
 try{
@@ -10476,7 +10477,7 @@ const rank=getRanking().map((r,i)=>(i+1)+". "+r.score+" ("+r.diff+")").join("<br
 const _goScore=typeof score!=='undefined'?Number(score)||0:0;
 const _goShip=(typeof shipName!=='undefined'&&shipName)?String(shipName):'Nave';
 const _guestMode = (typeof window.techAuthIsLoggedIn === 'function') ? !window.techAuthIsLoggedIn() : true;
-extra.innerHTML='<p style="color:#FFD700;font-size:12px;margin-top:6px;margin-bottom:3px">⭐ Puntosjuego: '+coins+'</p>'
+extra.innerHTML='<p style="color:#FFD700;font-size:12px;margin-top:6px;margin-bottom:3px">⭐ Puntos juego: '+coins+'</p>'
   +(!_guestMode?'<p id="onlineRankStatus" style="color:#7fd;font-size:11px;margin:4px 0">🌐 Subiendo al ranking online…</p>':'')
   +'<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:5px;padding-bottom:10px">'
   +'<button class="game-btn" id="shareScoreBtn" style="margin:0;transform:translateY(-12px)">📤 COMPARTIR</button>'
@@ -10922,7 +10923,7 @@ function showStoryResultPanel(ok){
   const ch=STORY_CAMPAIGN[storyChapterIdx]||{};
   const nextIdx=storyChapterIdx+1;const hasNext=nextIdx<STORY_CAMPAIGN.length;
   if(ok){
-    p.innerHTML='<h2>✅ MISIÓN CUMPLIDA</h2><p style="color:#FFCD00">'+(ch.title||"")+'</p><p>+'+(ch.reward||0)+' ⭐ puntosjuego</p><p style="font-size:12px;color:#aaa">Puntuación: '+(score||0)+'</p>'+
+    p.innerHTML='<h2>✅ MISIÓN CUMPLIDA</h2><p style="color:#FFCD00">'+(ch.title||"")+'</p><p>+'+(ch.reward||0)+' ⭐ puntos juego</p><p style="font-size:12px;color:#aaa">Puntuación: '+(score||0)+'</p>'+
       (hasNext?'<button class="game-btn" id="storyNextBtn">'+(typeof T==='function'?T('storyNext'):'➡ Siguiente misión')+'</button>':'<p style="color:#66FF88">'+(typeof T==='function'?T('storyCampaignDone'):'🏁 Campaña completada')+'</p>')+
       '<button class="game-btn game-btn-blue" id="storyMenuBtn">📖 MENÚ HISTORIA</button>';
   }else{
@@ -11091,7 +11092,7 @@ function storyOnWaveComplete(){
 /* === Parche final i18n: traducción completa del menú de inicio y textos dinámicos === */
 (function(){
   const LANGS = {
-    es:{label:'Idioma',choose:'Elige dificultad y nave · Desliza para ver más',start:'🚀 Iniciar',easy:'Fácil',normal:'NORMAL',hard:'Difícil',mode:'Modo de juego',classic:'Clásico',infinite:'Infinito',infiniteDesc:'Infinito: oleadas interminables, sin jefes; la velocidad y la dificultad aumentan con cada oleada.',upgrades:'Mejoras permanentes',speed:'Velocidad',ammo:'Munición',lives:'Vidas',damage:'Daño',world:'Mundo',space:'Espacio',snow:'Nieve',fire:'Fuego',crystal:'Cristal',halloween:'Halloween',neon:'Neón',toxic:'Tóxico',void:'Vacío',selectShip:'Seleccionar nave',allShips:'Todas las naves',scroll:'◀ ▶ o desliza · o elige abajo',max:'Máx. 10 letras · se ve en la nave',color:'🎨 Color',white:'Blanca',black:'Negra',gold:'Oro',cyan:'Cian',crimson:'Carmesí',violet:'Violeta',lime:'Lima',steel:'Acero',orange:'Naranja',points:'⭐ Puntosjuego:',basic:'Básica',double:'Doble',piercing:'Perfora',spread:'Abanico',bonuses:'Bonos por récord',record:'Récord:',bullets:'balas',life:'vida',agile:'ágil',manual:'📖 Manual de usuario',equipment:'🛡️ Equipamiento',missions:'📋 Misiones diarias',boss:'Derrota de jefes',combo:'Maestro del combo',top:'TOP: Sin récords aún',history:'📜 Historial de partidas',noHistory:'Sin partidas aún. ¡Juega una!',clear:'🗑 Borrar historial',settings:'Ajustes en ⚙ Config (arriba a la izquierda)',continue:'💾 Continuar partida',story:'📖 Modo historia',controls:'⌨️ Flechas · Espacio · 🎮 Mando · ⚙ Config · Pausa',shown:'se ve en la nave'},
+    es:{label:'Idioma',choose:'Elige dificultad y nave · Desliza para ver más',start:'🚀 Iniciar',easy:'Fácil',normal:'NORMAL',hard:'Difícil',mode:'Modo de juego',classic:'Clásico',infinite:'Infinito',infiniteDesc:'Infinito: oleadas interminables, sin jefes; la velocidad y la dificultad aumentan con cada oleada.',upgrades:'Mejoras permanentes',speed:'Velocidad',ammo:'Munición',lives:'Vidas',damage:'Daño',world:'Mundo',space:'Espacio',snow:'Nieve',fire:'Fuego',crystal:'Cristal',halloween:'Halloween',neon:'Neón',toxic:'Tóxico',void:'Vacío',selectShip:'Seleccionar nave',allShips:'Todas las naves',scroll:'◀ ▶ o desliza · o elige abajo',max:'Máx. 10 letras · se ve en la nave',color:'🎨 Color',white:'Blanca',black:'Negra',gold:'Oro',cyan:'Cian',crimson:'Carmesí',violet:'Violeta',lime:'Lima',steel:'Acero',orange:'Naranja',points:'⭐ Puntos juego:',basic:'Básica',double:'Doble',piercing:'Perfora',spread:'Abanico',bonuses:'Bonos por récord',record:'Récord:',bullets:'balas',life:'vida',agile:'ágil',manual:'📖 Manual de usuario',equipment:'🛡️ Equipamiento',missions:'📋 Misiones diarias',boss:'Derrota de jefes',combo:'Maestro del combo',top:'TOP: Sin récords aún',history:'📜 Historial de partidas',noHistory:'Sin partidas aún. ¡Juega una!',clear:'🗑 Borrar historial',settings:'Ajustes en ⚙ Config (arriba a la izquierda)',continue:'💾 Continuar partida',story:'📖 Modo historia',controls:'⌨️ Flechas · Espacio · 🎮 Mando · ⚙ Config · Pausa',shown:'se ve en la nave'},
     en:{label:'Language',choose:'Choose difficulty and ship · Scroll for more',start:'🚀 Start',easy:'Easy',normal:'NORMAL',hard:'Hard',mode:'Game mode',classic:'Classic',infinite:'Infinite',infiniteDesc:'Infinite: endless waves, no bosses; speed and difficulty rise with each wave.',upgrades:'Permanent upgrades',speed:'Speed',ammo:'Ammo',lives:'Lives',damage:'Damage',world:'World',space:'Space',snow:'Snow',fire:'Fire',crystal:'Crystal',halloween:'Halloween',neon:'Neon',toxic:'Toxic',void:'Void',selectShip:'Select ship',allShips:'All ships',scroll:'◀ ▶ or swipe · or choose below',max:'Max. 10 characters · shown on the ship',color:'🎨 Color',white:'White',black:'Black',gold:'Gold',cyan:'Cyan',crimson:'Crimson',violet:'Violet',lime:'Lime',steel:'Steel',orange:'Orange',points:'⭐ Game points:',basic:'Basic',double:'Double',piercing:'Piercing',spread:'Spread',bonuses:'Record bonuses',record:'Record:',bullets:'bullets',life:'life',agile:'agile',manual:'📖 User manual',equipment:'🛡️ Equipment',missions:'📋 Daily missions',boss:'Boss hunter',combo:'Combo master',top:'TOP: No records yet',history:'📜 Match history',noHistory:'No matches yet. Play one!',clear:'🗑 Clear history',settings:'Settings in ⚙ Config (top left)',continue:'💾 Continue game',story:'📖 Story mode',controls:'⌨️ Arrows · Space · 🎮 Gamepad · ⚙ Settings · Pause',shown:'shown on the ship'},
     fr:{label:'Langue',choose:'Choisissez la difficulté et le vaisseau · Faites défiler',start:'🚀 Démarrer',easy:'FACILE',normal:'NORMAL',hard:'DIFFICILE',mode:'Mode de jeu',classic:'Classique',infinite:'Infini',infiniteDesc:'Infini : vagues sans fin sans boss, difficulté croissante',upgrades:'Améliorations permanentes',speed:'Vitesse',ammo:'Munitions',lives:'Vies',damage:'Dégâts',world:'Monde',space:'Espace',snow:'Neige',fire:'Feu',crystal:'Cristal',halloween:'Halloween',neon:'Néon',toxic:'Toxique',void:'Vide',selectShip:'Choisir un vaisseau',allShips:'Tous les vaisseaux',scroll:'◀ ▶ ou glissez · ou choisissez ci-dessous',max:'10 caractères max. · visible sur le vaisseau',color:'🎨 Couleur',white:'Blanche',black:'Noire',gold:'Or',cyan:'Cyan',crimson:'Cramoisi',violet:'Violet',lime:'Vert citron',steel:'Acier',orange:'Orange',points:'⭐ Points de jeu :',basic:'Basique',double:'Double',piercing:'Perforant',spread:'Éventail',bonuses:'Bonus de record',record:'Record :',bullets:'balles',life:'vie',agile:'agile',manual:'📖 Manuel utilisateur',equipment:'🛡️ Équipement',missions:'📋 Missions quotidiennes',boss:'Chasseur de boss',combo:'Maître du combo',top:'TOP : aucun record',history:'📜 Historique des parties',noHistory:'Aucune partie. Jouez-en une !',clear:'🗑 Effacer l’historique',settings:'Réglages dans ⚙ Config (en haut à gauche)',continue:'💾 Continuer la partie',story:'📖 Mode histoire',controls:'⌨️ Flèches · Espace · 🎮 Manette · ⚙ Réglages · Pause',shown:'visible sur le vaisseau'},
     ja:{label:'言語',choose:'難易度と機体を選択 · 下へスクロール',start:'🚀 スタート',easy:'かんたん',normal:'ふつう',hard:'むずかしい',mode:'ゲームモード',classic:'クラシック',infinite:'無限',infiniteDesc:'無限：ボスなしでウェーブが続き、難易度が上がります',upgrades:'恒久アップグレード',speed:'速度',ammo:'弾薬',lives:'ライフ',damage:'ダメージ',world:'世界',space:'宇宙',snow:'雪',fire:'炎',crystal:'クリスタル',halloween:'ハロウィン',neon:'ネオン',toxic:'毒',void:'虚無',selectShip:'機体を選択',allShips:'すべての機体',scroll:'◀ ▶ またはスワイプ・下から選択',max:'最大10文字・機体に表示',color:'🎨 色',white:'白',black:'黒',gold:'金',cyan:'シアン',crimson:'深紅',violet:'紫',lime:'ライム',steel:'スチール',orange:'オレンジ',points:'⭐ ゲームポイント：',basic:'基本',double:'ダブル',piercing:'貫通',spread:'拡散',bonuses:'記録ボーナス',record:'記録：',bullets:'弾',life:'ライフ',agile:'敏捷',manual:'📖 ユーザーマニュアル',equipment:'🛡️ 装備',missions:'📋 デイリーミッション',boss:'ボスハンター',combo:'コンボマスター',top:'TOP：記録なし',history:'📜 プレイ履歴',noHistory:'まだプレイ記録がありません。プレイしましょう！',clear:'🗑 履歴を削除',settings:'設定は左上の ⚙ Config',continue:'💾 ゲームを続ける',story:'📖 ストーリーモード',controls:'⌨️ 矢印 · スペース · 🎮 コントローラー · ⚙ 設定 · 一時停止',shown:'機体に表示'},
@@ -11123,7 +11124,7 @@ function storyOnWaveComplete(){
     '🌍 Mundo':'world','World':'world','Monde':'world','世界':'world','1 Espacio':'space','Space':'space','Espace':'space','宇宙':'space','太空':'space','2 Nieve':'snow','Snow':'snow','Neige':'snow','雪':'snow','雪地':'snow','3 Fuego':'fire','Fire':'fire','Feu':'fire','炎':'fire','火焰':'fire','4 Cristal':'crystal','Crystal':'crystal','Cristal':'crystal','クリスタル':'crystal','水晶':'crystal','5 Halloween':'halloween','Halloween':'halloween','ハロウィン':'halloween','万圣节':'halloween','6 Neón':'neon','Neon':'neon','Néon':'neon','ネオン':'neon','霓虹':'neon','7 Tóxico':'toxic','Toxic':'toxic','Toxique':'toxic','毒':'toxic','毒域':'toxic','8 Vacío':'void','Void':'void','Vide':'void','虚無':'void','虚空':'void',
     '🚀 Seleccionar nave':'selectShip','Select ship':'selectShip','Choisir un vaisseau':'selectShip','機体を選択':'selectShip','选择飞船':'selectShip','🚀 Todas las naves':'allShips','All ships':'allShips','Tous les vaisseaux':'allShips','すべての機体':'allShips','所有飞船':'allShips','◀ ▶ o desliza · o elige abajo':'scroll','◀ ▶ or swipe · or choose below':'scroll','◀ ▶ ou glissez · ou choisissez ci-dessous':'scroll','◀ ▶ またはスワイプ・下から選択':'scroll','◀ ▶ 或滑动 · 也可在下方选择':'scroll',
     'Máx. 10 letras · se ve en la nave':'max','Max. 10 characters · shown on the ship':'max','10 caractères max. · visible sur le vaisseau':'max','最大10文字・機体に表示':'max','最多10个字符·显示在飞船上':'max','🎨 Color':'color','🎨 Couleur':'color','🎨 色':'color','🎨 颜色':'color','Blanca':'white','White':'white','Blanche':'white','白':'white','白色':'white','Negra':'black','Black':'black','Noire':'black','黒':'black','黑色':'black','Oro':'gold','Gold':'gold','Or':'gold','金':'gold','金色':'gold','Cian':'cyan','Cyan':'cyan','シアン':'cyan','青色':'cyan','Carmesí':'crimson','Crimson':'crimson','Cramoisi':'crimson','深紅':'crimson','深红色':'crimson','Violeta':'violet','Violet':'violet','紫':'violet','Lima':'lime','Lime':'lime','Vert citron':'lime','ライム':'lime','青柠绿':'lime','Acero':'steel','Steel':'steel','Acier':'steel','スチール':'steel','钢色':'steel','Naranja':'orange','Orange':'orange','オレンジ':'orange','橙色':'orange',
-    '⭐ Puntosjuego:':'points','⭐ Game points:':'points','Puntosjuego:':'points','Game points:':'points','Points de jeu :':'points','ゲームポイント：':'points','游戏积分：':'points','Básica':'basic','Basic':'basic','Basique':'basic','基本':'basic','基础':'basic','Doble':'double','Double':'double','Perfora':'piercing','Piercing':'piercing','Perforante':'piercing','貫通':'piercing','穿透':'piercing','Abanico':'spread','Spread':'spread','Éventail':'spread','拡散':'spread','散射':'spread',
+    '⭐ Puntos juego:':'points','⭐ Game points:':'points','Puntos juego:':'points','Game points:':'points','Points de jeu :':'points','ゲームポイント：':'points','游戏积分：':'points','Básica':'basic','Basic':'basic','Basique':'basic','基本':'basic','基础':'basic','Doble':'double','Double':'double','Perfora':'piercing','Piercing':'piercing','Perforante':'piercing','貫通':'piercing','穿透':'piercing','Abanico':'spread','Spread':'spread','Éventail':'spread','拡散':'spread','散射':'spread',
     'Bonos por récord':'bonuses','Record bonuses':'bonuses','Bonus de record':'bonuses','記録ボーナス':'bonuses','纪录奖励':'bonuses','Récord:':'record','Record:':'record','Record :':'record','記録：':'record','纪录：':'record','balas':'bullets','bullets':'bullets','balles':'bullets','弾':'bullets','子弹':'bullets','vida':'life','life':'life','vie':'life','ライフ':'life','agile':'agile','ágil':'agile','敏捷':'agile',
     '📖 Manual de usuario':'manual','📖 User manual':'manual','📖 Manuel utilisateur':'manual','📖 ユーザーマニュアル':'manual','📖 用户手册':'manual','🛡️ Equipamiento':'equipment','🛡️ Equipment':'equipment','🛡️ Équipement':'equipment','🛡️ 装備':'equipment','🛡️ 装备':'equipment','📋 Misiones diarias':'missions','📋 Daily missions':'missions','📋 Missions quotidiennes':'missions','📋 デイリーミッション':'missions','📋 每日任务':'missions','Derrota de jefes':'boss','Boss hunter':'boss','Chasseur de boss':'boss','ボスハンター':'boss','首领猎手':'boss','Maestro del combo':'combo','Combo master':'combo','Maître du combo':'combo','コンボマスター':'combo','连击大师':'combo',
     'TOP: Sin récords aún':'top','TOP: No records yet':'top','TOP : aucun record':'top','TOP：記録なし':'top','TOP：暂无记录':'top','📜 Historial de partidas':'history','📜 Match history':'history','📜 Historique des parties':'history','📜 プレイ履歴':'history','📜 对局记录':'history','Sin partidas aún. ¡Juega una!':'noHistory','No matches yet. Play one!':'noHistory','Aucune partie. Jouez-en une !':'noHistory','まだプレイ記録がありません。プレイしましょう！':'noHistory','还没有对局，来玩一局吧！':'noHistory','🗑 Borrar historial':'clear','🗑 Clear history':'clear','🗑 Effacer l’historique':'clear','🗑 履歴を削除':'clear','🗑 清除记录':'clear','Ajustes en ⚙ Config (arriba a la izquierda)':'settings','Settings in ⚙ Config (top left)':'settings','Réglages dans ⚙ Config (en haut à gauche)':'settings','設定は左上の ⚙ Config':'settings','设置位于左上角 ⚙ Config':'settings','💾 Continuar partida':'continue','💾 Continue game':'continue','💾 Continuer la partie':'continue','💾 ゲームを続ける':'continue','💾 继续游戏':'continue','📖 Modo historia':'story','📖 Story mode':'story','📖 Mode histoire':'story','📖 ストーリーモード':'story','⌨️ Flechas · Espacio · 🎮 Mando · ⚙ Config · Pausa':'controls','⌨️ Arrows · Space · 🎮 Gamepad · ⚙ Settings · Pause':'controls','⌨️ Flèches · Espace · 🎮 Manette · ⚙ Réglages · Pause':'controls','⌨️ 矢印 · スペース · 🎮 コントローラー · ⚙ 設定 · 一時停止':'controls','⌨️ 方向键 · 空格 · 🎮 手柄 · ⚙ 设置 · 暂停':'controls'
@@ -11579,7 +11580,7 @@ function runAdded(node){if(!node||node.nodeType!==1)return;run(node);}
         if(start){
           bar=document.createElement('div');
           bar.id='techCoinsBar';
-          bar.innerHTML='<span class="tcb-star">⭐</span><span class="tcb-label">PUNTOSJUEGO</span><span class="tcb-value" id="techCoinsMainValue">'+value+'</span>';
+          bar.innerHTML='<span class="tcb-star">⭐</span><span class="tcb-label">PUNTOS JUEGO</span><span class="tcb-value" id="techCoinsMainValue">'+value+'</span>';
           const h2=start.querySelector('h2');
           if(h2&&h2.nextSibling) start.insertBefore(bar, h2.nextSibling);
           else start.insertBefore(bar, start.firstChild);
@@ -14272,9 +14273,14 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
      if(!nick){status('Esta cuenta no tiene nombre de usuario. Contacta con el administrador.');return;}
      const input=$('shipNameInput');if(input)input.value=nick;
      try{localStorage.setItem('techShipName',nick);}catch(e){}
-     status('Sesión iniciada. Bienvenido, '+nick+'.',true);
+     status('Sesión iniciada. ¡Bienvenidos! '+nick+'.',true);
      try{if(typeof window.techRefreshStartMenu==='function')window.techRefreshStartMenu();}catch(e){console.warn('[TECH RUN] No se pudo actualizar el menú',e);}
-     setTimeout(close,900);
+     setTimeout(function(){
+       close();
+       setTimeout(function(){
+         try{if(typeof window.openTechTutorial==='function')window.openTechTutorial(true);}catch(e){console.warn('[TECH RUN] No se pudo abrir la guía',e);}
+       },350);
+     },900);
    }catch(e){console.error('[TECH RUN Auth] login',e);status('No se pudo iniciar sesión. Revisa el correo, la contraseña y confirma el correo si te lo pide. '+e.message);}
  }
  async function sendCode(){
@@ -16939,17 +16945,16 @@ y>
   background:
     linear-gradient(160deg, rgba(12,18,40,.98) 0%, rgba(6,8,18,.99) 55%, rgba(20,6,10,.98) 100%);
   box-shadow:
-    0 0 0 1px rgba(206,17,38,.35),
-    0 0 40px rgba(255,205,0,.18),
+    0 0 0 1px rgba(126,151,177,.12),
+    0 0 28px rgba(80,112,145,.10),
     0 24px 60px rgba(0,0,0,.65);
   position:relative;
 }
 #techTutorialCard::before{
   content:"";position:absolute;top:0;left:0;right:0;height:4px;
-  background:linear-gradient(90deg,#FFCD00,#CE1126,#0038A8,#FFCD00);
-  background-size:200% 100%;animation:tutBar 2.5s linear infinite;
+  background:linear-gradient(90deg,#657f99,#8295a8,#657f99);
 }
-@keyframes tutBar{to{background-position:200% 0}}
+@keyframes tutBar{to{background-position:0 0}}
 .tut-head{
   padding:20px 18px 10px;text-align:center;flex-shrink:0;
 }
@@ -16962,11 +16967,11 @@ y>
 .tut-head h2{
   margin:0;font:800 clamp(22px,5vw,30px) Orbitron,sans-serif;
   letter-spacing:2px;color:#fff!important;-webkit-text-fill-color:#fff!important;
-  text-shadow:0 0 20px rgba(255,205,0,.35);
+  text-shadow:0 1px 8px rgba(80,112,145,.18);
 }
 .tut-step-num{
   margin-top:6px;font:700 12px 'Share Tech Mono',monospace;
-  color:#FFCD00;-webkit-text-fill-color:#FFCD00;
+  color:#a9bfd2;-webkit-text-fill-color:#a9bfd2;
 }
 .tut-body{
   flex:1;overflow-y:auto;padding:8px 20px 12px;
@@ -16975,13 +16980,9 @@ y>
 .tut-icon{
   font-size:clamp(42px,10vw,64px);text-align:center;
   line-height:1;margin:6px 0 12px;
-  filter:drop-shadow(0 0 12px rgba(255,205,0,.4));
-  animation:tutPulse 1.6s ease-in-out infinite;
+  filter:drop-shadow(0 2px 5px rgba(0,0,0,.25));
 }
-@keyframes tutPulse{
-  0%,100%{transform:scale(1)}
-  50%{transform:scale(1.08)}
-}
+@keyframes tutPulse{0%,100%{transform:scale(1)}}
 .tut-title{
   text-align:center;font:800 18px Orbitron,sans-serif;
   color:#FFCD00!important;-webkit-text-fill-color:#FFCD00!important;
@@ -17007,8 +17008,8 @@ y>
 .tut-tips li span{
   flex:0 0 28px;height:28px;border-radius:8px;
   display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,#FFCD00,#CE1126);
-  color:#111;font-weight:800;font-size:14px;
+  background:#526a80;
+  color:#f0f4f8;font-weight:700;font-size:14px;
 }
 .tut-foot{
   flex-shrink:0;padding:12px 16px 16px;
@@ -17020,7 +17021,7 @@ y>
   width:9px;height:9px;border-radius:50%;
   background:rgba(255,255,255,.25);border:none;padding:0;cursor:pointer;
 }
-.tut-dot.on{background:#FFCD00;box-shadow:0 0 10px rgba(255,205,0,.7);transform:scale(1.15)}
+.tut-dot.on{background:#91a8bd;transform:scale(1.08)}
 .tut-actions{display:flex;gap:8px;flex-wrap:wrap}
 .tut-actions button{
   flex:1;min-height:48px;border-radius:12px;cursor:pointer;
@@ -17036,9 +17037,9 @@ y>
   border-color:rgba(93,229,255,.35)!important;
 }
 .tut-btn-next{
-  background:linear-gradient(135deg,#FFCD00,#FF6A00)!important;
-  color:#111!important;border-color:#fff!important;
-  box-shadow:0 6px 20px rgba(255,205,0,.3);
+  background:#536b82!important;
+  color:#f5f7fa!important;border-color:rgba(180,198,216,.35)!important;
+  box-shadow:0 3px 10px rgba(0,0,0,.18);
 }
 .tut-btn-next:active,.tut-btn-prev:active{transform:scale(.97)}
 @media(max-width:480px){
@@ -17055,11 +17056,11 @@ y>
   var STEPS=[
     {
       icon:'⚡',
-      title:'BIENVENIDO A TECH RUN',
-      text:'Un shooter espacial duro y directo. Sobrevive oleadas, sube de puntuación y gasta tus ⭐ puntosjuego en armas brutales.',
+      title:'BIENVENIDOS A TECH RUN',
+      text:'Un shooter espacial duro y directo. Sobrevive oleadas, sube de puntuación y gasta tus ⭐ puntos juego en armas brutales.',
       tips:[
         ['🚀','Elige dificultad, mundo y nave antes de iniciar.'],
-        ['⭐','Los puntosjuego se guardan y sirven para Equipamiento.'],
+        ['⭐','Los puntos juego se guardan y sirven para Equipamiento.'],
         ['🎯','Tu puntuación de partida y el récord se ven arriba en el HUD.']
       ]
     },
@@ -17095,12 +17096,108 @@ y>
     },
     {
       icon:'⭐',
-      title:'PUNTOSJUEGO',
+      title:'PUNTOS JUEGO',
       text:'Son tu moneda permanente. Se ven en el menú y en el HUD durante la partida.',
       tips:[
-        ['💰','Ganas puntosjuego al destruir enemigos y completar misiones.'],
+        ['💰','Ganas puntos juego al destruir enemigos y completar misiones.'],
         ['🛒','Gástalos en Equipamiento y mejoras permanentes.'],
         ['👀','Barra dorada del menú = saldo actual. ¡Mírala siempre!']
+      ]
+    },
+    {
+      icon:'🌍',
+      title:'MUNDOS Y MODOS',
+      text:'Prepara cada partida desde el menú. Elige el mundo y el modo disponible, revisa la dificultad y adapta tu estrategia al escenario.',
+      tips:[
+        ['🪐','En la pestaña Mundo puedes revisar y seleccionar los escenarios disponibles.'],
+        ['🎚️','Ajusta la dificultad antes de iniciar si quieres una partida más exigente o más tranquila.'],
+        ['🔁','Al avanzar, los escenarios y las oleadas pueden cambiar: mantente atento al entorno.']
+      ]
+    },
+    {
+      icon:'🎯',
+      title:'MISIONES Y PROGRESO',
+      text:'No te concentres solo en sobrevivir: completa objetivos, mejora tus marcas y aprovecha las recompensas.',
+      tips:[
+        ['📋','Consulta las Misiones diarias desde Extra y revisa su progreso.'],
+        ['🏅','Supera tus récords para conseguir bonificaciones y demostrar tu avance.'],
+        ['📊','Revisa tus estadísticas para seguir tu evolución entre partidas.']
+      ]
+    },
+    {
+      icon:'🛠️',
+      title:'PERSONALIZA TU PARTIDA',
+      text:'Configura TECH RUN para jugar con comodidad. Los ajustes adecuados ayudan a controlar mejor la nave y aprovechar cada poder.',
+      tips:[
+        ['🎮','En Extra encontrarás opciones de equipamiento, manual y otras herramientas.'],
+        ['🔊','Ajusta audio y sensibilidad desde Configuración según tu dispositivo.'],
+        ['💾','Inicia sesión con tu cuenta para acceder a las funciones online asociadas a tu perfil.']
+      ]
+    },
+    {
+      icon:'🧭',
+      title:'ANTES DE EMPEZAR',
+      text:'Dedica unos segundos a preparar la partida. Una buena configuración hace que controles mejor la nave y evita entrar con un equipo que no se adapta a tu estrategia.',
+      tips:[
+        ['⚙️','Revisa la dificultad, el mundo y el modo antes de pulsar Iniciar.'],
+        ['🚀','Comprueba la nave seleccionada y el nombre que aparecerá durante la partida.'],
+        ['🎨','Elige un color de nave que puedas distinguir fácilmente entre los efectos del escenario.'],
+        ['📖','Si tienes dudas sobre una opción, consulta el Manual o vuelve a esta guía desde Extra.']
+      ]
+    },
+    {
+      icon:'🔫',
+      title:'ARMAS Y EQUIPAMIENTO',
+      text:'Cada arma ofrece una forma distinta de atacar. Prueba las opciones disponibles y elige la que te permita controlar mejor las oleadas.',
+      tips:[
+        ['•','Básica: una opción sencilla para comenzar y aprender los patrones enemigos.'],
+        ['↔','Doble: amplía la cobertura de tus disparos.'],
+        ['➤','Perfora: útil cuando necesitas atravesar objetivos alineados.'],
+        ['✳','Abanico: reparte los disparos en varias direcciones. Revisa su coste antes de comprar.']
+      ]
+    },
+    {
+      icon:'📦',
+      title:'RECOGE OBJETOS',
+      text:'Durante la partida pueden aparecer objetos y bonificaciones en el escenario. Mantén la atención en el campo de juego y acércate a los que te ayuden.',
+      tips:[
+        ['＋','Busca objetos de apoyo y munición para mantenerte en combate.'],
+        ['⭐','Los objetos de puntos pueden aumentar tu saldo de Puntos juego.'],
+        ['🛡️','Aprovecha los poderes defensivos cuando la pantalla se llene de amenazas.'],
+        ['⚠️','No te expongas a un impacto solo por recoger un objeto: primero evita el peligro.']
+      ]
+    },
+    {
+      icon:'👾',
+      title:'ENEMIGOS Y JEFES',
+      text:'Aprende a leer el movimiento de los enemigos. A medida que progresas, el ritmo y la presión pueden aumentar; moverte con anticipación es mejor que reaccionar tarde.',
+      tips:[
+        ['👁️','Observa la dirección de los enemigos y de sus proyectiles.'],
+        ['↗','Muévete en diagonal o cambia de posición para salir de zonas peligrosas.'],
+        ['🎯','Prioriza las amenazas que estén más cerca o que te cierren el paso.'],
+        ['💥','Cuando aparezca un jefe, conserva espacio para esquivar y mantén el fuego cuando sea seguro.']
+      ]
+    },
+    {
+      icon:'📈',
+      title:'COMBOS, RÉCORD Y RECOMPENSAS',
+      text:'Tu progreso no depende únicamente de terminar una partida. Mejora tu puntuación, mantén el ritmo y completa objetivos para sacar más provecho de cada intento.',
+      tips:[
+        ['✦','Encadena eliminaciones y mantén la concentración para mejorar tu rendimiento.'],
+        ['🏆','Compara tu puntuación con el récord y busca superarlo en cada intento.'],
+        ['🎁','Algunos hitos y misiones pueden otorgar bonificaciones. Revisa sus condiciones.'],
+        ['📊','Consulta tus estadísticas e historial cuando quieras revisar cómo has jugado.']
+      ]
+    },
+    {
+      icon:'🎮',
+      title:'CONTROLES Y COMODIDAD',
+      text:'Puedes jugar desde distintos dispositivos. Usa el método de control que te resulte más cómodo y ajusta la configuración para mantener una respuesta precisa.',
+      tips:[
+        ['⌨️','En PC utiliza las flechas para desplazarte y Espacio o clic para disparar, según la configuración.'],
+        ['🖱️','Si usas el ratón, mueve el cursor con suavidad y evita movimientos bruscos.'],
+        ['📱','En móvil utiliza los controles táctiles que aparecen en pantalla.'],
+        ['⏸️','Usa la pausa y la configuración cuando necesites detenerte o ajustar la experiencia.']
       ]
     },
     {
@@ -17387,4 +17484,25 @@ y>
 .tech-game.is-playing #gameCanvas {
   clip-path: none !important;
 }
+</style>
+
+
+<style id="tech-coins-muted-palette">
+/* Puntos juego: presentación más sobria y menos brillante */
+.tech-game .hud-coins{
+  border-color:rgba(137,158,180,.38)!important;
+  background:linear-gradient(145deg,rgba(31,43,58,.94),rgba(17,25,36,.94))!important;
+}
+.tech-game .hud-coins .hud-icon,.tech-game .hud-coins strong,#gameCoins{
+  color:#c0ccd8!important;-webkit-text-fill-color:#c0ccd8!important;
+  text-shadow:none!important;
+}
+.tech-game .hud-coins .hud-label{color:#aebdcb!important;-webkit-text-fill-color:#aebdcb!important}
+#techCoinsBar{
+  border:1px solid rgba(137,158,180,.42)!important;
+  background:linear-gradient(135deg,rgba(73,91,111,.18),rgba(29,43,59,.34))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06)!important;
+}
+#techCoinsBar .tcb-label{color:#bdc9d5!important;-webkit-text-fill-color:#bdc9d5!important}
+#techCoinsBar .tcb-value{color:#d0d9e2!important;-webkit-text-fill-color:#d0d9e2!important;text-shadow:none!important}
 </style>
