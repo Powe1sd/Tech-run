@@ -18,8 +18,9 @@
 /* Foto de perfil: tamaño adaptable */
 .boton-foto {
   position: fixed;
-  top: 10px;
-  left: 10px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 99999;
   background: none;
   border: none;
@@ -30,26 +31,27 @@
 
 .foto-perfil {
   display: block;
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height:  120px;
   max-width: calc(100vw - 24px);
   object-fit: cover;
   object-position: center;
   border-radius: 50%;
   border: 3px solid white;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.55), 0 0 0 2px rgba(206, 17, 38, 0.45);
 }
 
 /* Celulares */
 @media screen and (max-width: 600px) {
   .boton-foto {
-    top: 8px;
-    left: 8px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
 
   .foto-perfil {
-    width: 55px;
-    height: 55px;
+    width: 72px;
+    height:  72px;
     border-width: 2px;
   }
 }
