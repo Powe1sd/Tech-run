@@ -10240,11 +10240,16 @@ if(!gameRunning||gamePaused)return;
 _lastLoopTs=performance.now();
 const _isMobLoop=(typeof isMobile==='function'&&isMobile());
 /* La limpieza de entidades no necesita ejecutarse en cada pocos frames. */
-if((++_gcTick)%(_isMobLoop?6:12)===0)gcEntities();
+if((++_gcTick)%(_isMobLoop?4:8)===0){
+  gcEntities();
+  const cap=(arr,max)=>{if(Array.isArray(arr)&&arr.length>max)arr.splice(0,arr.length-max);};
+  cap(typeof particles!=='undefined'?particles:null,_isMobLoop?90:180);cap(typeof explosions!=='undefined'?explosions:null,_isMobLoop?18:36);
+  cap(typeof lightningFX!=='undefined'?lightningFX:null,_isMobLoop?12:24);cap(typeof missiles!=='undefined'?missiles:null,_isMobLoop?24:48);
+}
 ctx.clearRect(0,0,canvas.width,canvas.height);
 try{
-  ctx.imageSmoothingEnabled=false;
-  if(!_isMobLoop){ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality=(typeof lowPower!=="undefined"&&lowPower)?"low":"medium"}
+  ctx.imageSmoothingEnabled=!_isMobLoop;
+  if(!_isMobLoop && (typeof lowPower!=="undefined"&&lowPower))ctx.imageSmoothingQuality="low";
 }catch(e){}
 /* Sin temblor de cámara: el mapa se queda fijo (también en PC reduce mareo) */
 screenShake=0;
@@ -13912,7 +13917,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
    <div class="ta-actions" id="taMainActions"><button type="button" id="taRegister">Crear usuario</button><button type="button" id="taLogin" class="ta-secondary">Iniciar sesión</button></div>
    <div class="ta-actions ta-hidden" id="taRecoveryActions"><button type="button" id="taSendCode">Enviar código</button><button type="button" id="taResetPassword" class="ta-secondary">Cambiar contraseña</button></div>
   </form>
-  <div class="ta-links"><button type="button" id="taGuestPlay" style="color:#83f0b0;border:1px solid rgba(131,240,176,.35);border-radius:10px;padding:10px 12px">Entrar como invitado</button><button type="button" id="taForgot">¿Olvidaste tu contraseña?</button><button type="button" id="taBack" class="ta-hidden">Volver al inicio</button><button type="button" id="taLogout" class="ta-hidden">↪ Cerrar sesión</button></div>
+  <div class="ta-links"><button type="button" id="taGuestPlay" style="color:#83f0b0;border:1px solid rgba(131,240,176,.35);border-radius:10px;padding:10px 12px">Entrar como invitado</button><button type="button" id="taForgot">¿Olvidaste tu contraseña?</button><button type="button" id="taBack" class="ta-hidden">Volver al inicio</button><button type="button" id="taLogout" class="ta-hidden">↪ Cerrar sesión</button><button type="button" id="taLogoutGuest" class="ta-hidden" style="display:block;width:100%;margin-top:8px;color:#83f0b0;border:1px solid rgba(131,240,176,.5);border-radius:10px;padding:11px 12px;background:rgba(20,70,48,.35);font-weight:700">Salir de la cuenta y entrar como invitado</button></div>
   <p id="techAuthStatus" role="status" aria-live="polite"></p>
  </div>
 </div>
@@ -14321,7 +14326,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
    if(!res.ok){let msg=data.msg||data.message||data.error_description||data.error||('Error HTTP '+res.status);if(res.status===400&&/already registered|user already exists/i.test(String(msg)))msg='Ese correo ya tiene una cuenta. Inicia sesión o recupera la contraseña.';throw new Error(msg);}
    return data;
  }
- function saveSession(s){const prevLogged=!!(session&&session.access_token&&user);session=s||null;if(session&&!session.expires_at&&session.expires_in)session.expires_at=Math.floor(Date.now()/1000)+Number(session.expires_in);user=session&&session.user||null;try{if(session)localStorage.setItem(SESSION_KEY,JSON.stringify(session));else localStorage.removeItem(SESSION_KEY);}catch(e){};updateAccountUI();try{window.techAuthAccessToken=session&&session.access_token||null;window.techAuthUserId=function(){return String((user&&user.id)||'').trim()};}catch(e){}try{const nowLogged=!!(session&&session.access_token&&user);if(typeof window.techOnAuthAccountChange==='function')window.techOnAuthAccountChange({loggedIn:nowLogged,wasLoggedIn:prevLogged,username:username(),userId:user&&user.id||null,migratedFromGuest:nowLogged&&!prevLogged});}catch(e){console.warn('[TECH Auth] account change',e)}}
+ function saveSession(s){const prevLogged=!!(session&&session.access_token&&user);session=s||null;if(session&&!session.expires_at&&session.expires_in)session.expires_at=Math.floor(Date.now()/1000)+Number(session.expires_in);user=session&&session.user||null;try{if(session)localStorage.setItem(SESSION_KEY,JSON.stringify(session));else localStorage.removeItem(SESSION_KEY);}catch(e){};updateAccountUI();try{window.techAuthAccessToken=session&&session.access_token||null;window.techAuthUserId=function(){return String((user&&user.id)||'').trim()};}catch(e){}try{const nowLogged=!!(session&&session.access_token&&user);if(typeof window.techOnAuthAccountChange==='function'){window.techAccountSyncing=true;Promise.resolve(window.techOnAuthAccountChange({loggedIn:nowLogged,wasLoggedIn:prevLogged,username:username(),userId:user&&user.id||null,migratedFromGuest:nowLogged&&!prevLogged})).catch(e=>console.warn('[TECH Auth] account sync',e)).finally(()=>{window.techAccountSyncing=false;});}else{window.techAccountSyncing=false;}}catch(e){window.techAccountSyncing=false;console.warn('[TECH Auth] account change',e)}}
  function username(){return String(user&&(user.user_metadata||{}).username||'').trim();}
  function isLogged(){return !!(session&&session.access_token&&user);}
  function owns(n){return isLogged()&&username().toLocaleLowerCase()===String(n||'').trim().toLocaleLowerCase();}
@@ -14336,7 +14341,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
    show('taCodeWrap',next==='reset');show('taNewPasswordWrap',next==='reset');show('taNewConfirmWrap',next==='reset');
    show('taMainActions',next==='home'||next==='register'||next==='login');show('taRecoveryActions',next==='forgot'||next==='reset');
    show('taSendCode',next==='forgot');show('taResetPassword',next==='reset');
-   show('taForgot',!logged&&next!=='forgot'&&next!=='reset');show('taBack',next!=='home'&&next!=='logged');show('taLogout',logged);
+   show('taForgot',!logged&&next!=='forgot'&&next!=='reset');show('taBack',next!=='home'&&next!=='logged');show('taLogout',logged);show('taLogoutGuest',logged);
    $('taRegister').classList.toggle('ta-hidden',next==='login');$('taLogin').classList.toggle('ta-hidden',next==='register');
    $('techAuthTitle').textContent=logged?'Cuenta conectada':(next==='forgot'||next==='reset'?'Recuperar contraseña':next==='register'?'':'TECH RUN');
    $('techAuthTitle').classList.toggle('ta-hidden',next==='register');
@@ -14411,7 +14416,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
      status('Contraseña actualizada. Ahora inicia sesión con tu nueva contraseña.',true);setMode('login');$('taEmail').value=email;$('taPassword').value='';
    }catch(e){console.error('[TECH RUN Auth] reset',e);status('No se pudo cambiar la contraseña: '+e.message+' Comprueba que el correo de recuperación esté configurado para enviar un código.');}
  }
- async function logout(){
+ async function logout(toGuest=false){
    try{if(session&&session.access_token)await request('logout','POST',{},session.access_token);}catch(e){console.warn('[TECH RUN Auth] logout',e);}
    saveSession(null);
    /* Bloqueo inmediato: cerrar sesión también detiene una partida que ya estuviera abierta. */
@@ -14421,7 +14426,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
    try{document.querySelectorAll('.game-panel').forEach(function(el){el.style.setProperty('display','none','important');});}catch(e){}
    try{var sp=document.getElementById('startPanel');if(sp)sp.style.setProperty('display','block','important');}catch(e){}
    try{var game=document.querySelector('.tech-game');if(game)game.classList.remove('is-playing');}catch(e){}
-   mode='home';modal.style.display='flex';setMode('home');status('Sesión cerrada. Inicia sesión o crea una cuenta para continuar.',true);
+   mode='home';setMode('home');modal.style.display=toGuest?'none':'flex';status(toGuest?'Sesión cerrada. Ya puedes jugar como invitado.':'Sesión cerrada. Inicia sesión o crea una cuenta para continuar.',true);
    try{if(typeof window.techRefreshStartMenu==='function')window.techRefreshStartMenu();}catch(e){console.warn('[TECH RUN] No se pudo actualizar el menú',e);}
    if(window.techNotify)window.techNotify('Sesión cerrada. Inicia sesión para continuar.','success','Sesión cerrada');
  }
@@ -14439,7 +14444,8 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
  $('taSendCode').addEventListener('click',sendCode);
  $('taResetPassword').addEventListener('click',resetPassword);
  $('taBack').addEventListener('click',()=>setMode(isLogged()?'logged':'home'));
- $('taLogout').addEventListener('click',logout);
+ $('taLogout').addEventListener('click',()=>logout(false));
+ $('taLogoutGuest').addEventListener('click',()=>logout(true));
  const accountExit=$('techAccountExit');
  if(accountExit)accountExit.addEventListener('click',function(){
    if(!isLogged()){accountExit.classList.remove('is-visible');return;}
@@ -14608,6 +14614,19 @@ function getAccessToken(){
   }catch(e){}
   return '';
 }
+function pvpAccountReady(){
+  const logged=!!(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn());
+  if(!logged){
+    setErr('El modo 1v1 requiere una cuenta iniciada. Entra con tu correo para continuar.');
+    if(window.techAuthOpen)window.techAuthOpen();
+    return false;
+  }
+  if(window.techAccountSyncing){
+    setErr('Tu cuenta todavía se está sincronizando. Espera a que termine antes de entrar al modo 1v1.');
+    return false;
+  }
+  return true;
+}
 function authHeaders(json){
   const token = getAccessToken() || ANON;
   const h = {
@@ -14719,6 +14738,7 @@ function updateReadyButton(r){
 }
 
 async function createRoom(){
+  if(!pvpAccountReady())return;
   setErr('');
   const code=genCode();
   const me=uid(); const nick=uname();
@@ -14760,6 +14780,7 @@ async function createRoom(){
 }
 
 async function joinRoom(){
+  if(!pvpAccountReady())return;
   setErr('');
   const code=String(($('pvpCodeInput')&&$('pvpCodeInput').value)||'').trim().toUpperCase().replace(/\s+/g,'');
   if(code.length<4){setErr('Escribe un código válido.');return}
