@@ -5911,8 +5911,10 @@ canvas.addEventListener("mousemove",e=>{
   const tx=(e.clientX-r.left)*scaleX, ty=(e.clientY-r.top)*scaleY;
   /* sensMouse 0.2–2: qué tanto sigue al cursor (1 = natural) */
   const k=Math.max(0.15,Math.min(1.5,sensMouse));
+  /* ~2 cm por encima de la cruz/cursor para que no tape la nave */
+  const aimLift = Math.max(48, Math.floor(75 * scaleY)); /* ~2cm CSS → buffer */
   let nx=player.x+(tx-player.x)*k;
-  let ny=player.y+(ty-player.y)*k;
+  let ny=player.y+((ty-aimLift)-player.y)*k;
   try{
     const m=Math.max(player.size||12,8);
     const top=(typeof getPlayerTopPad==="function")?getPlayerTopPad():Math.max(m*2,28);
@@ -5944,10 +5946,10 @@ function setAimFromTouch(t){
   const scaleX=canvas.width/Math.max(1,r.width), scaleY=canvas.height/Math.max(1,r.height);
   const m=Math.max(player.size||12,8);
   mouse.x=Math.max(m, Math.min(canvas.width-m, (t.clientX-r.left)*scaleX));
-  /* Nave por encima del dedo para que no la tape */
+  /* Nave por encima del dedo/cruz para que no la tape */
   const fingerY=(t.clientY-r.top)*scaleY;
-  /* ~2.5–3 cm por encima del dedo para que no tape la nave */
-  const offset=Math.max(110, player.size*4.5 + canvas.height*0.06);
+  /* ~2 cm extra: nave por encima de la mira táctil */
+  const offset=Math.max(110, player.size*4.5 + canvas.height*0.06) + Math.floor(75 * scaleY);
   const top=getPlayerTopPad();
   const bot=getPlayerBottomPad();
   mouse.y=Math.max(top, Math.min(canvas.height-bot, fingerY-offset));
