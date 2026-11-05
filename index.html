@@ -81,7 +81,7 @@ body::before{content:"";position:fixed;width:100%;height:200%;background-image:r
 .game-title{color:#fff;font-weight:800;font-size:12px;letter-spacing:1.5px;text-transform:none;text-shadow:0 0 12px rgba(0,160,233,.45),0 1px 2px #000;white-space:nowrap}
 .game-score{font-family:'Share Tech Mono',monospace;font-size:13px;text-align:left;line-height:1.5;color:#c8d6e8;text-shadow:0 0 8px rgba(0,0,0,.95),0 1px 2px #000;letter-spacing:.4px;padding:4px 8px 4px 0;border-left:2px solid rgba(255,205,0,.55);padding-left:8px}
 .game-score span{color:#FFCD00;font-weight:800;font-size:14px;text-shadow:0 0 10px rgba(255,205,0,.55)}
-.game-help{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);z-index:10;color:rgba(255,255,255,.55);font-family:'Share Tech Mono',monospace;font-size:12px;pointer-events:none;white-space:nowrap}
+.game-help{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);z-index:10;color:rgba(255,255,255,.55);font-family:'Share Tech Mono',monospace;font-size:12px;pointer-events:none;white-space:nowrap;max-width:92%;overflow:hidden;text-overflow:ellipsis}
 .game-panel{position:absolute;z-index:20;top:50%;left:50%;transform:translate(-50%,-50%);width:360px;max-width:92%;max-height:92%;padding:22px 18px;text-align:center;background:linear-gradient(165deg,rgba(8,14,32,.97),rgba(0,0,0,.98));border:1px solid rgba(255,205,0,.32);border-radius:16px;box-shadow:0 0 0 1px rgba(0,56,168,.25),0 16px 48px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .game-panel h2{color:#fff;font-size:24px;margin-bottom:12px;letter-spacing:1px;text-shadow:none;-webkit-text-fill-color:#fff}
 .game-panel p{color:#c5d0e0;font-family:'Share Tech Mono',monospace;line-height:1.55;margin-bottom:8px;font-size:13px}
@@ -2434,7 +2434,7 @@ body.low-power .tech-game { box-shadow: none !important; }
 :root{color-scheme:dark}
 html,body{width:100%;min-width:320px}
 .tech-game-section{width:100%;max-width:none;margin:0 auto;padding:clamp(12px,2vw,30px);}
-.tech-game{width:100%;max-width:none;height:clamp(560px,82vh,1050px);min-height:560px;border-radius:clamp(14px,1.5vw,24px);}
+.tech-game{width:100%;max-width:none;height:clamp(560px,90vh,1200px);min-height:560px;border-radius:clamp(14px,1.5vw,24px);}
 .game-panel{width:min(680px,88vw);max-width:92%;max-height:90%;padding:clamp(24px,3vw,44px);border-radius:22px;}
 .game-panel h2{font-size:clamp(28px,2.5vw,42px);line-height:1.2;margin-bottom:18px}
 .game-panel p{font-size:clamp(15px,1.1vw,19px);line-height:1.65}
@@ -2454,7 +2454,7 @@ html,body{width:100%;min-width:320px}
 /* En PC: espacio completo y sin controles táctiles */
 @media (min-width:1101px) and (pointer:fine){
  .tech-game-section{padding:clamp(14px,1.5vw,28px) clamp(18px,2.2vw,42px)}
- .tech-game{height:clamp(650px,86vh,1150px);min-height:650px}
+ .tech-game{height:clamp(650px,90vh,1200px);min-height:650px}
  .touch-pad{display:none!important}
  .game-panel{width:min(760px,70vw)}
  #startPanel{width:min(800px,72vw)}
@@ -2746,6 +2746,11 @@ let level=1,phase="meteors",phaseTimer=0,waveNumber=1,waveCount=0;
 let scenario=1,scenarioTransition=0,scenarioMsg="";
 const METEOR_DURATION=18*60,WARNING_DURATION=1.5*60; /* oleada cada 18 s */
 let ammo=100,shield=0,bounceShield=0,rapidFire=0,tripleShot=0,slowMo=0,laser=0,pierce=0,invisible=0,magnet=0,missilePower=0,allyPower=0,storm=0,overdrive=0,nova=0,reflect=0,burst=0,repair=0,freezeEnemies=0,barrier=0,bazooka=0,vortex=0,ion=0,emp=0,laserGrace=0,specialCharges=3,powersCollected=0,lives=1,powerMode=lsGet("techPowerMode","auto"),coins=Number(lsGet("techCoinsV2",lsGet("techCoins",0)))||0,ownedWeapons=(function(){try{var w=JSON.parse(lsGet('techWeapons','["basic"]'));return Array.isArray(w)?w:['basic']}catch(e){return['basic']}})(),currentWeapon=lsGet('techWeapon','basic')||'basic';
+/* === Nuevos poderes === */
+let bulletTime=0,kineticCharge=0,kineticReady=0,cleanPulseCd=0,ionBoots=0,tractorBeam=0;
+let playerClone=null,energyWalls=[],decoyEntity=null,ionTrail=[];
+let parasiteAttached=0,disruptorSlow=0;
+
 let weaponHeat=0,weaponOverheat=0,weaponDeployCd=0,playerDeploys=[];
 let showGokuFormsBar=lsGet("techShowForms","1")!=="0";
 window.showMinimap=lsGet("techShowMinimap","1")!=="0";
@@ -4585,16 +4590,8 @@ function fireRedLBeam(){
 
 function applyNewPowerPickup(type){
   powersCollected++;
-  if(type==="chain"){
-    if(powerMode==="manual"){specialCharges=Math.min(9,specialCharges+1);playSfx("power");scenarioMsg="⚡ Cadena lista";scenarioTransition=45}
-    else activateChainLightning();
-    return true;
-  }
-  if(type==="phase"){
-    if(powerMode==="manual"){specialCharges=Math.min(9,specialCharges+1);playSfx("power");scenarioMsg="👻 Phase listo";scenarioTransition=45}
-    else activatePhaseShift();
-    return true;
-  }
+  /* chain / phase / emp eliminados del juego */
+  if(type==="chain"||type==="phase"||type==="emp"){return false}
   if(type==="orbmine"){
     if(powerMode==="manual"){specialCharges=Math.min(9,specialCharges+1);playSfx("power");scenarioMsg="💣 Minas listas";scenarioTransition=45}
     else activateOrbitalMines();
@@ -4623,7 +4620,7 @@ function useSpecialPower(){
     fireKamehameha();
     return;
   }
-  const opts=["hammer","bomb","burst","shield","missile","chain","phase","orbmine","vacuum","railgun","redL","redL"];
+  const opts=["hammer","bomb","burst","shield","missile","orbmine","vacuum","railgun","redL","redL"];
   const pick=opts[Math.floor(Math.random()*opts.length)];
   if(pick==="hammer"){activateHammer();playSfx("hammer");if(!SFX.hammer)playSfx("power");try{playSfx("explode")}catch(e){}}
   else if(pick==="nova"){activateNova();playSfx("nova");if(!SFX.nova)playSfx("explode")}
@@ -4632,9 +4629,7 @@ function useSpecialPower(){
   else if(pick==="shield"){shield=320;playSfx("shield");if(!SFX.shield)playSfx("power")}
   else if(pick==="rapid"){rapidFire=400;playSfx("rapid");if(!SFX.rapid)playSfx("power")}
   else if(pick==="missile"){missilePower=420;playSfx("missile");if(!SFX.missile)playSfx("power");for(let k=0;k<3;k++)setTimeout(()=>{if(gameRunning&&!gamePaused)fireMissile()},k*120)}
-  else if(pick==="chain"){activateChainLightning()}
-  else if(pick==="phase"){activatePhaseShift()}
-  else if(pick==="orbmine"){activateOrbitalMines()}
+    else if(pick==="orbmine"){activateOrbitalMines()}
   else if(pick==="vacuum"){activateLootVacuum()}
   else if(pick==="railgun"){activateRailgunBuff()}
   else if(pick==="redL"){fireRedLBeam()}
@@ -5814,11 +5809,16 @@ function getSpeedScale(){
    Los meteoros, poderes y balas siguen usando todo el alto del canvas (hasta canvas.height). */
 function getPlayerBottomPad(){
   const s=(typeof player!=="undefined"&&player&&player.size)?player.size:14;
-  const h=(canvas&&canvas.height)?canvas.height:400;
-  /* ~2 cm más abajo: margen justo para cuerpo+estela, pegado a la línea inferior del marco */
-  /* 2cm ≈ 75px CSS; en buffer usamos proporcional al alto del canvas */
-  const twoCm = Math.max(36, Math.min(90, Math.floor(h * 0.09)));
-  return Math.max(s * 2.2, 34) + Math.max(8, Math.floor(h * 0.012));
+  /* Barra HUD inferior (MUNICIÓN / PUNTOS) + cuerpo de la nave.
+     Así la nave baja hasta justo encima de los datos y se ve completa. */
+  let dpr = 1;
+  try{
+    if(canvas && canvas.clientWidth > 0) dpr = canvas.width / Math.max(1, canvas.clientWidth);
+  }catch(e){}
+  const hudBar = Math.ceil(((typeof mob==="function"&&mob())?34:36) * dpr);
+  const body   = Math.ceil(Math.max(s * 1.2, 18));
+  const gap    = Math.ceil(4 * dpr);
+  return hudBar + body + gap;
 }
 function getPlayerTopPad(){
   const s=(typeof player!=="undefined"&&player&&player.size)?player.size:14;
@@ -5911,8 +5911,16 @@ canvas.addEventListener("mousemove",e=>{
   const tx=(e.clientX-r.left)*scaleX, ty=(e.clientY-r.top)*scaleY;
   /* sensMouse 0.2–2: qué tanto sigue al cursor (1 = natural) */
   const k=Math.max(0.15,Math.min(1.5,sensMouse));
-  mouse.x=player.x+(tx-player.x)*k;
-  mouse.y=player.y+(ty-player.y)*k;
+  let nx=player.x+(tx-player.x)*k;
+  let ny=player.y+(ty-player.y)*k;
+  try{
+    const m=Math.max(player.size||12,8);
+    const top=(typeof getPlayerTopPad==="function")?getPlayerTopPad():Math.max(m*2,28);
+    const bot=(typeof getPlayerBottomPad==="function")?getPlayerBottomPad():Math.max(m*3,60);
+    nx=Math.max(m, Math.min(canvas.width-m, nx));
+    ny=Math.max(top, Math.min(canvas.height-bot, ny));
+  }catch(err){}
+  mouse.x=nx; mouse.y=ny;
 });
 canvas.addEventListener("mousedown",function(ev){
   try{
@@ -6307,6 +6315,14 @@ function createEnemy(etype,role){
   else if(etype==="alien_brute"){size=(20+Math.random()*8)*sc;hp=8;spd=1.0}
   else if(etype==="alien_eye"){size=(14+Math.random()*5)*sc;hp=4;spd=1.4}
   else if(etype==="bigship"){size=(14+Math.random()*8)*sc;hp=4+Math.floor(level/2);spd=1.3}
+  else if(etype==="parasite"){size=(8+Math.random()*3)*sc;hp=2;spd=2.4}
+  else if(etype==="mirror"){size=(12+Math.random()*4)*sc;hp=3;spd=1.6}
+  else if(etype==="sower"){size=(14+Math.random()*5)*sc;hp=4;spd=1.15}
+  else if(etype==="elite_sniper"){size=(13+Math.random()*4)*sc;hp=3;spd=0.95}
+  else if(etype==="shield_bearer"){size=(16+Math.random()*5)*sc;hp=6;spd=1.05}
+  else if(etype==="necrophage"){size=(13+Math.random()*5)*sc;hp=4;spd=1.25}
+  else if(etype==="disruptor"){size=(14+Math.random()*4)*sc;hp=5;spd=1.2}
+  else if(etype==="swarm_queen"){size=(18+Math.random()*6)*sc;hp=9;spd=0.85}
   else{size=(10+Math.random()*6)*sc;hp=2+Math.floor(level/3);spd=1.5}
   const topY=etype==="turret"?(12+Math.random()*28):(18+Math.random()*48);
   obstacles.push({
@@ -6370,11 +6386,11 @@ function spawnShipWave(){
   const hw=(selectedWorld===5||scenario===5);
   const nTop=Math.min(hw?(mob?2:3):(mob?4:6), Math.floor((2+Math.min(2,Math.floor(waveCount*0.15)))*dm*(hw?0.7:1)));
   let poolTop=["hunter","hunter","ship","sniper","kamikaze","ship","hunter","drone","drone"];
-  if(waveCount>=1)poolTop.push("ship","hunter","sniper","drone","strafer");
-  if(waveCount>=2)poolTop.push("teleport","bigship","turret","bomber");
-  if(waveCount>=3||scenario>=3)poolTop.push("bigship","hunter","kamikaze","armored","missile_ship");
-  if(scenario>=3)poolTop.push("sniper","teleport","bigship","turret","strafer");
-  if(waveCount>=4)poolTop.push("bomber","armored","missile_ship","drone");
+  if(waveCount>=1)poolTop.push("ship","hunter","sniper","drone","strafer","parasite");
+  if(waveCount>=2)poolTop.push("teleport","bigship","turret","bomber","sower","mirror");
+  if(waveCount>=3||scenario>=3)poolTop.push("bigship","hunter","kamikaze","armored","missile_ship","elite_sniper","shield_bearer");
+  if(scenario>=3)poolTop.push("sniper","teleport","bigship","turret","strafer","necrophage","disruptor");
+  if(waveCount>=4)poolTop.push("bomber","armored","missile_ship","drone","swarm_queen","elite_sniper");
   /* Mundo Halloween: pocos fantasmas/calabazas (rendimiento) */
   if((selectedWorld===5||scenario===5)){
     poolTop=["ghost","pumpkin","ghost"];
@@ -6794,6 +6810,24 @@ function enemyShoot(o){
   } else if(o.type==="missile_ship"){
     /* proyectil lento más grande (tipo misil) */
     enemyBullets.push({x:cx,y:cy,vx:vx*0.75,vy:vy*0.75,size:4.5*s,aim:true});
+  } else if(o.type==="elite_sniper"){
+    /* láser cargado: proyectil rápido y grueso */
+    enemyBullets.push({x:cx,y:cy,vx:vx*1.35,vy:vy*1.35,size:4.2*s,aim:true,elite:true});
+  } else if(o.type==="mirror"){
+    enemyBullets.push({x:cx,y:cy,vx:vx,vy:vy,size:3.0*s});
+  } else if(o.type==="sower"){
+    enemyBullets.push({x:cx,y:cy,vx:vx*0.7,vy:vy*0.7,size:3.2*s});
+  } else if(o.type==="shield_bearer"){
+    enemyBullets.push({x:cx,y:cy,vx:vx*0.85,vy:vy*0.85,size:3.4*s});
+  } else if(o.type==="necrophage"){
+    enemyBullets.push({x:cx,y:cy,vx:vx,vy:vy,size:3.3*s});
+  } else if(o.type==="disruptor"){
+    for(let i=-1;i<=1;i++)enemyBullets.push({x:cx,y:cy,vx:vx+i*0.35,vy:vy,size:2.8*s});
+  } else if(o.type==="swarm_queen"){
+    enemyBullets.push({x:cx-6,y:cy,vx:vx-0.2,vy:vy,size:3.2*s});
+    enemyBullets.push({x:cx+6,y:cy,vx:vx+0.2,vy:vy,size:3.2*s});
+  } else if(o.type==="parasite"){
+    /* no dispara: se pega al jugador */
   } else if(o.type==="swarm"||o.type==="alien_small"){
     enemyBullets.push({x:cx,y:cy,vx:vx*.85,vy:vy*.85,size:2.4*s});
   } else if(o.type==="alien"||o.type==="creature"||o.type==="alien_flyer"){
@@ -6857,7 +6891,7 @@ function maybeSpawnPickup(x,y){
   /* pool de poderes especiales (hammer, chrono, barrier, stormbolt, bazooka, etc.) */
   if(r<.72){
     /* L y ┘ ponderados: aparecen con más frecuencia */
-    const pool=["ammo","hammer","shield","bounce","missile","allies","overdrive","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","invisible","drone","barrier","stormbolt","bazooka","vortex","ion","emp","chain","phase","orbmine","vacuum","railgun","redL","redL","redL"];
+    const pool=["ammo","hammer","shield","bounce","missile","allies","overdrive","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","invisible","drone","barrier","stormbolt","bazooka","vortex","ion","orbmine","vacuum","railgun","redL","redL","redL","bullet_time","clone","tractor","energy_wall","kinetic","decoy","clean_pulse","ion_boots"];
     const type=pool[Math.floor(Math.random()*pool.length)];
     pickups.push({x,y,type,size:s,vy:1.5});
   }
@@ -6921,7 +6955,7 @@ function openSupplyCrate(x,y){
   createExplosion(x,y,18,"206,17,38");
   try{playSfx("power")}catch(e){}
   try{doVibrate(25)}catch(e){}
-  const rewards=["ammo","shield","coin","coin","missile","life","overdrive","chain","phase","orbmine","vacuum","railgun","redL","redL","redL","laser","laser","laser"];
+  const rewards=["ammo","shield","coin","coin","missile","life","overdrive","orbmine","vacuum","railgun","redL","redL","redL","laser","laser","laser"];
   const n=2+Math.floor(Math.random()*2);
   for(let k=0;k<n;k++){
     const type=rewards[Math.floor(Math.random()*rewards.length)];
@@ -7142,7 +7176,7 @@ function destroyEnemy(o,i){
     shipsDestroyed++;
     addKi(String(o.type).startsWith("boss")?25:6);
   }
-  const pts={patrol_drone:1,space_mine:2,meteor:1,explosive:2,magnetic:2,ship:3,hunter:4,sniper:5,turret:6,kamikaze:3,swarm:1,thief:5,teleport:6,drone:2,bomber:5,armored:7,strafer:4,missile_ship:6,ghost:4,pumpkin:5,witch_e:6,creature:7,alien:5,alien_small:2,alien_flyer:4,alien_brute:8,alien_eye:6,bigship:6,boss_meteor:30,boss_mothership:40,boss_tentacle:35,boss_bh:45,boss_alien_space:40,boss_alien_ice:40,boss_alien_fire:42,boss_alien_crystal:42,boss_alien_halloween:45,boss_pumpkin:50,boss_witch:52,boss_alien_neon:43,boss_alien_toxic:44,boss_alien_void:48};
+  const pts={patrol_drone:1,space_mine:2,meteor:1,explosive:2,magnetic:2,ship:3,hunter:4,sniper:5,turret:6,kamikaze:3,swarm:1,thief:5,teleport:6,drone:2,bomber:5,armored:7,strafer:4,missile_ship:6,ghost:4,pumpkin:5,witch_e:6,creature:7,alien:5,alien_small:2,alien_flyer:4,alien_brute:8,alien_eye:6,bigship:6,parasite:3,mirror:5,sower:6,elite_sniper:7,shield_bearer:8,necrophage:6,disruptor:7,swarm_queen:12,boss_meteor:30,boss_mothership:40,boss_tentacle:35,boss_bh:45,boss_alien_space:40,boss_alien_ice:40,boss_alien_fire:42,boss_alien_crystal:42,boss_alien_halloween:45,boss_pumpkin:50,boss_witch:52,boss_alien_neon:43,boss_alien_toxic:44,boss_alien_void:48};
   addScoreCombo(pts[o.type]||2);
   // Puntos juego can be spent in the shop: every enemy grants 1, bosses grant 10.
   const currencyReward=String(o.type).startsWith("boss")?10:1;
@@ -7154,6 +7188,17 @@ function destroyEnemy(o,i){
   if(isAlien)progressDaily("alien",1);
   if(String(o.type).startsWith("boss"))progressDaily("boss",1);
   if(o.type==="patrol_drone"||o.type==="space_mine"||o.type==="meteor"||o.type==="explosive"||o.type==="magnetic"||o.type==="hard"||o.type==="fireball"||o.type==="boss_meteor")progressDaily("meteor",1);
+  /* Sembrador: al morir suelta minas/drones */
+  try{
+    if(o.type==="sower"){
+      const cx=o.x+o.size/2, cy=o.y+o.size/2, sc=(typeof getScale==="function")?getScale():1;
+      for(let k=0;k<3;k++){
+        const a=Math.random()*Math.PI*2;
+        obstacles.push({x:cx,y:cy,size:10*sc,speed:(1.2+Math.random())*getSpeedScale(),vx:Math.cos(a)*1.2,rotation:0,rotationSpeed:0.2,type:Math.random()>.5?"space_mine":"patrol_drone",hp:1,maxHp:1,shootTimer:30,zigzag:0,zigzagDir:1,zigMode:true,baseY:cy,arriving:false,proximity:true,armRadius:55});
+      }
+      scenarioMsg="🌱 SEMBRADOR: MINAS SUELTAS";scenarioTransition=55;
+    }
+  }catch(e){}
   progressDaily("score",score);
   if(typeof combo==="number")progressDaily("combo",combo);
   obstacles.splice(i,1);
@@ -7964,11 +8009,29 @@ function doDash(){
   const dist=88*((typeof getScale==="function")?getScale():1);
   const ox=player.x,oy=player.y;
   player.x=Math.max(player.size,Math.min(canvas.width-player.size,player.x+dx*dist));
-  player.y=Math.max(player.size*2.0,Math.min(canvas.height-player.size*4.2,player.y+dy*dist));
+  try{
+    const top=(typeof getPlayerTopPad==="function")?getPlayerTopPad():player.size*2.0;
+    const bot=(typeof getPlayerBottomPad==="function")?getPlayerBottomPad():player.size*4.2;
+    player.y=Math.max(top,Math.min(canvas.height-bot,player.y+dy*dist));
+  }catch(e){
+    player.y=Math.max(player.size*2.0,Math.min(canvas.height-player.size*4.2,player.y+dy*dist));
+  }
   mouse.x=player.x;mouse.y=player.y;
   dashCd=90; /* 1.5s cooldown */
   dashInvuln=28; /* invulnerable breve */
   invisible=Math.max(invisible,28);
+  /* Botas iónicas: estela dañina + sacudir parásito */
+  try{
+    if(typeof ionBoots!=="undefined"&&ionBoots>0){
+      for(let k=0;k<5;k++){
+        ionTrail.push({x:ox+(player.x-ox)*(k/5),y:oy+(player.y-oy)*(k/5),life:18+k*2,r:22});
+      }
+    }
+    if(typeof parasiteAttached!=="undefined"&&parasiteAttached>0){
+      parasiteAttached=0;
+      scenarioMsg="🦠 PARÁSITO SACUDIDO";scenarioTransition=40;
+    }
+  }catch(e){}
   /* estela de color según nave / fase Goku */
   const trailCol=(function(){
     if(shipModel==="goku"){
@@ -8631,7 +8694,13 @@ function drawShipPreview(){
 
 function drawPlayer(){
   /* Posición dibujada estable (evita temblor del triángulo/nave por subpíxeles) */
-  const _dx=Math.round(player.x), _dy=Math.round(player.y);
+  let _dx=Math.round(player.x), _dy=Math.round(player.y);
+  /* Seguridad: nunca dibujar la nave cortada por el borde inferior del marco */
+  try{
+    const bot=(typeof getPlayerBottomPad==="function")?getPlayerBottomPad():60;
+    const maxY=canvas.height-bot;
+    if(_dy>maxY) _dy=Math.round(maxY);
+  }catch(e){}
   if(!lowPower && !(typeof isMobile==='function'&&isMobile())){
     ctx.fillStyle="rgba(255,255,255,0.15)";
     ctx.beginPath();ctx.ellipse(_dx,_dy+player.size*0.9,player.size*0.35,player.size*0.5,0,0,Math.PI*2);ctx.fill();
@@ -9267,8 +9336,8 @@ function updateEnemyBullets(){
   }
 }
 
-function updatePickups(){for(let i=pickups.length-1;i>=0;i--){if(pickups[i]&&(pickups[i].type==="chrono"||pickups[i].type==="slow")){pickups.splice(i,1)}}const labels={redL:"┘",ammo:"+40",coin:"⭐",shield:"S",bounce:"↻",rapid:"R",triple:"3",slow:"⏱",laser:"L",bomb:"💣",pierce:"P",life:"♥",invisible:"★",magnet:"M",hammer:"🔨",missile:"🚀",allies:"✈",overdrive:"⚡",nova:"✸",reflect:"↺",burst:"✸✸",repair:"+",drone:"🛸",freeze:"❄",chrono:"⏱",barrier:"⬡",stormbolt:"⚡",bazooka:"🚀",vortex:"🌀",ion:"💠",emp:"💥",chain:"⚡⚡",phase:"👻",orbmine:"💣",vacuum:"🧲",railgun:"══"};
-const colors={redL:"#FF1738",ammo:"#FFCD00",coin:"#FFD700",shield:"#00C8FF",bounce:"#AAFFFF",rapid:"#00FF88",triple:"#66CCFF",slow:"#AA88FF",laser:"#00FFFF",bomb:"#FF4400",pierce:"#AADD00",life:"#FF3333",invisible:"#FFD700",magnet:"#FFAA00",hammer:"#E8F0FF",missile:"#FF8800",allies:"#44FFAA",overdrive:"#FF2244",nova:"#FFAA00",reflect:"#66FFEE",burst:"#FF8800",repair:"#88FF88",drone:"#88DDFF",freeze:"#AADDFF",chrono:"#FFE066",barrier:"#66CCFF",stormbolt:"#FFEE88",bazooka:"#FF8844",vortex:"#CC66FF",ion:"#66FFEE",emp:"#FFEE66",chain:"#66EEFF",phase:"#CCDDEE",orbmine:"#FF9944",vacuum:"#FFD700",railgun:"#FFE566"};
+function updatePickups(){for(let i=pickups.length-1;i>=0;i--){if(pickups[i]&&(pickups[i].type==="chrono"||pickups[i].type==="slow")){pickups.splice(i,1)}}const labels={redL:"┘",ammo:"🔫",coin:"⭐",shield:"S",bounce:"↻",rapid:"R",triple:"3",slow:"⏱",laser:"L",bomb:"💣",pierce:"P",life:"♥",invisible:"★",magnet:"M",hammer:"🔨",missile:"🚀",allies:"✈",overdrive:"⚡",nova:"✸",reflect:"↺",burst:"✸✸",repair:"+",drone:"🛸",freeze:"❄",chrono:"⏱",barrier:"⬡",stormbolt:"⚡",bazooka:"🚀",vortex:"🌀",ion:"💠",emp:"💥",chain:"⚡⚡",phase:"👻",orbmine:"💣",vacuum:"🧲",railgun:"══",bullet_time:"⏳",clone:"👥",tractor:"🪝",energy_wall:"🧱",kinetic:"⚡",decoy:"🕶",clean_pulse:"💨",ion_boots:"👟"};
+const colors={redL:"#FF1738",ammo:"#FFCD00",coin:"#FFD700",shield:"#00C8FF",bounce:"#AAFFFF",rapid:"#00FF88",triple:"#66CCFF",slow:"#AA88FF",laser:"#00FFFF",bomb:"#FF4400",pierce:"#AADD00",life:"#FF3333",invisible:"#FFD700",magnet:"#FFAA00",hammer:"#E8F0FF",missile:"#FF8800",allies:"#44FFAA",overdrive:"#FF2244",nova:"#FFAA00",reflect:"#66FFEE",burst:"#FF8800",repair:"#88FF88",drone:"#88DDFF",freeze:"#AADDFF",chrono:"#FFE066",barrier:"#66CCFF",stormbolt:"#FFEE88",bazooka:"#FF8844",vortex:"#CC66FF",ion:"#66FFEE",emp:"#FFEE66",chain:"#66EEFF",phase:"#CCDDEE",orbmine:"#FF9944",vacuum:"#FFD700",railgun:"#FFE566",bullet_time:"#FFE066",clone:"#88CCFF",tractor:"#FFAA66",energy_wall:"#66FFCC",kinetic:"#FFEE44",decoy:"#AAAAFF",clean_pulse:"#AAFFEE",ion_boots:"#66DDFF"};
 for(let i=pickups.length-1;i>=0;i--){const p=pickups[i];
 if(magnet>0){const dx=player.x-p.x,dy=player.y-p.y,d=Math.hypot(dx,dy)||1;p.x+=(dx/d)*2.5;p.y+=(dy/d)*2.5}
 p.y+=p.vy;
@@ -9283,21 +9352,16 @@ if(p.type==="redL"){
   powersCollected++;specialCharges=Math.min(9,specialCharges+1);fireRedLBeam();
   scenarioMsg="🔴 RAYO LÁSER ROJO ┘";scenarioTransition=75;
   for(let k=0;k<18;k++){const a=Math.random()*Math.PI*2;const d=12+Math.random()*55;createExplosion(p.x+Math.cos(a)*d,p.y+Math.sin(a)*d,5+Math.random()*9,"255,20,55")}
-}else if(["chain","phase","orbmine","vacuum","railgun","redL"].includes(p.type)){applyNewPowerPickup(p.type)}
+}else if(["orbmine","vacuum","railgun","redL"].includes(p.type)){applyNewPowerPickup(p.type)}
 else if(p.type==="ammo"){ammo=Math.min(ammo+40,250);playSfx("power")}
 else if(p.type==="coin"){coins+=(p.value||5)*2;lsSet("techCoinsV2",coins);try{if(typeof syncCoinsUI==="function")syncCoinsUI()}catch(e){};playSfx("power");scenarioMsg="⭐ +"+(p.value||5)*2+" puntos juego";scenarioTransition=40}
-else if(powerMode==="manual"&&["hammer","bomb","burst","shield","bounce","missile","laser","pierce","reflect","vortex","ion","emp","chain","phase","orbmine","vacuum","railgun","redL"].includes(p.type)){
+else if(powerMode==="manual"&&["hammer","bomb","burst","shield","bounce","missile","laser","pierce","reflect","vortex","ion","orbmine","vacuum","railgun","redL"].includes(p.type)){
   specialCharges=Math.min(9,specialCharges+1);powersCollected++;playSfx("power");
 }else if(p.type==="shield"){shield=320;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("shield");if(!SFX.shield)playSfx("power")}
 else if(p.type==="bounce"){bounceShield=420;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("reflect");if(!SFX.reflect)playSfx("shield");scenarioMsg="↻ ESCUDO REBOTE";scenarioTransition=70}
 else if(p.type==="vortex"){vortex=360;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("power");scenarioMsg="🌀 VÓRTICE";scenarioTransition=70}
 else if(p.type==="ion"){ion=300;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("laser");if(!SFX.laser)playSfx("power");scenarioMsg="💠 CAÑÓN IÓNICO";scenarioTransition=70}
-else if(p.type==="emp"){emp=1;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("nova");if(!SFX.nova)playSfx("explode");
-  /* EMP: aturde enemigos y borra balas enemigas */
-  enemyBullets=[];
-  obstacles.forEach(o=>{if(!String(o.type||"").startsWith("boss")&&!["meteor","hard"].includes(o.type)){o.shootTimer=90;o.speed*=0.4}});
-  createExplosion(player.x,player.y,80,"255,255,100");scenarioMsg="💥 EMP";scenarioTransition=80}
-
+else if(p.type==="emp"){ammo=Math.min(ammo+20,250);playSfx("power")}
 else if(p.type==="rapid"){rapidFire=400;specialCharges=Math.min(6,specialCharges+1);powersCollected++;playSfx("rapid");if(!SFX.rapid)playSfx("power")}
 else if(p.type==="triple"){tripleShot=340;playSfx("triple");if(!SFX.triple)playSfx("power")}
 else if(p.type==="laser"){laser=220;playSfx("laser");if(!SFX.laser)playSfx("power")}
@@ -9318,6 +9382,14 @@ else if(p.type==="nova"){specialCharges=Math.min(6,specialCharges+1);powersColle
 else if(p.type==="reflect"){reflect=360;playSfx("reflect");if(!SFX.reflect)playSfx("power")}
 else if(p.type==="burst"){if(powerMode==="auto"){burst=1;activateBurst()}else{specialCharges=Math.min(6,specialCharges+1);powersCollected++}playSfx("burst");if(!SFX.burst)playSfx("power")}
 else if(p.type==="repair"){if(lives<3){lives++;updateLivesUI()}else shield=Math.max(shield,280);playSfx("repair");if(!SFX.repair)playSfx("power")}
+else if(p.type==="bullet_time"){bulletTime=Math.max(bulletTime,240);playSfx("power");scenarioMsg="⏳ ESCUDO DE TIEMPO";scenarioTransition=70}
+else if(p.type==="clone"){try{playerClone={x:player.x+30,y:player.y,life:240,shootT:12};}catch(e){};playSfx("power");scenarioMsg="👥 CLON ACTIVO";scenarioTransition=70}
+else if(p.type==="tractor"){tractorBeam=Math.max(tractorBeam,300);playSfx("power");scenarioMsg="🪝 GANCHO TRACTOR";scenarioTransition=70}
+else if(p.type==="energy_wall"){try{energyWalls.push({y:player.y-40,life:200,h:14});}catch(e){};playSfx("power");scenarioMsg="🧱 MURO DE ENERGÍA";scenarioTransition=70}
+else if(p.type==="kinetic"){kineticCharge=1;kineticReady=1;playSfx("power");scenarioMsg="⚡ CARGA CINÉTICA LISTA";scenarioTransition=70}
+else if(p.type==="decoy"){try{decoyEntity={x:player.x,y:player.y,life:180};}catch(e){};playSfx("power");scenarioMsg="🕶 SOMBRA SEÑUELO";scenarioTransition=70}
+else if(p.type==="clean_pulse"){try{const R=140*((typeof getScale==="function")?getScale():1);for(let bi=enemyBullets.length-1;bi>=0;bi--){const b=enemyBullets[bi];if(Math.hypot(b.x-player.x,b.y-player.y)<R)enemyBullets.splice(bi,1);}createExplosion(player.x,player.y,R*0.4,"170,255,240");}catch(e){};playSfx("power");scenarioMsg="💨 PULSO DE LIMPIEZA";scenarioTransition=70}
+else if(p.type==="ion_boots"){ionBoots=Math.max(ionBoots,420);playSfx("power");scenarioMsg="👟 BOTAS IÓNICAS";scenarioTransition=70}
 else playSfx("power");
 createExplosion(p.x,p.y,10,"255,255,100");pickups.splice(i,1)}else if(p.y>canvas.height+30)pickups.splice(i,1)}}
 
@@ -9372,18 +9444,53 @@ if(bounceShield>0){
   ctx.textAlign="right";ctx.font="bold "+P(8)+"px Orbitron";ctx.fillStyle="#AAFFFF";
   ctx.fillText("REBOTE",canvas.width-P(8),P(12));
 }
-ctx.fillStyle="rgba(0,0,0,.62)";ctx.fillRect(0,canvas.height-P(40),canvas.width,P(40));
-ctx.textAlign="left";ctx.font="bold "+P(11)+"px Orbitron";
-ctx.fillStyle=ammo>15?"#FFCD00":"#FF3333";
-ctx.fillText("MUNICIÓN "+ammo,P(8),canvas.height-P(10));
+/* HUD inferior compacto: deja más área jugable; el pad de la nave usa la misma altura */
+const _hudH = (typeof mob==="function"&&mob())?34:36;
+ctx.fillStyle="rgba(0,0,0,.62)";ctx.fillRect(0,canvas.height-P(_hudH),canvas.width,P(_hudH));
+ctx.textAlign="left";
+/* Munición en iconos de bala (no número) */
+(function(){
+  const maxIcons=12;
+  const maxAmmo=250;
+  const filled=Math.max(0, Math.min(maxIcons, Math.ceil((Math.max(0,ammo)/maxAmmo)*maxIcons)));
+  const low=ammo<=15;
+  const bx0=P(8), by=canvas.height-P(10);
+  const bw=P(5), bh=P(11), gap=P(2);
+  for(let i=0;i<maxIcons;i++){
+    const x=bx0+i*(bw+gap);
+    const on=i<filled;
+    /* casquillo */
+    ctx.fillStyle=on?(low?"#FF3333":"#FFCD00"):"rgba(255,255,255,.15)";
+    ctx.beginPath();
+    ctx.moveTo(x+bw*0.5, by-bh);
+    ctx.lineTo(x+bw, by-bh+bh*0.28);
+    ctx.lineTo(x+bw, by-bh*0.15);
+    ctx.lineTo(x, by-bh*0.15);
+    ctx.lineTo(x, by-bh+bh*0.28);
+    ctx.closePath();
+    ctx.fill();
+    /* cuerpo de la bala */
+    ctx.fillStyle=on?(low?"#FF6666":"#FFE566"):"rgba(255,255,255,.10)";
+    ctx.fillRect(x+bw*0.15, by-bh*0.15, bw*0.7, bh*0.55);
+    /* base */
+    ctx.fillStyle=on?(low?"#CC2222":"#E6B800"):"rgba(255,255,255,.08)";
+    ctx.fillRect(x, by-bh*0.15+bh*0.55, bw, bh*0.18);
+  }
+  /* si está vacío, icono de aviso */
+  if(ammo<=0){
+    ctx.fillStyle="#FF3333";
+    ctx.font="bold "+P(9)+"px Orbitron";
+    ctx.fillText("✕", bx0+maxIcons*(bw+gap)+P(4), by);
+  }
+})();
 /* Puntos juego bien visibles */
 ctx.font="bold "+P(12)+"px Orbitron";
 ctx.fillStyle="#000";
-ctx.fillText("⭐ PUNTOS JUEGO "+(coins|0),P(9),canvas.height-P(23));
+ctx.fillText("⭐ PUNTOS JUEGO "+(coins|0),P(9),canvas.height-P(20));
 ctx.fillStyle="#FFCD00";
-ctx.fillText("⭐ PUNTOS JUEGO "+(coins|0),P(8),canvas.height-P(24));
+ctx.fillText("⭐ PUNTOS JUEGO "+(coins|0),P(8),canvas.height-P(21));
 ctx.fillStyle="#FFFFFF";ctx.font="bold "+P(9)+"px Orbitron";
-ctx.fillText("☄ "+meteorsDestroyed,P(8),canvas.height-P(36));
+ctx.fillText("☄ "+meteorsDestroyed,P(8),canvas.height-P(32));
 try{
   const gc=document.getElementById("gameCoins");
   if(gc) gc.textContent=String(coins|0);
@@ -14413,7 +14520,7 @@ html,body{overflow-x:hidden}
 .game-panel{left:50%;max-width:calc(100% - 24px);min-width:0;}
 @media (min-width:1101px) and (pointer:fine){
  .tech-game-section{padding-left:clamp(10px,1.2vw,22px)!important;padding-right:clamp(10px,1.2vw,22px)!important;padding-bottom:4px!important}
- .tech-game{height:calc(100dvh - 12px)!important;min-height:0!important;max-height:calc(100dvh - 12px)!important;border-radius:14px}
+ .tech-game{height:90vh!important;min-height:0!important;max-height:90vh!important;border-radius:14px}
  .game-panel{max-height:calc(100% - 24px);overflow-y:auto}
  #startPanel{width:min(760px,68vw);max-height:calc(100% - 28px);padding:clamp(18px,2vw,30px)}
  #startPanel h2{font-size:clamp(28px,2.4vw,42px);margin-bottom:10px}
@@ -15457,7 +15564,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
     padding:12px clamp(20px,2.5vw,48px) !important;
   }
   .tech-game{
-    height:min(90vh, 1100px) !important;
+    height:90vh !important;max-height:90vh !important;
     min-height:640px !important;
   }
   #startPanel.game-panel{
@@ -17341,7 +17448,7 @@ y>
     margin-left:calc(50% - 50vw) !important; margin-right:0 !important;
     padding:18px clamp(24px,3vw,60px) 28px !important; box-sizing:border-box !important;
   }
-  .tech-game { width:100% !important; max-width:none !important; height: min(88vh, 1200px) !important; min-height:760px !important; }
+  .tech-game { width:100% !important; max-width:none !important; height: 90vh !important; max-height:90vh !important; min-height:0 !important; }
   .game-panel, #startPanel {
     width:min(1120px, 88vw) !important; min-width:min(760px, 80vw) !important;
     max-width:88vw !important; max-height:94vh !important; box-sizing:border-box !important;
@@ -17506,3 +17613,404 @@ y>
 #techCoinsBar .tcb-label{color:#bdc9d5!important;-webkit-text-fill-color:#bdc9d5!important}
 #techCoinsBar .tcb-value{color:#d0d9e2!important;-webkit-text-fill-color:#d0d9e2!important;text-shadow:none!important}
 </style>
+
+<style id="tech-pc-90pct-screen">
+/* PC: marco del juego al 90% de la pantalla */
+@media (min-width: 1101px) and (pointer: fine) {
+  .tech-game-section {
+    width: 100% !important;
+    max-width: none !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0.5vh !important;
+    padding-bottom: 0.5vh !important;
+  }
+  .tech-game {
+    width: 96vw !important;
+    max-width: 96vw !important;
+    height: 90vh !important;
+    max-height: 90vh !important;
+    min-height: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+  .tech-game-section:fullscreen .tech-game,
+  .tech-game-section:-webkit-full-screen .tech-game {
+    width: 96vw !important;
+    height: 90vh !important;
+    max-height: 90vh !important;
+  }
+}
+</style>
+
+<script id="tech-new-powers-enemies">
+(function(){
+  'use strict';
+  /* ===== Actualización de poderes y enemigos nuevos ===== */
+  function tickNewSystems(){
+    if(typeof gameRunning==="undefined"||!gameRunning||(typeof gamePaused!=="undefined"&&gamePaused))return;
+    try{
+      /* —— Poderes —— */
+      if(typeof bulletTime!=="undefined"&&bulletTime>0)bulletTime--;
+      if(typeof ionBoots!=="undefined"&&ionBoots>0)ionBoots--;
+      if(typeof tractorBeam!=="undefined"&&tractorBeam>0)tractorBeam--;
+      if(typeof kineticReady!=="undefined"&&kineticReady>0){
+        /* carga cinética se mantiene hasta disparar */
+      }
+      if(typeof isShooting!=="undefined"&&!isShooting&&typeof kineticCharge!=="undefined"){
+        kineticCharge=Math.min(1,(kineticCharge||0)+0.004);
+      }
+      /* Clon */
+      if(typeof playerClone!=="undefined"&&playerClone){
+        playerClone.life--;
+        playerClone.x+=(player.x+28-playerClone.x)*0.08;
+        playerClone.y+=(player.y-10-playerClone.y)*0.08;
+        playerClone.shootT--;
+        if(playerClone.shootT<=0&&typeof bullets!=="undefined"){
+          playerClone.shootT=14;
+          bullets.push({x:playerClone.x,y:playerClone.y-10,speed:8*((typeof getSpeedScale==="function")?getSpeedScale():1),size:2.5,pierce:false});
+        }
+        if(playerClone.life<=0)playerClone=null;
+      }
+      /* Muro de energía */
+      if(typeof energyWalls!=="undefined"&&energyWalls.length){
+        for(let i=energyWalls.length-1;i>=0;i--){
+          const w=energyWalls[i];
+          w.life--;
+          w.y-=1.2*((typeof getSpeedScale==="function")?getSpeedScale():1);
+          if(typeof enemyBullets!=="undefined"){
+            for(let bi=enemyBullets.length-1;bi>=0;bi--){
+              const b=enemyBullets[bi];
+              if(Math.abs(b.y-w.y)<(w.h||14) && b.x>0 && b.x<canvas.width){
+                enemyBullets.splice(bi,1);
+              }
+            }
+          }
+          if(w.life<=0)energyWalls.splice(i,1);
+        }
+      }
+      /* Señuelo */
+      if(typeof decoyEntity!=="undefined"&&decoyEntity){
+        decoyEntity.life--;
+        if(decoyEntity.life<=0)decoyEntity=null;
+      }
+      /* Estela iónica dañina */
+      if(typeof ionTrail!=="undefined"&&ionTrail.length&&typeof obstacles!=="undefined"){
+        for(let i=ionTrail.length-1;i>=0;i--){
+          const t=ionTrail[i];
+          t.life--;
+          for(let j=obstacles.length-1;j>=0;j--){
+            const o=obstacles[j];
+            if(!o||o.indestructible||String(o.type||"").startsWith("boss"))continue;
+            const cx=o.x+o.size/2, cy=o.y+o.size/2;
+            if(Math.hypot(cx-t.x,cy-t.y)<(t.r||20)+o.size*0.3){
+              o.hp=(o.hp||1)-1;
+              if(o.hp<=0){try{if(typeof destroyObstacle==="function")destroyObstacle(j);else obstacles.splice(j,1);}catch(e){obstacles.splice(j,1);}}
+            }
+          }
+          if(t.life<=0)ionTrail.splice(i,1);
+        }
+      }
+      /* Tractor: atrae enemigo/pickup más cercano */
+      if(typeof tractorBeam!=="undefined"&&tractorBeam>0){
+        let best=null,bd=1e9;
+        if(typeof obstacles!=="undefined"){
+          for(let j=0;j<obstacles.length;j++){
+            const o=obstacles[j];
+            if(!o||String(o.type||"").startsWith("boss"))continue;
+            const d=Math.hypot(player.x-(o.x+o.size/2),player.y-(o.y+o.size/2));
+            if(d<bd&&d<220){bd=d;best={k:"o",i:j,d:d};}
+          }
+        }
+        if(typeof pickups!=="undefined"){
+          for(let j=0;j<pickups.length;j++){
+            const p=pickups[j];
+            const d=Math.hypot(player.x-p.x,player.y-p.y);
+            if(d<bd&&d<240){bd=d;best={k:"p",i:j,d:d};}
+          }
+        }
+        if(best&&best.k==="o"){
+          const o=obstacles[best.i];
+          const cx=o.x+o.size/2,cy=o.y+o.size/2;
+          const dx=player.x-cx,dy=player.y-cy,d=Math.hypot(dx,dy)||1;
+          o.x+=dx/d*2.2;o.y+=dy/d*2.2;
+        }else if(best&&best.k==="p"){
+          const p=pickups[best.i];
+          const dx=player.x-p.x,dy=player.y-p.y,d=Math.hypot(dx,dy)||1;
+          p.x+=dx/d*3;p.y+=dy/d*3;
+        }
+      }
+
+      /* —— Enemigos nuevos: IA por frame —— */
+      if(typeof obstacles!=="undefined"){
+        disruptorSlow=0;
+        for(let i=0;i<obstacles.length;i++){
+          const o=obstacles[i];
+          if(!o)continue;
+          const cx=o.x+o.size/2, cy=o.y+o.size/2;
+          /* Parásito: persigue y se pega */
+          if(o.type==="parasite"){
+            const dx=player.x-cx,dy=player.y-cy,d=Math.hypot(dx,dy)||1;
+            o.x+=dx/d*2.6;o.y+=dy/d*2.6;
+            if(d<player.size+o.size*0.5){
+              parasiteAttached=180;
+              try{obstacles.splice(i,1);}catch(e){}
+              scenarioMsg="🦠 PARÁSITO ADHERIDO — DASH!";scenarioTransition=60;
+              i--;continue;
+            }
+          }
+          /* Espejo: copia eje X del jugador */
+          if(o.type==="mirror"&&!o.arriving){
+            o.x=Math.max(4,Math.min(canvas.width-o.size-4, canvas.width-player.x-o.size/2));
+            o.baseY=o.baseY||cy;
+            o.y+=(o.baseY-o.y)*0.05;
+            /* dispara si el jugador dispara */
+            if(typeof isShooting!=="undefined"&&isShooting&&Math.random()<0.08){
+              try{if(typeof enemyShoot==="function")enemyShoot(o);}catch(e){}
+            }
+          }
+          /* Francotirador élite: carga visible */
+          if(o.type==="elite_sniper"&&!o.arriving){
+            o.charge=(o.charge||0)+1;
+            if(o.charge>70){
+              o.charge=0;
+              try{if(typeof enemyShoot==="function")enemyShoot(o);}catch(e){}
+            }
+          }
+          /* Portador de escudo: marca frontal */
+          if(o.type==="shield_bearer"){
+            o.frontShield=true;
+          }
+          /* Necrófago: cura cerca de explosiones */
+          if(o.type==="necrophage"&&typeof explosions!=="undefined"){
+            for(let e=0;e<explosions.length;e++){
+              const ex=explosions[e];
+              if(Math.hypot(ex.x-cx,ex.y-cy)<70){
+                o.hp=Math.min(o.maxHp||o.hp, (o.hp||1)+0.04);
+                o.size=Math.min((o._baseSize||o.size)*1.35, o.size+0.05);
+              }
+            }
+            if(!o._baseSize)o._baseSize=o.size;
+          }
+          /* Disruptor: aura que marca slow de poderes */
+          if(o.type==="disruptor"){
+            const d=Math.hypot(player.x-cx,player.y-cy);
+            if(d<100){disruptorSlow=1;}
+          }
+          /* Reina enjambre: suelta drones */
+          if(o.type==="swarm_queen"&&!o.arriving){
+            o.spawnT=(o.spawnT||90)-1;
+            if(o.spawnT<=0){
+              o.spawnT=110;
+              if(obstacles.length<20){
+                try{if(typeof createEnemy==="function")createEnemy("swarm");}catch(e){
+                  try{createEnemy("drone");}catch(_){}}
+              }
+            }
+          }
+        }
+      }
+      /* Parásito adherido: drena */
+      if(typeof parasiteAttached!=="undefined"&&parasiteAttached>0){
+        parasiteAttached--;
+        if(parasiteAttached%12===0&&typeof ammo!=="undefined")ammo=Math.max(0,ammo-1);
+        /* penaliza un poco el seguimiento del mouse */
+        if(typeof mouse!=="undefined"&&Math.random()<0.3){
+          mouse.x+=(Math.random()-0.5)*6;
+          mouse.y+=(Math.random()-0.5)*4;
+        }
+        if(parasiteAttached<=0){scenarioMsg="🦠 PARÁSITO AGOTADO";scenarioTransition=35;}
+      }
+    }catch(e){}
+  }
+
+  function drawNewSystems(){
+    if(typeof gameRunning==="undefined"||!gameRunning)return;
+    try{
+      /* Clon */
+      if(playerClone&&typeof ctx!=="undefined"){
+        ctx.save();
+        ctx.globalAlpha=0.55;
+        ctx.strokeStyle="#88CCFF";ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(playerClone.x,playerClone.y,10,0,Math.PI*2);ctx.stroke();
+        ctx.fillStyle="rgba(120,180,255,.35)";ctx.fill();
+        ctx.globalAlpha=1;ctx.restore();
+      }
+      /* Muros */
+      if(energyWalls&&energyWalls.length){
+        for(let i=0;i<energyWalls.length;i++){
+          const w=energyWalls[i];
+          const a=Math.max(0.2,w.life/200);
+          ctx.fillStyle="rgba(100,255,200,"+(0.35*a)+")";
+          ctx.fillRect(0,w.y-(w.h||14)/2,canvas.width,w.h||14);
+          ctx.strokeStyle="rgba(180,255,230,"+(0.7*a)+")";
+          ctx.strokeRect(0,w.y-(w.h||14)/2,canvas.width,w.h||14);
+        }
+      }
+      /* Señuelo */
+      if(decoyEntity){
+        ctx.save();ctx.globalAlpha=0.45;
+        ctx.strokeStyle="#AAAAFF";ctx.setLineDash([4,3]);
+        ctx.beginPath();ctx.arc(decoyEntity.x,decoyEntity.y,12,0,Math.PI*2);ctx.stroke();
+        ctx.setLineDash([]);ctx.globalAlpha=1;ctx.restore();
+      }
+      /* Estela iónica */
+      if(ionTrail&&ionTrail.length){
+        for(let i=0;i<ionTrail.length;i++){
+          const t=ionTrail[i];
+          ctx.fillStyle="rgba(100,220,255,"+(t.life/24)*0.45+")";
+          ctx.beginPath();ctx.arc(t.x,t.y,t.r*0.6,0,Math.PI*2);ctx.fill();
+        }
+      }
+      /* Tractor beam visual */
+      if(typeof tractorBeam!=="undefined"&&tractorBeam>0){
+        ctx.strokeStyle="rgba(255,170,80,0.35)";ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(player.x,player.y,40+Math.sin(performance.now()/80)*6,0,Math.PI*2);ctx.stroke();
+      }
+      /* Carga cinética barra */
+      if(typeof kineticCharge!=="undefined"&&kineticCharge>0.05){
+        const bw=40,bh=4;
+        ctx.fillStyle="rgba(0,0,0,.5)";ctx.fillRect(player.x-bw/2,player.y+16,bw,bh);
+        ctx.fillStyle=kineticCharge>=1?"#FFEE44":"#88AAFF";
+        ctx.fillRect(player.x-bw/2,player.y+16,bw*Math.min(1,kineticCharge),bh);
+      }
+      /* Bullet time tint */
+      if(typeof bulletTime!=="undefined"&&bulletTime>0){
+        ctx.fillStyle="rgba(255,220,80,0.04)";ctx.fillRect(0,0,canvas.width,canvas.height);
+      }
+      /* Parásito UI */
+      if(typeof parasiteAttached!=="undefined"&&parasiteAttached>0){
+        ctx.fillStyle="#FF4466";ctx.font="bold 11px Orbitron";ctx.textAlign="center";
+        ctx.fillText("🦠 DASH!",player.x,player.y+22);
+      }
+      /* Elite sniper charge line */
+      if(typeof obstacles!=="undefined"){
+        for(let i=0;i<obstacles.length;i++){
+          const o=obstacles[i];
+          if(!o||o.type!=="elite_sniper"||!o.charge)continue;
+          const cx=o.x+o.size/2,cy=o.y+o.size/2;
+          const a=Math.min(1,o.charge/70);
+          ctx.strokeStyle="rgba(255,80,80,"+(0.25+a*0.55)+")";
+          ctx.lineWidth=1+a*2;
+          ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(player.x,player.y);ctx.stroke();
+          /* Escudo frontal portador */
+          if(o.type==="shield_bearer"||o.frontShield){
+            ctx.strokeStyle="rgba(150,200,255,0.55)";ctx.lineWidth=3;
+            ctx.beginPath();ctx.arc(cx,cy+o.size*0.2,o.size*0.7,0.15*Math.PI,0.85*Math.PI);ctx.stroke();
+          }
+        }
+        for(let i=0;i<obstacles.length;i++){
+          const o=obstacles[i];
+          if(!o||o.type!=="shield_bearer")continue;
+          const cx=o.x+o.size/2,cy=o.y+o.size/2;
+          ctx.strokeStyle="rgba(150,200,255,0.55)";ctx.lineWidth=3;
+          ctx.beginPath();ctx.arc(cx,cy+o.size*0.15,o.size*0.75,0.2*Math.PI,0.8*Math.PI);ctx.stroke();
+        }
+        for(let i=0;i<obstacles.length;i++){
+          const o=obstacles[i];
+          if(!o||o.type!=="disruptor")continue;
+          const cx=o.x+o.size/2,cy=o.y+o.size/2;
+          ctx.strokeStyle="rgba(200,100,255,0.25)";ctx.lineWidth=1;
+          ctx.beginPath();ctx.arc(cx,cy,100,0,Math.PI*2);ctx.stroke();
+        }
+      }
+    }catch(e){}
+  }
+
+  /* Bullet time: ralentiza enemigos vía freezeEnemies light */
+  function applyBulletTime(){
+    try{
+      if(typeof bulletTime!=="undefined"&&bulletTime>0){
+        if(typeof freezeEnemies!=="undefined")freezeEnemies=Math.max(freezeEnemies,2);
+      }
+      /* Disruptor: corta poderes activos poco a poco */
+      if(typeof disruptorSlow!=="undefined"&&disruptorSlow){
+        if(typeof rapidFire!=="undefined"&&rapidFire>0)rapidFire=Math.max(0,rapidFire-2);
+        if(typeof overdrive!=="undefined"&&overdrive>0)overdrive=Math.max(0,overdrive-2);
+        if(typeof laser!=="undefined"&&laser>0)laser=Math.max(0,laser-2);
+      }
+    }catch(e){}
+  }
+
+  /* Carga cinética al disparar */
+  const _shootOrig=typeof shoot==="function"?shoot:null;
+  if(_shootOrig&&!shoot.__kineticHook){
+    const wrapped=function(){
+      try{
+        if(typeof kineticCharge!=="undefined"&&kineticCharge>=1){
+          kineticCharge=0;kineticReady=0;
+          /* disparo potenciado */
+          const sp=14*((typeof getSpeedScale==="function")?getSpeedScale():1);
+          if(typeof bullets!=="undefined"){
+            bullets.push({x:player.x,y:player.y-player.size,speed:sp,size:5,pierce:true,dmg:3});
+            createExplosion(player.x,player.y-player.size,12,"255,230,80");
+          }
+          scenarioMsg="⚡ CARGA CINÉTICA";scenarioTransition=40;
+        }
+      }catch(e){}
+      return _shootOrig.apply(this,arguments);
+    };
+    wrapped.__kineticHook=true;
+    try{shoot=wrapped;window.shoot=wrapped;}catch(e){}
+  }
+
+  /* Señuelo: enemigos apuntan al decoy ocasionalmente (enemyShoot aim) */
+  const _esOrig=typeof enemyShoot==="function"?enemyShoot:null;
+  if(_esOrig&&!enemyShoot.__decoyHook){
+    const wrapped=function(o){
+      try{
+        if(decoyEntity&&decoyEntity.life>0&&Math.random()<0.55){
+          const _px=player.x,_py=player.y;
+          player.x=decoyEntity.x;player.y=decoyEntity.y;
+          const r=_esOrig.apply(this,arguments);
+          player.x=_px;player.y=_py;
+          return r;
+        }
+      }catch(e){}
+      return _esOrig.apply(this,arguments);
+    };
+    wrapped.__decoyHook=true;
+    try{enemyShoot=wrapped;window.enemyShoot=wrapped;}catch(e){}
+  }
+
+  /* Reducir daño frontal a shield_bearer */
+  /* Se aplica en checkCollision / bullet hits via hook on bullet loop - simplified: more hp already */
+
+  /* Integrar en game loop */
+  function hookLoop(){
+    try{
+      if(typeof gameLoopCore==="function"&&!gameLoopCore.__newSystems){
+        const orig=gameLoopCore;
+        const wrapped=function(ts){
+          applyBulletTime();
+          const r=orig.apply(this,arguments);
+          tickNewSystems();
+          drawNewSystems();
+          return r;
+        };
+        wrapped.__newSystems=true;
+        gameLoopCore=wrapped;
+        try{window.gameLoopCore=wrapped;}catch(e){}
+      }
+    }catch(e){}
+  }
+  hookLoop();
+  setInterval(hookLoop,2000);
+
+  /* Reset en nueva partida */
+  function hookReset(){
+    try{
+      bulletTime=0;kineticCharge=0;kineticReady=0;ionBoots=0;tractorBeam=0;
+      playerClone=null;energyWalls=[];decoyEntity=null;ionTrail=[];
+      parasiteAttached=0;disruptorSlow=0;
+    }catch(e){}
+  }
+  setInterval(function(){
+    try{
+      if(typeof gameRunning!=="undefined"&&!gameRunning)hookReset();
+    }catch(e){}
+  },1000);
+
+  console.log("[TECH] Nuevos poderes y enemigos cargados");
+})();
+</script>
