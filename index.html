@@ -5464,19 +5464,7 @@ if(startPanel&&!document.getElementById("startExtras")){
     const ach=Object.values(getAchievements()).map(a=>a.title).slice(0,6).join(", ")||"—";
     const histHtml=formatMatchHistoryHtml(20);
     box.innerHTML=`
-<section class="tech-country-picker" aria-label="Seleccionar bandera del país">
-      <div class="tech-country-heading"><span>🌐 Biblioteca de banderas</span><small>Selecciona una bandera; aparecerá durante la partida</small></div>
-      <div class="tech-country-control">
-        <span class="tech-country-current" id="techCountryPreview">${techSelectedFlagEmoji()||"🌐"}</span>
-        <select id="techCountrySelect" aria-label="Escoger bandera del país">
-          <option value="" ${selectedFlag===""?"selected":""} disabled>Elige el país</option>
-          ${TECH_COUNTRY_CODES.slice().sort((a,b)=>techCountryName(a).localeCompare(techCountryName(b),"es")).map(code=>`<option value="${code}" ${selectedFlag===code?"selected":""}>${techCountryName(code)}</option>`).join("")}
-        </select>
-      </div>
-      <div class="tech-country-flags" id="techCountryFlags" aria-label="Banderas disponibles">
-        ${TECH_COUNTRY_CODES.slice().sort((a,b)=>techCountryName(a).localeCompare(techCountryName(b),"es")).map(code=>`<button type="button" class="tech-country-flag-btn ${selectedFlag===code?"active":""}" data-country-flag="${code}" title="${techCountryName(code)}" aria-label="${techCountryName(code)}" aria-pressed="${selectedFlag===code}">${techFlagEmoji(code)}</button>`).join("")}
-      </div>
-    </section>
+
     <div class="diff-btns">
       <button type="button" data-d="easy" class="${difficulty==="easy"?"active":""}">Fácil</button>
       <button type="button" data-d="normal" class="${difficulty==="normal"?"active":""}">NORMAL</button>
@@ -5542,6 +5530,19 @@ if(startPanel&&!document.getElementById("startExtras")){
       }).join("")}
     </div>
 
+<section class="tech-country-picker" aria-label="Seleccionar bandera del país">
+      <div class="tech-country-heading"><span>🌐 Biblioteca de banderas</span><small>Selecciona una bandera; aparecerá durante la partida</small></div>
+      <div class="tech-country-control">
+        <span class="tech-country-current" id="techCountryPreview">${techSelectedFlagEmoji()||"🌐"}</span>
+        <select id="techCountrySelect" aria-label="Escoger bandera del país">
+          <option value="" ${selectedFlag===""?"selected":""} disabled>Elige el país</option>
+          ${TECH_COUNTRY_CODES.slice().sort((a,b)=>techCountryName(a).localeCompare(techCountryName(b),"es")).map(code=>`<option value="${code}" ${selectedFlag===code?"selected":""}>${techCountryName(code)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="tech-country-flags" id="techCountryFlags" aria-label="Banderas disponibles">
+        ${TECH_COUNTRY_CODES.slice().sort((a,b)=>techCountryName(a).localeCompare(techCountryName(b),"es")).map(code=>`<button type="button" class="tech-country-flag-btn ${selectedFlag===code?"active":""}" data-country-flag="${code}" title="${techCountryName(code)}" aria-label="${techCountryName(code)}" aria-pressed="${selectedFlag===code}">${techFlagEmoji(code)}</button>`).join("")}
+      </div>
+    </section>
     <h3>🌍 Mundo</h3>
     <div class="diff-btns">
       <button type="button" data-world="1" class="${selectedWorld===1?"active":""}">1 Espacio</button>
