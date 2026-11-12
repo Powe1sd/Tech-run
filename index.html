@@ -2573,13 +2573,174 @@ html,body{width:100%;min-width:320px}
 #shipPreview{display:block!important;opacity:1!important;visibility:visible!important}
 </style>
 
+
+<style id="tech-futuristic-interface-v2">
+/* TECH RUN — renovación visual únicamente; no modifica lógica ni controles */
+:root{
+  --tr-metal:#dce7f1;
+  --tr-metal-dim:#9eafc1;
+  --tr-glass:rgba(8,17,31,.94);
+  --tr-glass-soft:rgba(14,27,45,.88);
+  --tr-edge:rgba(150,190,220,.25);
+  --tr-edge-hot:rgba(105,218,245,.48);
+  --tr-gold-soft:#d9c58a;
+  --tr-cyan-soft:#8bd9e8;
+}
+.tech-game{
+  background:
+    radial-gradient(ellipse at 50% 0%,rgba(62,112,145,.16),transparent 48%),
+    linear-gradient(145deg,#050b14 0%,#091522 48%,#050a12 100%) !important;
+  border:1px solid rgba(154,190,218,.34) !important;
+  box-shadow:0 24px 70px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.07) !important;
+}
+.tech-game:before{
+  border-color:rgba(139,217,232,.10) !important;
+}
+.tech-game .game-panel,
+.tech-game .data-card,
+.tech-game .contact-card,
+#techStatisticsPanel,
+#techTutorialCard{
+  color:#e8f0f7 !important;
+  background:
+    linear-gradient(145deg,rgba(15,29,47,.97),rgba(5,13,25,.97)) !important;
+  border:1px solid var(--tr-edge) !important;
+  border-radius:18px !important;
+  box-shadow:0 22px 58px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.065) !important;
+}
+.tech-game .game-panel:before{
+  content:"";
+  display:block;
+  height:2px;
+  width:76px;
+  margin:0 auto 12px;
+  border-radius:5px;
+  background:linear-gradient(90deg,transparent,var(--tr-cyan-soft),var(--tr-gold-soft),transparent);
+  opacity:.8;
+}
+.tech-game .game-panel h2,
+#techStatisticsPanel h2,
+#techTutorialCard h2{
+  color:#f1f6fb !important;
+  text-shadow:0 2px 18px rgba(102,197,222,.16) !important;
+  letter-spacing:.045em !important;
+}
+.tech-game .game-panel p,
+.tech-game .game-panel small{
+  color:#aebdcb !important;
+}
+.tech-game .game-btn,
+.tech-game button,
+#techStatisticsPanel button,
+#techTutorialCard button{
+  border:1px solid rgba(145,190,215,.30) !important;
+  border-radius:11px !important;
+  background:linear-gradient(180deg,rgba(35,57,78,.96),rgba(13,27,43,.98)) !important;
+  color:#eaf2f8 !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 5px 14px rgba(0,0,0,.24) !important;
+  text-shadow:none !important;
+  transition:border-color .18s ease,background .18s ease,transform .18s ease,box-shadow .18s ease !important;
+}
+.tech-game .game-btn:hover,
+.tech-game button:hover,
+#techStatisticsPanel button:hover,
+#techTutorialCard button:hover{
+  border-color:rgba(139,217,232,.72) !important;
+  background:linear-gradient(180deg,rgba(48,83,105,.98),rgba(17,39,57,.98)) !important;
+  box-shadow:0 0 0 1px rgba(139,217,232,.10),0 7px 20px rgba(0,0,0,.32) !important;
+}
+.tech-game .game-btn:active,
+.tech-game button:active{transform:translateY(1px) !important}
+.tech-game input,
+.tech-game select,
+.tech-game textarea,
+#techStatisticsPanel input,
+#techStatisticsPanel select{
+  color:#edf4fa !important;
+  background:rgba(4,13,24,.92) !important;
+  border:1px solid rgba(140,183,208,.32) !important;
+  border-radius:9px !important;
+  box-shadow:inset 0 2px 7px rgba(0,0,0,.28) !important;
+}
+.tech-game input:focus,
+.tech-game select:focus,
+.tech-game textarea:focus{
+  outline:none !important;
+  border-color:rgba(139,217,232,.78) !important;
+  box-shadow:0 0 0 3px rgba(90,184,210,.12) !important;
+}
+.tech-game .game-top,
+.tech-game .game-score{
+  color:#e5edf4 !important;
+}
+.tech-game .hud-score,
+.tech-game .hud-coins,
+.tech-game .hud-lives,
+.tech-game .hud-level{
+  border:1px solid rgba(153,187,210,.25) !important;
+  border-radius:10px !important;
+  background:linear-gradient(145deg,rgba(14,29,45,.91),rgba(5,13,23,.91)) !important;
+  box-shadow:0 5px 16px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.055) !important;
+}
+.tech-game .hud-score strong,
+.tech-game .hud-coins strong,
+.tech-game .hud-lives strong,
+.tech-game .hud-level strong{
+  text-shadow:none !important;
+}
+.tech-game .hud-coins strong,
+.tech-game .hud-coins .hud-icon,
+#gameCoins{color:var(--tr-gold-soft) !important;-webkit-text-fill-color:var(--tr-gold-soft) !important}
+.tech-game .hud-score strong,
+#gameScore{color:#dceaf4 !important;-webkit-text-fill-color:#dceaf4 !important}
+#techTutorialOverlay{
+  background:radial-gradient(ellipse at 50% 0%,rgba(75,139,165,.18),transparent 52%),rgba(1,6,13,.91) !important;
+}
+#techTutorialCard{
+  border-color:rgba(139,190,211,.34) !important;
+}
+#techStatisticsPanel .tech-stat-notice,
+#techStatisticsPanel .tech-stat-breakdown,
+#techStatisticsPanel .tech-stat-card{
+  background:rgba(13,29,46,.78) !important;
+  border-color:rgba(140,184,208,.20) !important;
+}
+#techBackOrb{
+  background:radial-gradient(circle at 32% 25%,#f4f7f9 0%,#d9c58a 28%,#9d8750 62%,#34495a 100%) !important;
+  box-shadow:0 0 0 1px rgba(230,239,245,.32),0 5px 18px rgba(0,0,0,.45) !important;
+}
+@media (prefers-reduced-motion:reduce){
+  .tech-game .game-btn,.tech-game button,#techStatisticsPanel button,#techTutorialCard button{transition:none !important}
+}
+</style>
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/css/flag-icons.min.css">
+<style id="tech-country-flag-picker">
+.tech-country-picker{margin:10px 0 14px;padding:11px 12px;border:1px solid rgba(206,17,38,.42);border-radius:12px;background:linear-gradient(135deg,rgba(5,20,42,.94),rgba(15,12,22,.94));box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.tech-country-heading{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;color:#dce8f5;font:700 11px Orbitron,sans-serif;letter-spacing:.35px}
+.tech-country-heading small{font:10px Inter,Arial,sans-serif;color:#91a5ba;letter-spacing:0}
+.tech-country-control{display:flex;align-items:center;gap:9px}
+.tech-country-current{display:grid;place-items:center;flex:0 0 42px;height:36px;border:1px solid rgba(255,205,0,.35);border-radius:8px;background:rgba(0,0,0,.28);font-size:25px}
+#techCountrySelect{flex:1;min-width:0;height:38px;padding:0 10px;border:1px solid rgba(120,180,220,.38);border-radius:8px;background:#071426;color:#f2f6fb;font:600 12px Inter,Arial,sans-serif;outline:none}
+#techCountrySelect option{background:#071426;color:#f2f6fb}
+.tech-country-flags{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:5px;margin-top:9px;max-height:190px;overflow:auto;padding:2px 3px 5px;scrollbar-width:thin;scrollbar-color:#d5ae45 #071426}
+.tech-country-flag-btn{height:31px;min-width:0;padding:2px;border:1px solid rgba(120,180,220,.2);border-radius:6px;background:rgba(2,12,27,.8);font:22px/1 Arial,sans-serif;cursor:pointer;transition:border-color .15s,background .15s,transform .15s}
+.tech-country-flag-btn .fi{display:inline-block;width:1.35em;height:1em;vertical-align:middle;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.16)}
+.tech-country-current .fi{display:inline-block;width:1.55em;height:1.05em;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.22)}
+.tech-hud-flag .fi{display:inline-block;width:1.35em;height:.95em;border-radius:2px;vertical-align:middle}
+.tech-country-flag-btn:hover{border-color:#ffcd00;background:rgba(255,205,0,.12);transform:translateY(-1px)}
+.tech-country-flag-btn.active{border:1px solid #ffcd00;background:rgba(255,205,0,.18);box-shadow:0 0 9px rgba(255,205,0,.22)}
+.tech-hud-flag{display:inline-flex;align-items:center;justify-content:center;margin:0 4px;padding:1px 4px;border:1px solid rgba(255,205,0,.34);border-radius:5px;background:rgba(0,0,0,.28);font-family:Arial,sans-serif;font-size:16px;line-height:1.2;vertical-align:middle}
+@media(max-width:600px){.tech-country-picker{padding:9px}.tech-country-heading{font-size:10px}#techCountrySelect{font-size:11px}.tech-country-flags{grid-template-columns:repeat(auto-fill,minmax(34px,1fr));max-height:150px}.tech-country-flag-btn{height:29px;font-size:20px}}
+</style>
 </head>
 <body>
 
 <section class="tech-game-section">
 <div class="tech-game">
 <div class="game-top" aria-label="Estadísticas de la partida">
-  <div class="game-title"><span class="hud-live-dot"></span> TECH RUN <small>MISSION HUD</small></div>
+  <div class="game-title"><span class="hud-live-dot"></span> TECH RUN <span id="techHudFlag" class="tech-hud-flag" title="Elige el país" aria-label="No hay país seleccionado" style="display:none"></span> <small>MISSION HUD</small></div>
   <div class="game-score">
     <div class="hud-stat hud-score"><span class="hud-icon">✦</span><span class="hud-label">PUNTOS</span><strong id="gameScore">0</strong></div>
     <div class="hud-stat hud-coins"><span class="hud-icon">⭐</span><span class="hud-label">PUNTOS JUEGO</span><strong id="gameCoins">0</strong></div>
@@ -2747,8 +2908,8 @@ let scenario=1,scenarioTransition=0,scenarioMsg="";
 const METEOR_DURATION=18*60,WARNING_DURATION=1.5*60; /* oleada cada 18 s */
 let ammo=100,shield=0,bounceShield=0,rapidFire=0,tripleShot=0,slowMo=0,laser=0,pierce=0,invisible=0,magnet=0,missilePower=0,allyPower=0,storm=0,overdrive=0,nova=0,reflect=0,burst=0,repair=0,freezeEnemies=0,barrier=0,bazooka=0,vortex=0,ion=0,emp=0,laserGrace=0,specialCharges=3,powersCollected=0,lives=1,powerMode=lsGet("techPowerMode","auto"),coins=Number(lsGet("techCoinsV2",lsGet("techCoins",0)))||0,ownedWeapons=(function(){try{var w=JSON.parse(lsGet('techWeapons','["basic"]'));return Array.isArray(w)?w:['basic']}catch(e){return['basic']}})(),currentWeapon=lsGet('techWeapon','basic')||'basic';
 /* === Nuevos poderes === */
-let bulletTime=0,kineticCharge=0,kineticReady=0,cleanPulseCd=0,ionBoots=0,tractorBeam=0;
-let playerClone=null,energyWalls=[],decoyEntity=null,ionTrail=[];
+let kineticCharge=0,kineticReady=0,cleanPulseCd=0,tractorBeam=0;
+let playerClone=null;
 let parasiteAttached=0,disruptorSlow=0;
 
 let weaponHeat=0,weaponOverheat=0,weaponDeployCd=0,playerDeploys=[];
@@ -2806,7 +2967,7 @@ let shieldCd=0,activeShield=0,chargeShot=0,chargeMax=90;
 let worldTeleportCd=0;
 let droneCd=0,bounceShot=0,bounceShotCd=0,freezeCd=0;
 /* —— Poderes nuevos (solo motor, sin touch pad) —— */
-let phaseShift=0,railgun=0,lootVacuum=0;
+let railgun=0,lootVacuum=0;
 let orbitalMines=[],chainFX=[];
 
 let runStartTime=0;
@@ -3114,6 +3275,17 @@ function promptGokuAccessAsync(){
 let shipName=(lsGet("techShipName","Br7")||"Br7").slice(0,10);
 
 let selectedWorld=Math.min(24,Math.max(1,Number(lsGet("techWorld","1"))||1)); // 1-24 mundos
+
+// Bandera/país elegido por el jugador. Se conserva entre sesiones.
+const TECH_COUNTRY_CODES="AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW".split(" ");
+const techRegionNames=(typeof Intl!=="undefined"&&Intl.DisplayNames)?new Intl.DisplayNames(["es"],{type:"region"}):null;
+function techFlagEmoji(code){return `<span class="fi fi-${String(code||"").toLowerCase()}" role="img" aria-label="${techCountryName(code)}"></span>`;}
+function techCountryName(code){try{return techRegionNames?techRegionNames.of(code):code}catch(e){return code}}
+// La selección empieza vacía para mostrar "Elige el país". Después se conserva.
+let selectedFlag=(String(lsGet("techCountryFlagV2","")||"").toUpperCase());
+if(!TECH_COUNTRY_CODES.includes(selectedFlag))selectedFlag="";
+function techSelectedFlagEmoji(){return selectedFlag?techFlagEmoji(selectedFlag):""}
+function techUpdateHudFlag(){const el=document.getElementById("techHudFlag");if(el){el.innerHTML=techSelectedFlagEmoji();el.title=selectedFlag?techCountryName(selectedFlag):"Elige el país";el.setAttribute("aria-label",selectedFlag?("Bandera seleccionada: "+techCountryName(selectedFlag)):"No hay país seleccionado");el.style.display=selectedFlag?"inline-flex":"none";}}
 
 let metaCoins=Number(lsGet("techCoins",0))||0;
 let upgSpeed=Number(lsGet("techUpgSpeed",0))||0;
@@ -4347,7 +4519,7 @@ function updateKamehameha(){
 }
 
 /* =========================================================
-   PODERES NUEVOS: cadena, phase, minas, vacuum, railgun
+   PODERES NUEVOS: minas, vacuum y railgun
    (integrados en el juego; no en el touch pad)
    ========================================================= */
 function damageObstacleAt(j, dmg){
@@ -4361,56 +4533,7 @@ function damageObstacleAt(j, dmg){
     return true;
   }catch(e){return false}
 }
-function activateChainLightning(originX, originY){
-  if(!gameRunning||gamePaused)return;
-  const ox=originX!=null?originX:player.x;
-  const oy=originY!=null?originY:player.y;
-  const maxJumps=isMobile()?3:5;
-  const range=150*((typeof getScale==="function")?getScale():1);
-  const dmgBase=3.5+(typeof bulletDamage==="function"?bulletDamage():1);
-  let cx=ox,cy=oy;
-  const hitIdx=new Set();
-  const segs=[];
-  for(let jump=0;jump<maxJumps;jump++){
-    let best=-1,bestD=range;
-    for(let i=0;i<obstacles.length;i++){
-      if(hitIdx.has(i))continue;
-      const o=obstacles[i];
-      if(!o||o.__techDestroyed)continue;
-      const tx=o.x+(o.size||10)/2, ty=o.y+(o.size||10)/2;
-      const d=Math.hypot(tx-cx,ty-cy);
-      if(d<bestD){bestD=d;best=i}
-    }
-    if(best<0)break;
-    hitIdx.add(best);
-    const o=obstacles[best];
-    const tx=o.x+(o.size||10)/2, ty=o.y+(o.size||10)/2;
-    segs.push({x1:cx,y1:cy,x2:tx,y2:ty,life:14});
-    damageObstacleAt(best, dmgBase*(1-jump*0.12));
-    createExplosion(tx,ty,10,"120,220,255");
-    cx=tx;cy=ty;
-  }
-  if(segs.length){
-    chainFX.push(...segs);
-    try{playSfx("stormbolt")}catch(e){try{playSfx("laser")}catch(_){try{playSfx("power")}catch(__){}}}
-    scenarioMsg="⚡ CADENA ELÉCTRICA";scenarioTransition=55;
-    try{doVibrate(18)}catch(e){}
-  } else {
-    /* sin enemigos: arco visual corto */
-    chainFX.push({x1:ox,y1:oy,x2:ox+(Math.random()-0.5)*40,y2:oy-60,life:10});
-    try{playSfx("power")}catch(e){}
-  }
-}
-function activatePhaseShift(){
-  if(!gameRunning||gamePaused)return;
-  phaseShift=Math.max(phaseShift,52); /* ~0.85s a 60fps */
-  invisible=Math.max(invisible,52);
-  dashInvuln=Math.max(dashInvuln,52);
-  createExplosion(player.x,player.y,18,"180,220,255");
-  try{playSfx("chrono")}catch(e){try{playSfx("power")}catch(_){}}
-  scenarioMsg="👻 PHASE SHIFT";scenarioTransition=50;
-  try{doVibrate(14)}catch(e){}
-}
+
 function activateOrbitalMines(){
   if(!gameRunning||gamePaused)return;
   const s=((typeof getScale==="function")?getScale():1);
@@ -4601,8 +4724,8 @@ function fireRedLBeam(){
 
 function applyNewPowerPickup(type){
   powersCollected++;
-  /* chain / phase / emp eliminados del juego */
-  if(type==="chain"||type==="phase"||type==="emp"){return false}
+  /* emp no se entrega como poder */
+  if(type==="emp"){return false}
   if(type==="orbmine"){
     if(powerMode==="manual"){specialCharges=Math.min(9,specialCharges+1);playSfx("power");scenarioMsg="💣 Minas listas";scenarioTransition=45}
     else activateOrbitalMines();
@@ -5341,6 +5464,19 @@ if(startPanel&&!document.getElementById("startExtras")){
     const ach=Object.values(getAchievements()).map(a=>a.title).slice(0,6).join(", ")||"—";
     const histHtml=formatMatchHistoryHtml(20);
     box.innerHTML=`
+<section class="tech-country-picker" aria-label="Seleccionar bandera del país">
+      <div class="tech-country-heading"><span>🌐 Biblioteca de banderas</span><small>Selecciona una bandera; aparecerá durante la partida</small></div>
+      <div class="tech-country-control">
+        <span class="tech-country-current" id="techCountryPreview">${techSelectedFlagEmoji()||"🌐"}</span>
+        <select id="techCountrySelect" aria-label="Escoger bandera del país">
+          <option value="" ${selectedFlag===""?"selected":""} disabled>Elige el país</option>
+          ${TECH_COUNTRY_CODES.slice().sort((a,b)=>techCountryName(a).localeCompare(techCountryName(b),"es")).map(code=>`<option value="${code}" ${selectedFlag===code?"selected":""}>${techCountryName(code)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="tech-country-flags" id="techCountryFlags" aria-label="Banderas disponibles">
+        ${TECH_COUNTRY_CODES.slice().sort((a,b)=>techCountryName(a).localeCompare(techCountryName(b),"es")).map(code=>`<button type="button" class="tech-country-flag-btn ${selectedFlag===code?"active":""}" data-country-flag="${code}" title="${techCountryName(code)}" aria-label="${techCountryName(code)}" aria-pressed="${selectedFlag===code}">${techFlagEmoji(code)}</button>`).join("")}
+      </div>
+    </section>
     <div class="diff-btns">
       <button type="button" data-d="easy" class="${difficulty==="easy"?"active":""}">Fácil</button>
       <button type="button" data-d="normal" class="${difficulty==="normal"?"active":""}">NORMAL</button>
@@ -5405,6 +5541,7 @@ if(startPanel&&!document.getElementById("startExtras")){
         </button>`;
       }).join("")}
     </div>
+
     <h3>🌍 Mundo</h3>
     <div class="diff-btns">
       <button type="button" data-world="1" class="${selectedWorld===1?"active":""}">1 Espacio</button>
@@ -5620,6 +5757,19 @@ if(startPanel&&!document.getElementById("startExtras")){
     box.querySelectorAll("[data-world]").forEach(b=>b.onclick=()=>{
       selectedWorld=Number(b.getAttribute("data-world"))||1;lsSet("techWorld",selectedWorld);renderStart();
     });
+    const countrySelect=box.querySelector("#techCountrySelect");
+    const chooseCountryFlag=(rawCode)=>{
+      const code=String(rawCode||"").toUpperCase();
+      if(!TECH_COUNTRY_CODES.includes(code))return;
+      selectedFlag=code;lsSet("techCountryFlagV2",selectedFlag);
+      if(countrySelect)countrySelect.value=code;
+      const preview=box.querySelector("#techCountryPreview");if(preview)preview.innerHTML=techSelectedFlagEmoji()||"🌐";
+      box.querySelectorAll("[data-country-flag]").forEach(btn=>{const active=btn.getAttribute("data-country-flag")===code;btn.classList.toggle("active",active);btn.setAttribute("aria-pressed",active?"true":"false");});
+      techUpdateHudFlag();
+    };
+    if(countrySelect)countrySelect.onchange=()=>chooseCountryFlag(countrySelect.value);
+    box.querySelectorAll("[data-country-flag]").forEach(btn=>btn.onclick=()=>chooseCountryFlag(btn.getAttribute("data-country-flag")));
+    techUpdateHudFlag();
     /* Config en menú inicio */
     const ssp=box.querySelector("#startSensPad"), sspv=box.querySelector("#startSensPadVal");
     if(ssp)ssp.oninput=()=>{sensPad=Number(ssp.value);if(sspv)sspv.textContent=sensPad.toFixed(2)+"x";lsSet("techSensPadV7",sensPad)};
@@ -6697,7 +6847,7 @@ function shoot(){
   if(currentWeapon==="chain_arc"&&has("chain_arc")){
     if(ammo<2)return;ammo-=2;lastShot=now+90;
     bullets.push({x:player.x,y:player.y-player.size,speed:sp*1.1,size:3*s,pierce:false,dmg:1.2+(typeof bulletDamage==="function"?bulletDamage():1)*0.6,chain:true});
-    try{if(typeof activateChainLightning==="function"){/* se activa al impactar */} }catch(e){}
+
     return}
   if(currentWeapon==="flak_burst"&&has("flak_burst")){
     if(ammo<4)return;ammo-=4;lastShot=now+200;
@@ -6907,7 +7057,7 @@ function maybeSpawnPickup(x,y){
   /* pool de poderes especiales (hammer, chrono, barrier, stormbolt, bazooka, etc.) */
   if(r<.72){
     /* L y ┘ ponderados: aparecen con más frecuencia */
-    const pool=["ammo","hammer","shield","bounce","missile","allies","overdrive","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","invisible","drone","barrier","stormbolt","bazooka","vortex","ion","orbmine","vacuum","railgun","redL","redL","redL","bullet_time","clone","tractor","energy_wall","kinetic","decoy","clean_pulse","ion_boots"];
+    const pool=["ammo","hammer","shield","bounce","missile","allies","overdrive","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","invisible","drone","barrier","stormbolt","bazooka","vortex","ion","orbmine","vacuum","railgun","redL","redL","redL","clone","tractor","kinetic","clean_pulse"];
     const type=pool[Math.floor(Math.random()*pool.length)];
     pickups.push({x,y,type,size:s,vy:1.5});
   }
@@ -8036,13 +8186,8 @@ function doDash(){
   dashCd=90; /* 1.5s cooldown */
   dashInvuln=28; /* invulnerable breve */
   invisible=Math.max(invisible,28);
-  /* Botas iónicas: estela dañina + sacudir parásito */
+  /* El dash también permite sacudirse un parásito; se conserva esta función. */
   try{
-    if(typeof ionBoots!=="undefined"&&ionBoots>0){
-      for(let k=0;k<5;k++){
-        ionTrail.push({x:ox+(player.x-ox)*(k/5),y:oy+(player.y-oy)*(k/5),life:18+k*2,r:22});
-      }
-    }
     if(typeof parasiteAttached!=="undefined"&&parasiteAttached>0){
       parasiteAttached=0;
       scenarioMsg="🦠 PARÁSITO SACUDIDO";scenarioTransition=40;
@@ -8113,7 +8258,7 @@ function updateDashTrail(){
 }
 function hitPlayer(x,y,opts){
   opts=opts||{};
-  if(invisible>0||dashInvuln>0||phaseShift>0)return;
+  if(invisible>0||dashInvuln>0)return;
   /* Escudo rebote: no recibe daño (las balas se devuelven en updateEnemyBullets) */
   if(bounceShield>0){createExplosion(x,y,12,"200,255,255");playSfx("reflect");if(!SFX.reflect)playSfx("shield");return}
   if(opts.soft||opts.laser){
@@ -9352,8 +9497,8 @@ function updateEnemyBullets(){
   }
 }
 
-function updatePickups(){for(let i=pickups.length-1;i>=0;i--){if(pickups[i]&&(pickups[i].type==="chrono"||pickups[i].type==="slow")){pickups.splice(i,1)}}const labels={redL:"┘",ammo:"🔫",coin:"⭐",shield:"S",bounce:"↻",rapid:"R",triple:"3",slow:"⏱",laser:"L",bomb:"💣",pierce:"P",life:"♥",invisible:"★",magnet:"M",hammer:"🔨",missile:"🚀",allies:"✈",overdrive:"⚡",nova:"✸",reflect:"↺",burst:"✸✸",repair:"+",drone:"🛸",freeze:"❄",chrono:"⏱",barrier:"⬡",stormbolt:"⚡",bazooka:"🚀",vortex:"🌀",ion:"💠",emp:"💥",chain:"⚡⚡",phase:"👻",orbmine:"💣",vacuum:"🧲",railgun:"══",bullet_time:"⏳",clone:"",tractor:"🪝",energy_wall:"🧱",kinetic:"⚡",decoy:"🕶",clean_pulse:"💨",ion_boots:"👟"};
-const colors={redL:"#FF1738",ammo:"#FFCD00",coin:"#FFD700",shield:"#00C8FF",bounce:"#AAFFFF",rapid:"#00FF88",triple:"#66CCFF",slow:"#AA88FF",laser:"#00FFFF",bomb:"#FF4400",pierce:"#AADD00",life:"#FF3333",invisible:"#FFD700",magnet:"#FFAA00",hammer:"#E8F0FF",missile:"#FF8800",allies:"#44FFAA",overdrive:"#FF2244",nova:"#FFAA00",reflect:"#66FFEE",burst:"#FF8800",repair:"#88FF88",drone:"#88DDFF",freeze:"#AADDFF",chrono:"#FFE066",barrier:"#66CCFF",stormbolt:"#FFEE88",bazooka:"#FF8844",vortex:"#CC66FF",ion:"#66FFEE",emp:"#FFEE66",chain:"#66EEFF",phase:"#CCDDEE",orbmine:"#FF9944",vacuum:"#FFD700",railgun:"#FFE566",bullet_time:"#FFE066",clone:"#88CCFF",tractor:"#FFAA66",energy_wall:"#66FFCC",kinetic:"#FFEE44",decoy:"#AAAAFF",clean_pulse:"#AAFFEE",ion_boots:"#66DDFF"};
+function updatePickups(){for(let i=pickups.length-1;i>=0;i--){if(pickups[i]&&(pickups[i].type==="chrono"||pickups[i].type==="slow")){pickups.splice(i,1)}}const labels={redL:"┘",ammo:"🔫",coin:"⭐",shield:"S",bounce:"↻",rapid:"R",triple:"3",slow:"⏱",laser:"L",bomb:"💣",pierce:"P",life:"♥",invisible:"★",magnet:"M",hammer:"🔨",missile:"🚀",allies:"✈",overdrive:"⚡",nova:"✸",reflect:"↺",burst:"✸✸",repair:"+",drone:"🛸",freeze:"❄",chrono:"⏱",barrier:"⬡",stormbolt:"⚡",bazooka:"🚀",vortex:"🌀",ion:"💠",emp:"💥",orbmine:"💣",vacuum:"🧲",railgun:"══",clone:"",tractor:"🪝",kinetic:"⚡",clean_pulse:"💨"};
+const colors={redL:"#FF1738",ammo:"#FFCD00",coin:"#FFD700",shield:"#00C8FF",bounce:"#AAFFFF",rapid:"#00FF88",triple:"#66CCFF",slow:"#AA88FF",laser:"#00FFFF",bomb:"#FF4400",pierce:"#AADD00",life:"#FF3333",invisible:"#FFD700",magnet:"#FFAA00",hammer:"#E8F0FF",missile:"#FF8800",allies:"#44FFAA",overdrive:"#FF2244",nova:"#FFAA00",reflect:"#66FFEE",burst:"#FF8800",repair:"#88FF88",drone:"#88DDFF",freeze:"#AADDFF",chrono:"#FFE066",barrier:"#66CCFF",stormbolt:"#FFEE88",bazooka:"#FF8844",vortex:"#CC66FF",ion:"#66FFEE",emp:"#FFEE66",orbmine:"#FF9944",vacuum:"#FFD700",railgun:"#FFE566",clone:"#88CCFF",tractor:"#FFAA66",kinetic:"#FFEE44",clean_pulse:"#AAFFEE"};
 for(let i=pickups.length-1;i>=0;i--){const p=pickups[i];
 if(magnet>0){const dx=player.x-p.x,dy=player.y-p.y,d=Math.hypot(dx,dy)||1;p.x+=(dx/d)*2.5;p.y+=(dy/d)*2.5}
 p.y+=p.vy;
@@ -9361,7 +9506,7 @@ p.y+=p.vy;
 ctx.shadowColor=colors[p.type]||"#FFCD00";ctx.shadowBlur=10;
 ctx.fillStyle=colors[p.type]||"#FFCD00";
 const iconBoost=(p.type==="redL"||p.type==="laser")?1.12:1;ctx.font=`bold ${Math.max(isMobile()?9:11,p.size*(isMobile()?.5:.65))*iconBoost}px Orbitron`;ctx.textAlign="center";ctx.textBaseline="middle";
-ctx.fillText(labels[p.type]||"?",p.x,p.y);
+ctx.fillText(labels[p.type]||"",p.x,p.y);
 ctx.shadowBlur=0;
 if(Math.hypot(player.x-p.x,player.y-p.y)<player.size+p.size){
 if(p.type==="redL"){
@@ -9398,14 +9543,14 @@ else if(p.type==="nova"){specialCharges=Math.min(6,specialCharges+1);powersColle
 else if(p.type==="reflect"){reflect=360;playSfx("reflect");if(!SFX.reflect)playSfx("power")}
 else if(p.type==="burst"){if(powerMode==="auto"){burst=1;activateBurst()}else{specialCharges=Math.min(6,specialCharges+1);powersCollected++}playSfx("burst");if(!SFX.burst)playSfx("power")}
 else if(p.type==="repair"){if(lives<3){lives++;updateLivesUI()}else shield=Math.max(shield,280);playSfx("repair");if(!SFX.repair)playSfx("power")}
-else if(p.type==="bullet_time"){bulletTime=Math.max(bulletTime,240);playSfx("power");scenarioMsg="⏳ ESCUDO DE TIEMPO";scenarioTransition=70}
+
 else if(p.type==="clone"){try{playerClone={x:player.x+30,y:player.y,life:240,shootT:12};}catch(e){};playSfx("power");scenarioMsg="CLON ACTIVO";scenarioTransition=70}
 else if(p.type==="tractor"){tractorBeam=Math.max(tractorBeam,300);playSfx("power");scenarioMsg="🪝 GANCHO TRACTOR";scenarioTransition=70}
-else if(p.type==="energy_wall"){try{energyWalls.push({y:player.y-40,life:200,h:14});}catch(e){};playSfx("power");scenarioMsg="🧱 MURO DE ENERGÍA";scenarioTransition=70}
+
 else if(p.type==="kinetic"){kineticCharge=1;kineticReady=1;playSfx("power");scenarioMsg="⚡ CARGA CINÉTICA LISTA";scenarioTransition=70}
-else if(p.type==="decoy"){try{decoyEntity={x:player.x,y:player.y,life:180};}catch(e){};playSfx("power");scenarioMsg="🕶 SOMBRA SEÑUELO";scenarioTransition=70}
+
 else if(p.type==="clean_pulse"){try{const R=140*((typeof getScale==="function")?getScale():1);for(let bi=enemyBullets.length-1;bi>=0;bi--){const b=enemyBullets[bi];if(Math.hypot(b.x-player.x,b.y-player.y)<R)enemyBullets.splice(bi,1);}createExplosion(player.x,player.y,R*0.4,"170,255,240");}catch(e){};playSfx("power");scenarioMsg="💨 PULSO DE LIMPIEZA";scenarioTransition=70}
-else if(p.type==="ion_boots"){ionBoots=Math.max(ionBoots,420);playSfx("power");scenarioMsg="👟 BOTAS IÓNICAS";scenarioTransition=70}
+
 else playSfx("power");
 createExplosion(p.x,p.y,10,"255,255,100");pickups.splice(i,1)}else if(p.y>canvas.height+30)pickups.splice(i,1)}}
 
@@ -9515,7 +9660,7 @@ if(ammo<=0){ctx.textAlign="center";ctx.font="bold "+P(9)+"px Orbitron";ctx.fillT
 const pows=[];
 if(shield>0)pows.push(["ESC","#00C8FF"]);
 if(invisible>0)pows.push(["★ INV "+Math.ceil(invisible/60)+"s","#FFD700"]);
-if(phaseShift>0)pows.push(["PHS","#CCDDEE"]);
+
 if(railgun>0)pows.push(["RAIL","#FFE566"]);
 if(orbitalMines&&orbitalMines.length)pows.push(["MIN"+orbitalMines.length,"#FF9944"]);
 if(bounceShield>0)pows.push(["REB","#AAFFFF"]);
@@ -10299,7 +10444,7 @@ if(introTimer>0){
   ctx.fillText(difficulty.toUpperCase(),canvas.width/2,canvas.height/2+16);
 }
 
-if(shield>0)shield--;if(bounceShield>0)bounceShield--;if(vortex>0)vortex--;if(ion>0)ion--;if(emp>0)emp--;if(laserGrace>0)laserGrace--;if(rapidFire>0)rapidFire--;if(tripleShot>0)tripleShot--;if(slowMo>0)slowMo--;if(laser>0)laser--;if(pierce>0)pierce--;if(invisible>0)invisible--;if(magnet>0)magnet--;if(missilePower>0)missilePower--;if(allyPower>0)allyPower--;if(storm>0)storm--;if(overdrive>0)overdrive--;if(nova>0)nova=0;if(reflect>0)reflect--;if(burst>0)burst=0;if(freezeEnemies>0)freezeEnemies--;if(barrier>0)barrier--;if(phaseShift>0)phaseShift--;if(railgun>0)railgun--;
+if(shield>0)shield--;if(bounceShield>0)bounceShield--;if(vortex>0)vortex--;if(ion>0)ion--;if(emp>0)emp--;if(laserGrace>0)laserGrace--;if(rapidFire>0)rapidFire--;if(tripleShot>0)tripleShot--;if(slowMo>0)slowMo--;if(laser>0)laser--;if(pierce>0)pierce--;if(invisible>0)invisible--;if(magnet>0)magnet--;if(missilePower>0)missilePower--;if(allyPower>0)allyPower--;if(storm>0)storm--;if(overdrive>0)overdrive--;if(nova>0)nova=0;if(reflect>0)reflect--;if(burst>0)burst=0;if(freezeEnemies>0)freezeEnemies--;if(barrier>0)barrier--;if(railgun>0)railgun--;
 if(comboTimer>0){comboTimer--}else{combo=0;comboMult=1}
 if(feverMode>0){
   feverMode--;
@@ -10469,7 +10614,7 @@ for(let i=obstacles.length-1;i>=0;i--){
   }
   drawObstacle(o);
   if(checkCollision(o)){
-    if(invisible>0||dashInvuln>0||phaseShift>0){
+    if(invisible>0||dashInvuln>0){
       /* Invulnerable: destroza enemigos al contacto (jefes solo reciben daño) */
       createExplosion(o.x+o.size/2,o.y+o.size/2,o.type==="space_mine"?o.size*1.8:o.size,o.type==="space_mine"?"255,80,40":"255,215,0");
       if(String(o.type||"").startsWith("boss")){o.hp=(o.hp||10)-3;if(o.hp<=0){try{destroyEnemy(o,i)}catch(e){obstacles.splice(i,1)}}}
@@ -10582,7 +10727,7 @@ try{if(typeof showLiveGameControls==="function")showLiveGameControls(true);else{
   var ex=document.getElementById("techAccountExit");if(ex){ex.classList.remove("is-visible");ex.style.setProperty("display","none","important")}
 }}catch(e){}
 obstacles=[];particles=[];bullets=[];enemyBullets=[];pickups=[];explosions=[];traps=[];missiles=[];lightningFX=[];allies=[];gravZones=[];drones=[];
-score=0;meteorsDestroyed=0;shipsDestroyed=0;ki=0;kiReady=false;kamehameha=0;dashCd=0;dashInvuln=0;dashTrail=[];shieldCd=0;activeShield=0;chargeShot=0;worldTeleportCd=0;droneCd=0;bounceShot=0;bounceShotCd=0;freezeCd=0;phaseShift=0;railgun=0;lootVacuum=0;orbitalMines=[];chainFX=[];ammo=100;shield=0;rapidFire=0;tripleShot=0;slowMo=0;laser=0;pierce=0;invisible=0;magnet=0;missilePower=0;allyPower=0;storm=0;overdrive=0;nova=0;reflect=0;burst=0;repair=0;freezeEnemies=0;barrier=0;bazooka=0;specialCharges=3;powersCollected=0;lives=1;level=1;waveCount=0;waveNumber=1;scenario=selectedWorld||1;scenarioTransition=0;scenarioMsg="";gamePaused=false;lastEnemySpawn=0;
+score=0;meteorsDestroyed=0;shipsDestroyed=0;ki=0;kiReady=false;kamehameha=0;dashCd=0;dashInvuln=0;dashTrail=[];shieldCd=0;activeShield=0;chargeShot=0;worldTeleportCd=0;droneCd=0;bounceShot=0;bounceShotCd=0;freezeCd=0;railgun=0;lootVacuum=0;orbitalMines=[];chainFX=[];ammo=100;shield=0;rapidFire=0;tripleShot=0;slowMo=0;laser=0;pierce=0;invisible=0;magnet=0;missilePower=0;allyPower=0;storm=0;overdrive=0;nova=0;reflect=0;burst=0;repair=0;freezeEnemies=0;barrier=0;bazooka=0;specialCharges=3;powersCollected=0;lives=1;level=1;waveCount=0;waveNumber=1;scenario=selectedWorld||1;scenarioTransition=0;scenarioMsg="";gamePaused=false;lastEnemySpawn=0;
 keys.up=keys.down=keys.left=keys.right=false;
 if(scoreElement)scoreElement.textContent="0";
 record=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;if(recordElement)recordElement.textContent=record;
@@ -17705,8 +17850,6 @@ y>
     if(typeof gameRunning==="undefined"||!gameRunning||(typeof gamePaused!=="undefined"&&gamePaused))return;
     try{
       /* —— Poderes —— */
-      if(typeof bulletTime!=="undefined"&&bulletTime>0)bulletTime--;
-      if(typeof ionBoots!=="undefined"&&ionBoots>0)ionBoots--;
       if(typeof tractorBeam!=="undefined"&&tractorBeam>0)tractorBeam--;
       if(typeof kineticReady!=="undefined"&&kineticReady>0){
         /* carga cinética se mantiene hasta disparar */
@@ -17725,45 +17868,6 @@ y>
           bullets.push({x:playerClone.x,y:playerClone.y-10,speed:8*((typeof getSpeedScale==="function")?getSpeedScale():1),size:2.5,pierce:false});
         }
         if(playerClone.life<=0)playerClone=null;
-      }
-      /* Muro de energía */
-      if(typeof energyWalls!=="undefined"&&energyWalls.length){
-        for(let i=energyWalls.length-1;i>=0;i--){
-          const w=energyWalls[i];
-          w.life--;
-          w.y-=1.2*((typeof getSpeedScale==="function")?getSpeedScale():1);
-          if(typeof enemyBullets!=="undefined"){
-            for(let bi=enemyBullets.length-1;bi>=0;bi--){
-              const b=enemyBullets[bi];
-              if(Math.abs(b.y-w.y)<(w.h||14) && b.x>0 && b.x<canvas.width){
-                enemyBullets.splice(bi,1);
-              }
-            }
-          }
-          if(w.life<=0)energyWalls.splice(i,1);
-        }
-      }
-      /* Señuelo */
-      if(typeof decoyEntity!=="undefined"&&decoyEntity){
-        decoyEntity.life--;
-        if(decoyEntity.life<=0)decoyEntity=null;
-      }
-      /* Estela iónica dañina */
-      if(typeof ionTrail!=="undefined"&&ionTrail.length&&typeof obstacles!=="undefined"){
-        for(let i=ionTrail.length-1;i>=0;i--){
-          const t=ionTrail[i];
-          t.life--;
-          for(let j=obstacles.length-1;j>=0;j--){
-            const o=obstacles[j];
-            if(!o||o.indestructible||String(o.type||"").startsWith("boss"))continue;
-            const cx=o.x+o.size/2, cy=o.y+o.size/2;
-            if(Math.hypot(cx-t.x,cy-t.y)<(t.r||20)+o.size*0.3){
-              o.hp=(o.hp||1)-1;
-              if(o.hp<=0){try{if(typeof destroyObstacle==="function")destroyObstacle(j);else obstacles.splice(j,1);}catch(e){obstacles.splice(j,1);}}
-            }
-          }
-          if(t.life<=0)ionTrail.splice(i,1);
-        }
       }
       /* Tractor: atrae enemigo/pickup más cercano */
       if(typeof tractorBeam!=="undefined"&&tractorBeam>0){
@@ -17890,32 +17994,6 @@ y>
         ctx.fillStyle="rgba(120,180,255,.35)";ctx.fill();
         ctx.globalAlpha=1;ctx.restore();
       }
-      /* Muros */
-      if(energyWalls&&energyWalls.length){
-        for(let i=0;i<energyWalls.length;i++){
-          const w=energyWalls[i];
-          const a=Math.max(0.2,w.life/200);
-          ctx.fillStyle="rgba(100,255,200,"+(0.35*a)+")";
-          ctx.fillRect(0,w.y-(w.h||14)/2,canvas.width,w.h||14);
-          ctx.strokeStyle="rgba(180,255,230,"+(0.7*a)+")";
-          ctx.strokeRect(0,w.y-(w.h||14)/2,canvas.width,w.h||14);
-        }
-      }
-      /* Señuelo */
-      if(decoyEntity){
-        ctx.save();ctx.globalAlpha=0.45;
-        ctx.strokeStyle="#AAAAFF";ctx.setLineDash([4,3]);
-        ctx.beginPath();ctx.arc(decoyEntity.x,decoyEntity.y,12,0,Math.PI*2);ctx.stroke();
-        ctx.setLineDash([]);ctx.globalAlpha=1;ctx.restore();
-      }
-      /* Estela iónica */
-      if(ionTrail&&ionTrail.length){
-        for(let i=0;i<ionTrail.length;i++){
-          const t=ionTrail[i];
-          ctx.fillStyle="rgba(100,220,255,"+(t.life/24)*0.45+")";
-          ctx.beginPath();ctx.arc(t.x,t.y,t.r*0.6,0,Math.PI*2);ctx.fill();
-        }
-      }
       /* Tractor beam visual */
       if(typeof tractorBeam!=="undefined"&&tractorBeam>0){
         ctx.strokeStyle="rgba(255,170,80,0.35)";ctx.lineWidth=2;
@@ -17927,10 +18005,6 @@ y>
         ctx.fillStyle="rgba(0,0,0,.5)";ctx.fillRect(player.x-bw/2,player.y+16,bw,bh);
         ctx.fillStyle=kineticCharge>=1?"#FFEE44":"#88AAFF";
         ctx.fillRect(player.x-bw/2,player.y+16,bw*Math.min(1,kineticCharge),bh);
-      }
-      /* Bullet time tint */
-      if(typeof bulletTime!=="undefined"&&bulletTime>0){
-        ctx.fillStyle="rgba(255,220,80,0.04)";ctx.fillRect(0,0,canvas.width,canvas.height);
       }
       /* Parásito UI */
       if(typeof parasiteAttached!=="undefined"&&parasiteAttached>0){
@@ -17971,13 +18045,10 @@ y>
     }catch(e){}
   }
 
-  /* Bullet time: ralentiza enemigos vía freezeEnemies light */
-  function applyBulletTime(){
+
+  /* Disruptor: reduce poco a poco la duración de poderes activos. */
+  function applyDisruptorSlow(){
     try{
-      if(typeof bulletTime!=="undefined"&&bulletTime>0){
-        if(typeof freezeEnemies!=="undefined")freezeEnemies=Math.max(freezeEnemies,2);
-      }
-      /* Disruptor: corta poderes activos poco a poco */
       if(typeof disruptorSlow!=="undefined"&&disruptorSlow){
         if(typeof rapidFire!=="undefined"&&rapidFire>0)rapidFire=Math.max(0,rapidFire-2);
         if(typeof overdrive!=="undefined"&&overdrive>0)overdrive=Math.max(0,overdrive-2);
@@ -18008,25 +18079,6 @@ y>
     try{shoot=wrapped;window.shoot=wrapped;}catch(e){}
   }
 
-  /* Señuelo: enemigos apuntan al decoy ocasionalmente (enemyShoot aim) */
-  const _esOrig=typeof enemyShoot==="function"?enemyShoot:null;
-  if(_esOrig&&!enemyShoot.__decoyHook){
-    const wrapped=function(o){
-      try{
-        if(decoyEntity&&decoyEntity.life>0&&Math.random()<0.55){
-          const _px=player.x,_py=player.y;
-          player.x=decoyEntity.x;player.y=decoyEntity.y;
-          const r=_esOrig.apply(this,arguments);
-          player.x=_px;player.y=_py;
-          return r;
-        }
-      }catch(e){}
-      return _esOrig.apply(this,arguments);
-    };
-    wrapped.__decoyHook=true;
-    try{enemyShoot=wrapped;window.enemyShoot=wrapped;}catch(e){}
-  }
-
   /* Reducir daño frontal a shield_bearer */
   /* Se aplica en checkCollision / bullet hits via hook on bullet loop - simplified: more hp already */
 
@@ -18036,7 +18088,7 @@ y>
       if(typeof gameLoopCore==="function"&&!gameLoopCore.__newSystems){
         const orig=gameLoopCore;
         const wrapped=function(ts){
-          applyBulletTime();
+          applyDisruptorSlow();
           const r=orig.apply(this,arguments);
           tickNewSystems();
           drawNewSystems();
@@ -18054,8 +18106,8 @@ y>
   /* Reset en nueva partida */
   function hookReset(){
     try{
-      bulletTime=0;kineticCharge=0;kineticReady=0;ionBoots=0;tractorBeam=0;
-      playerClone=null;energyWalls=[];decoyEntity=null;ionTrail=[];
+      kineticCharge=0;kineticReady=0;tractorBeam=0;
+      playerClone=null;
       parasiteAttached=0;disruptorSlow=0;
     }catch(e){}
   }
