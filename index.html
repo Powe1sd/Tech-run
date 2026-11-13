@@ -22,15 +22,82 @@
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;800&family=Share+Tech+Mono&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </noscript>
 <style id="tech-boot-splash">
-/* Primer pintado instantáneo mientras parsea el resto */
-html,body{margin:0;background:#03050c;color:#fff;font-family:system-ui,sans-serif}
-#techBootSplash{position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%,#0a1530 0%,#03050c 70%);transition:opacity .35s ease,visibility .35s}
+/* Splash de portada — primer pintado instantáneo */
+html,body{margin:0;background:#02040a;color:#fff;font-family:system-ui,-apple-system,sans-serif}
+#techBootSplash{
+  position:fixed;inset:0;z-index:2147483000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:
+    radial-gradient(ellipse 90% 55% at 50% 42%, rgba(0,80,180,.22) 0%, transparent 55%),
+    radial-gradient(ellipse 70% 40% at 50% 100%, rgba(206,17,38,.12) 0%, transparent 50%),
+    #02040a;
+  transition:opacity .55s ease, visibility .55s;
+  overflow:hidden;
+}
 #techBootSplash.hide{opacity:0;visibility:hidden;pointer-events:none}
-#techBootSplash .tb-logo{font:800 28px system-ui,sans-serif;letter-spacing:3px;margin:0 0 8px}
-#techBootSplash .tb-sub{color:#8fa3bd;font-size:13px;margin:0 0 22px}
-#techBootSplash .tb-bar{width:min(220px,60vw);height:4px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
-#techBootSplash .tb-bar>i{display:block;height:100%;width:30%;border-radius:99px;background:linear-gradient(90deg,#FFCD00,#00A0E9,#CE1126);animation:tbLoad 1.1s ease-in-out infinite}
-@keyframes tbLoad{0%{transform:translateX(-100%)}100%{transform:translateX(350%)}}
+#techBootSplash::before{
+  content:"";position:absolute;inset:0;pointer-events:none;opacity:.45;
+  background-image:
+    radial-gradient(circle,rgba(255,255,255,.55) 1px,transparent 1px),
+    radial-gradient(circle,rgba(0,160,255,.25) 1px,transparent 1px);
+  background-size:48px 48px, 78px 78px;
+  animation:tbStars 18s linear infinite;
+}
+@keyframes tbStars{to{transform:translateY(-40px)}}
+#techBootSplash .tb-inner{
+  position:relative;z-index:1;text-align:center;
+  animation:tbIn .9s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes tbIn{
+  from{opacity:0;transform:scale(.88) translateY(12px);filter:blur(6px)}
+  to{opacity:1;transform:scale(1) translateY(0);filter:blur(0)}
+}
+#techBootSplash .tb-brand{
+  font-weight:900;
+  font-size:clamp(64px,18vw,120px);
+  line-height:0.9;
+  letter-spacing:0.18em;
+  margin:0;
+  padding-left:0.18em; /* equilibrar letter-spacing */
+  color:#fff;
+  text-shadow:
+    0 0 40px rgba(0,160,255,.45),
+    0 0 80px rgba(255,205,0,.15),
+    0 4px 24px rgba(0,0,0,.6);
+  background:linear-gradient(180deg,#ffffff 10%,#b8dcff 45%,#FFCD00 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+#techBootSplash .tb-line{
+  width:min(180px,42vw);height:3px;margin:18px auto 14px;border-radius:99px;
+  background:linear-gradient(90deg,transparent,#FFCD00 20%,#00A0E9 50%,#CE1126 80%,transparent);
+  box-shadow:0 0 16px rgba(255,205,0,.35);
+  animation:tbLine 1.4s ease-in-out infinite alternate;
+}
+@keyframes tbLine{from{opacity:.55;transform:scaleX(.85)}to{opacity:1;transform:scaleX(1)}}
+#techBootSplash .tb-slogan{
+  margin:0;
+  font-weight:700;
+  font-size:clamp(11px,2.8vw,15px);
+  letter-spacing:0.55em;
+  text-transform:uppercase;
+  color:rgba(200,220,240,.85);
+  text-shadow:0 0 12px rgba(0,160,255,.25);
+}
+#techBootSplash .tb-bar{
+  margin-top:28px;width:min(160px,40vw);height:2px;border-radius:99px;
+  background:rgba(255,255,255,.08);overflow:hidden;opacity:.9;
+}
+#techBootSplash .tb-bar>i{
+  display:block;height:100%;width:35%;border-radius:99px;
+  background:linear-gradient(90deg,#FFCD00,#00A0E9,#CE1126);
+  animation:tbLoad 1.15s ease-in-out infinite;
+}
+@keyframes tbLoad{0%{transform:translateX(-120%)}100%{transform:translateX(320%)}}
+@media (prefers-reduced-motion:reduce){
+  #techBootSplash::before,#techBootSplash .tb-inner,#techBootSplash .tb-line,#techBootSplash .tb-bar>i{animation:none!important}
+}
 </style>
 <style>
 
@@ -2758,10 +2825,13 @@ html,body{width:100%;min-width:320px}
 </style>
 </head>
 <body>
-<div id="techBootSplash" aria-live="polite" aria-busy="true">
-  <div class="tb-logo">⚡ TECH RUN</div>
-  <p class="tb-sub">Cargando…</p>
-  <div class="tb-bar"><i></i></div>
+<div id="techBootSplash" aria-live="polite" aria-busy="true" role="presentation">
+  <div class="tb-inner">
+    <h1 class="tb-brand">TECH</h1>
+    <div class="tb-line" aria-hidden="true"></div>
+    <p class="tb-slogan">RUN</p>
+    <div class="tb-bar" aria-hidden="true"><i></i></div>
+  </div>
 </div>
 <button type="button" onclick="typeof openProgrammerModal==='function'&&openProgrammerModal()" class="boton-foto" aria-label="Ver perfil del programador">
   <img src="yo.jpeg" alt="Brahyan" class="foto-perfil" loading="lazy" decoding="async" width="100" height="100">
