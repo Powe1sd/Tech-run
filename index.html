@@ -6689,7 +6689,7 @@ function shoot(){
       else playSfx("laser"); /* fallback si no hay audios/poder-goku.mp3 */
     } else playSfx("shoot");
   }catch(e){}
-  if(!isMobile()||Math.random()<0.15)doVibrate(8,"shoot");
+  if(isMobile()&&Math.random()<0.04)doVibrate(6,"shoot");
   const sp=12.5*getSpeedScale()*bufScale(),s=getScale(); /* más rápidas: llegan hasta arriba */
   const has=w=>Array.isArray(ownedWeapons)&&ownedWeapons.indexOf(w)>=0;
   /* Goku: bolitas de energía (ki) pequeñas */
@@ -13075,7 +13075,17 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
   function wrapGameplay(){
     try{if(typeof startGame==='function'&&!startGame.__techStatsWrapped){const orig=startGame;const wrapped=function(){run={start:0,shots:0,kills:0,meteors:0,ships:0,recorded:false,mode:(typeof gameMode!=='undefined'?String(gameMode):'classic'),diff:(typeof difficulty!=='undefined'?String(difficulty):'normal'),missionId:'',missionTitle:''};try{trackVisitDay();if(!window.__techSessionActive)startSessionTrack()}catch(e){}window.__techRunTelemetry={shots:0,kills:0,meteors:0,ships:0};const r=orig.apply(this,arguments);run.start=typeof runStartTime!=='undefined'?safeNum(runStartTime):performance.now();run.mode=typeof gameMode!=='undefined'?String(gameMode):run.mode;run.diff=typeof difficulty!=='undefined'?String(difficulty):run.diff;if(typeof storyMode!=='undefined'&&storyMode&&typeof STORY_CAMPAIGN!=='undefined'&&STORY_CAMPAIGN[storyChapterIdx]){run.missionId=STORY_CAMPAIGN[storyChapterIdx].id;run.missionTitle=STORY_CAMPAIGN[storyChapterIdx].title}return r};wrapped.__techStatsWrapped=true;startGame=wrapped;window.startGame=wrapped}}
     catch(e){console.warn('No se pudo instrumentar inicio de partida',e)}
-    try{if(typeof shoot==='function'&&!shoot.__techStatsWrapped){const orig=shoot;const wrapped=function(){const before=typeof bullets!=='undefined'&&Array.isArray(bullets)?bullets.length:0;const r=orig.apply(this,arguments);const after=typeof bullets!=='undefined'&&Array.isArray(bullets)?bullets.length:before;const n=Math.max(0,after-before);if(n&&typeof gameRunning!=='undefined'&&gameRunning&&!gamePaused){run.shots+=n;try{window.__techRunTelemetry=window.__techRunTelemetry||{shots:0,kills:0,meteors:0,ships:0};window.__techRunTelemetry.shots=run.shots}catch(e){}const s=readStats();s.shots=safeNum(s.shots)+n;saveStats(s)}return r};wrapped.__techStatsWrapped=true;shoot=wrapped;window.shoot=wrapped}}
+    try{if(typeof shoot==='function'&&!shoot.__techStatsWrapped){const orig=shoot;const wrapped=function(){const before=typeof bullets!=='undefined'&&Array.isArray(bullets)?bullets.length:0;const r=orig.apply(this,arguments);const after=typeof bullets!=='undefined'&&Array.isArray(bullets)?bullets.length:before;const n=Math.max(0,after-before);if(n&&typeof gameRunning!=='undefined'&&gameRunning&&!gamePaused){run.shots+=n;try{window.__techRunTelemetry=window.__techRunTelemetry||{shots:0,kills:0,meteors:0,ships:0};window.__techRunTelemetry.shots=run.shots}catch(e){}/* Guardado por lotes: no leer/escribir localStorage en cada disparo.
+           La escritura se limita a una vez cada 2500 ms mientras se juega. */
+if(!run._pendingShotStats)run._pendingShotStats=0;
+run._pendingShotStats+=n;
+const _shotStatsNow=performance.now();
+if(_shotStatsNow-(run._lastShotStatsSave||0)>=2500){
+  const _pending=run._pendingShotStats;
+  run._pendingShotStats=0;
+  run._lastShotStatsSave=_shotStatsNow;
+  try{const _st=readStats();_st.shots=safeNum(_st.shots)+_pending;saveStats(_st)}catch(_e){}
+}}return r};wrapped.__techStatsWrapped=true;shoot=wrapped;window.shoot=wrapped}}
     catch(e){console.warn('No se pudo instrumentar disparos',e)}
     try{if(typeof destroyEnemy==='function'&&!destroyEnemy.__techStatsWrapped){const orig=destroyEnemy;const wrapped=function(o,i){const before=!!(o&&o.__techDestroyed);const type=o&&o.type?String(o.type):'';const r=orig.apply(this,arguments);if(o&&!before&&o.__techDestroyed){run.kills++;run.weaponKills=(run.weaponKills||0)+1;if(/meteor|explosive|magnetic|hard|fireball|patrol_drone|space_mine/i.test(type))run.meteors++;else run.ships++;try{window.__techRunTelemetry=window.__techRunTelemetry||{shots:0,kills:0,meteors:0,ships:0};window.__techRunTelemetry.kills=run.kills;window.__techRunTelemetry.meteors=run.meteors;window.__techRunTelemetry.ships=run.ships}catch(e){}}return r};wrapped.__techStatsWrapped=true;destroyEnemy=wrapped;window.destroyEnemy=wrapped}}
     catch(e){console.warn('No se pudo instrumentar eliminaciones',e)}
