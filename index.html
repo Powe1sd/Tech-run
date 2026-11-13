@@ -6030,10 +6030,10 @@ function resizeCanvas(force){
     try{
       var gfx=(window.techGfxQuality||localStorage.getItem('techGfxQuality')||'high').toLowerCase();
       if(gfx==='high'||gfx==='alto'){
-        dpr=Math.min(Math.max(window.devicePixelRatio||1,1),1.3);
-        if(typeof lowPower!=='undefined') lowPower=false;
+        /* En móviles priorizamos estabilidad: evitar renderizar a 1.3x en pantallas densas. */
+        dpr=Math.min(Math.max(window.devicePixelRatio||1,1),1.05);
       } else if(gfx==='medium'||gfx==='medio'){
-        dpr=Math.min(Math.max(window.devicePixelRatio||1,1),1.15);
+        dpr=1;
       } else {
         dpr=1;
         if(typeof lowPower!=='undefined') lowPower=true;
@@ -10384,18 +10384,18 @@ function gcEntities(){
   /* Límites equilibrados: fluido en móvil pero sin vaciar enemigos/trampas */
   const lim=m?(hw?0.5:0.7):1;
   /* Base más alta: efectos visibles; patchGc de calidad los ajusta */
-  trimArr(obstacles,Math.floor((m?14:28)*lim));
-  trimArr(bullets,Math.floor((m?20:48)*lim));
-  trimArr(enemyBullets,Math.floor((m?16:40)*lim));
-  trimArr(explosions,Math.floor((m?10:24)*(hw&&m?0.7:1)));
-  trimArr(particles,m?12:32);
-  trimArr(pickups,m?4:8);
-  trimArr(traps,Math.floor((m?8:16)*(hw&&m?0.7:1)));
-  trimArr(missiles,m?6:14);
-  trimArr(lightningFX,m?4:12);
-  trimArr(hitSparks,Math.floor((m?12:36)*(hw&&m?0.6:1)));
-  trimArr(allies,m?2:5);
-  trimArr(drones,m?2:5);
+  trimArr(obstacles,Math.floor((m?10:28)*lim));
+  trimArr(bullets,Math.floor((m?14:48)*lim));
+  trimArr(enemyBullets,Math.floor((m?9:40)*lim));
+  trimArr(explosions,Math.floor((m?6:24)*(hw&&m?0.7:1)));
+  trimArr(particles,m?6:32);
+  trimArr(pickups,m?3:8);
+  trimArr(traps,Math.floor((m?5:16)*(hw&&m?0.7:1)));
+  trimArr(missiles,m?4:14);
+  trimArr(lightningFX,m?3:12);
+  trimArr(hitSparks,Math.floor((m?6:36)*(hw&&m?0.6:1)));
+  trimArr(allies,m?1:5);
+  trimArr(drones,m?1:5);
   if(typeof supplyCrates!=="undefined")trimArr(supplyCrates,m?1:2);
   if(typeof gravZones!=="undefined")trimArr(gravZones,m?1:3);
 }
@@ -10407,11 +10407,13 @@ function updateAdaptiveQuality(ts){
   if(_techLastFrameTs){
     const dt=Math.min(80,Math.max(0,ts-_techLastFrameTs));
     _techFrameAvg=_techFrameAvg*0.92+dt*0.08;
-    if(_techFrameAvg>23){_techSlowFrames++;_techFastFrames=0;}
-    else if(_techFrameAvg<18){_techFastFrames++;_techSlowFrames=0;}
+    const _mobileAdaptive=(typeof isMobile==='function'&&isMobile());
+    if(_techFrameAvg>(_mobileAdaptive?20:23)){_techSlowFrames++;_techFastFrames=0;}
+    else if(_techFrameAvg<(_mobileAdaptive?16.8:18)){_techFastFrames++;_techSlowFrames=0;}
     else {_techSlowFrames=Math.max(0,_techSlowFrames-1);_techFastFrames=0;}
-    if(_techSlowFrames>90)_techAdaptiveLite=true;
-    if(_techFastFrames>240)_techAdaptiveLite=false;
+    /* En teléfono se activa el modo ligero en menos de medio segundo de tirones. */
+    if(_techSlowFrames>(_mobileAdaptive?18:90))_techAdaptiveLite=true;
+    if(_techFastFrames>(_mobileAdaptive?180:240))_techAdaptiveLite=false;
   }
   _techLastFrameTs=ts;
 }
@@ -10426,11 +10428,12 @@ const _isMobLoop=(typeof isMobile==='function'&&isMobile());
 if((++_gcTick)%(_isMobLoop?4:8)===0){
   gcEntities();
   const cap=(arr,max)=>{if(Array.isArray(arr)&&arr.length>max)arr.splice(0,arr.length-max);};
-  cap(typeof particles!=='undefined'?particles:null,_techAdaptiveLite?(_isMobLoop?28:90):(_isMobLoop?55:180));cap(typeof explosions!=='undefined'?explosions:null,_techAdaptiveLite?(_isMobLoop?6:18):(_isMobLoop?10:36));
-  cap(typeof lightningFX!=='undefined'?lightningFX:null,_techAdaptiveLite?(_isMobLoop?4:12):(_isMobLoop?8:24));cap(typeof missiles!=='undefined'?missiles:null,_techAdaptiveLite?(_isMobLoop?10:28):(_isMobLoop?18:48));
+  cap(typeof particles!=='undefined'?particles:null,_techAdaptiveLite?(_isMobLoop?5:90):(_isMobLoop?12:180));cap(typeof explosions!=='undefined'?explosions:null,_techAdaptiveLite?(_isMobLoop?3:18):(_isMobLoop?6:36));
+  cap(typeof lightningFX!=='undefined'?lightningFX:null,_techAdaptiveLite?(_isMobLoop?2:12):(_isMobLoop?3:24));cap(typeof missiles!=='undefined'?missiles:null,_techAdaptiveLite?(_isMobLoop?4:28):(_isMobLoop?8:48));
 }
 ctx.clearRect(0,0,canvas.width,canvas.height);
 try{
+  if(_isMobLoop){ctx.shadowBlur=0;ctx.shadowColor='transparent';}
   ctx.imageSmoothingEnabled=!_isMobLoop;
   if(!_isMobLoop && (typeof lowPower!=="undefined"&&lowPower))ctx.imageSmoothingQuality="low";
 }catch(e){}
@@ -10644,7 +10647,9 @@ if(phase==="meteors"&&gameRunning&&!gamePaused){
   }
 }
 updateExplosions();if(lightningFX&&lightningFX.length){updateLightning()}else if(!((selectedWorld===5||scenario===5)&&(typeof isMobile==="function"&&isMobile())&&!!lowPower)&&!lowPower){updateLightning()}updateAllies();updateDrones();drawPlayer();try{drawWeaponHeatHud()}catch(e){}
-try{updateEngineSound()}catch(e){}
+try{
+  if(!_mobEnd || (_gcTick%3===0)) updateEngineSound();
+}catch(e){}
 
 /* Vórtice: atrae enemigos */
 if(vortex>0){
@@ -10672,7 +10677,7 @@ if(ion>0){
 
 if(!(typeof mob==="function"?mob():isMobile()))updateParticles();
 const _mobEnd=(typeof isMobile==='function'&&isMobile());
-if(!_mobEnd || (_gcTick%2===0)) updateHitSparks();
+if(!_mobEnd || (_gcTick%3===0)) updateHitSparks();
 drawWarning();drawHUD();
 if(!_mobEnd || (_gcTick%3===0)) drawMinimap();
 try{
