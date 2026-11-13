@@ -5,8 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>TECH RUN</title>
 <link rel="icon" href="logo-no-background (2).png" type="image/x-icon">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Share+Tech+Mono&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <link rel="icon" href="nave.png" type="image/x-icon">   
 <button type="button" onclick="openProgrammerModal()" class="boton-foto" aria-label="Ver perfil del programador">
   <img src="yo.jpeg" alt="Brahyan" class="foto-perfil">
@@ -2715,7 +2718,8 @@ html,body{width:100%;min-width:320px}
 </style>
 
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/css/flag-icons.min.css">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/css/flag-icons.min.css" media="print" onload="this.media='all'">
 <style id="tech-country-flag-picker">
 .tech-country-picker{margin:10px 0 14px;padding:11px 12px;border:1px solid rgba(206,17,38,.42);border-radius:12px;background:linear-gradient(135deg,rgba(5,20,42,.94),rgba(15,12,22,.94));box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
 .tech-country-heading{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;color:#dce8f5;font:700 11px Orbitron,sans-serif;letter-spacing:.35px}
@@ -2724,15 +2728,16 @@ html,body{width:100%;min-width:320px}
 .tech-country-current{display:grid;place-items:center;flex:0 0 42px;height:36px;border:1px solid rgba(255,205,0,.35);border-radius:8px;background:rgba(0,0,0,.28);font-size:25px}
 #techCountrySelect{flex:1;min-width:0;height:38px;padding:0 10px;border:1px solid rgba(120,180,220,.38);border-radius:8px;background:#071426;color:#f2f6fb;font:600 12px Inter,Arial,sans-serif;outline:none}
 #techCountrySelect option{background:#071426;color:#f2f6fb}
-.tech-country-flags{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:5px;margin-top:9px;max-height:190px;overflow:auto;padding:2px 3px 5px;scrollbar-width:thin;scrollbar-color:#d5ae45 #071426}
-.tech-country-flag-btn{height:31px;min-width:0;padding:2px;border:1px solid rgba(120,180,220,.2);border-radius:6px;background:rgba(2,12,27,.8);font:22px/1 Arial,sans-serif;cursor:pointer;transition:border-color .15s,background .15s,transform .15s}
-.tech-country-flag-btn .fi{display:inline-block;width:1.35em;height:1em;vertical-align:middle;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.16)}
-.tech-country-current .fi{display:inline-block;width:1.55em;height:1.05em;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.22)}
-.tech-hud-flag .fi{display:inline-block;width:1.35em;height:.95em;border-radius:2px;vertical-align:middle}
+.tech-country-flags{display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:7px;margin-top:10px;max-height:220px;overflow:auto;padding:4px 4px 7px;scrollbar-width:thin;scrollbar-color:#d5ae45 #071426}
+.tech-country-flag-btn{height:39px;min-width:0;padding:5px;border:1px solid rgba(120,180,220,.2);border-radius:7px;background:rgba(2,12,27,.8);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:border-color .15s,background .15s}
+.tech-country-flag-btn .fi{display:block;width:30px;height:22px;flex:0 0 auto;background-size:contain!important;background-position:center!important;background-repeat:no-repeat!important;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.2)}
+.tech-country-flag-btn .fi:before,.tech-country-current .fi:before,.tech-hud-flag .fi:before{content:none!important;display:none!important}
+.tech-country-current .fi{display:block;width:31px;height:23px;background-size:contain!important;background-position:center!important;background-repeat:no-repeat!important;border-radius:2px;box-shadow:0 0 0 1px rgba(255,255,255,.22)}
+.tech-hud-flag .fi{display:block;width:22px;height:16px;background-size:contain!important;background-position:center!important;background-repeat:no-repeat!important;border-radius:2px}
 .tech-country-flag-btn:hover{border-color:#ffcd00;background:rgba(255,205,0,.12);transform:translateY(-1px)}
 .tech-country-flag-btn.active{border:1px solid #ffcd00;background:rgba(255,205,0,.18);box-shadow:0 0 9px rgba(255,205,0,.22)}
 .tech-hud-flag{display:inline-flex;align-items:center;justify-content:center;margin:0 4px;padding:1px 4px;border:1px solid rgba(255,205,0,.34);border-radius:5px;background:rgba(0,0,0,.28);font-family:Arial,sans-serif;font-size:16px;line-height:1.2;vertical-align:middle}
-@media(max-width:600px){.tech-country-picker{padding:9px}.tech-country-heading{font-size:10px}#techCountrySelect{font-size:11px}.tech-country-flags{grid-template-columns:repeat(auto-fill,minmax(34px,1fr));max-height:150px}.tech-country-flag-btn{height:29px;font-size:20px}}
+@media(max-width:600px){.tech-country-picker{padding:9px}.tech-country-heading{font-size:10px}#techCountrySelect{font-size:11px}.tech-country-flags{grid-template-columns:repeat(auto-fill,minmax(42px,1fr));max-height:165px;gap:6px}.tech-country-flag-btn{height:36px;padding:4px}.tech-country-flag-btn .fi{width:27px;height:20px}}
 </style>
 </head>
 <body>
@@ -4787,8 +4792,8 @@ const SFX = {
 /* Rutas en carpeta audios/ — cambia el nombre si tu archivo se llama distinto */
 try {
   SFX.bg = new Audio("audios/fondo.mp3");
-  SFX.shoot = new Audio("audios/disparo.mp3"); try{SFX.shoot.preload="auto";SFX.shoot.load()}catch(e){}
-  SFX.ki = new Audio("audios/poder-goku.mp3"); try{SFX.ki.preload="auto";SFX.ki.load()}catch(e){} /* disparo Goku */
+  SFX.shoot = new Audio("audios/disparo.mp3"); try{SFX.shoot.preload="none"}catch(e){}
+  SFX.ki = new Audio("audios/poder-goku.mp3"); try{SFX.ki.preload="none"}catch(e){} /* carga al primer disparo Goku */
   SFX.gokuFase = new Audio("audios/goku-fasee.mp3"); /* cambio de fase Goku */
   SFX.explode = new Audio("audios/explosion.mp3");
   SFX.power = new Audio("audios/poder.mp3");
@@ -4983,7 +4988,8 @@ function playSfx(key){
     if(base && base.src){
       if(!_sfxPool[key]){ _sfxPool[key]=[]; _sfxPoolIdx[key]=0; }
       // Round-robin: siempre un audio distinto en rafaga
-      while(_sfxPool[key].length<6){
+      const poolLimit=(typeof isMobile==="function"&&isMobile())?2:3;
+      while(_sfxPool[key].length<poolLimit){
         const n = new Audio(base.src);
         n.preload="auto";
         _sfxPool[key].push(n);
@@ -6024,10 +6030,10 @@ function resizeCanvas(force){
     try{
       var gfx=(window.techGfxQuality||localStorage.getItem('techGfxQuality')||'high').toLowerCase();
       if(gfx==='high'||gfx==='alto'){
-        dpr=Math.min(Math.max(window.devicePixelRatio||1,1),1.75);
+        dpr=Math.min(Math.max(window.devicePixelRatio||1,1),1.3);
         if(typeof lowPower!=='undefined') lowPower=false;
       } else if(gfx==='medium'||gfx==='medio'){
-        dpr=Math.min(Math.max(window.devicePixelRatio||1,1),1.25);
+        dpr=Math.min(Math.max(window.devicePixelRatio||1,1),1.15);
       } else {
         dpr=1;
         if(typeof lowPower!=='undefined') lowPower=true;
@@ -6689,7 +6695,7 @@ function shoot(){
       else playSfx("laser"); /* fallback si no hay audios/poder-goku.mp3 */
     } else playSfx("shoot");
   }catch(e){}
-  if(isMobile()&&Math.random()<0.04)doVibrate(6,"shoot");
+  /* Sin vibración por disparo: evita microcortes en móviles. */
   const sp=12.5*getSpeedScale()*bufScale(),s=getScale(); /* más rápidas: llegan hasta arriba */
   const has=w=>Array.isArray(ownedWeapons)&&ownedWeapons.indexOf(w)>=0;
   /* Goku: bolitas de energía (ki) pequeñas */
@@ -10420,8 +10426,8 @@ const _isMobLoop=(typeof isMobile==='function'&&isMobile());
 if((++_gcTick)%(_isMobLoop?4:8)===0){
   gcEntities();
   const cap=(arr,max)=>{if(Array.isArray(arr)&&arr.length>max)arr.splice(0,arr.length-max);};
-  cap(typeof particles!=='undefined'?particles:null,_techAdaptiveLite?(_isMobLoop?45:90):(_isMobLoop?90:180));cap(typeof explosions!=='undefined'?explosions:null,_techAdaptiveLite?(_isMobLoop?10:18):(_isMobLoop?18:36));
-  cap(typeof lightningFX!=='undefined'?lightningFX:null,_techAdaptiveLite?(_isMobLoop?6:12):(_isMobLoop?12:24));cap(typeof missiles!=='undefined'?missiles:null,_techAdaptiveLite?(_isMobLoop?14:28):(_isMobLoop?24:48));
+  cap(typeof particles!=='undefined'?particles:null,_techAdaptiveLite?(_isMobLoop?28:90):(_isMobLoop?55:180));cap(typeof explosions!=='undefined'?explosions:null,_techAdaptiveLite?(_isMobLoop?6:18):(_isMobLoop?10:36));
+  cap(typeof lightningFX!=='undefined'?lightningFX:null,_techAdaptiveLite?(_isMobLoop?4:12):(_isMobLoop?8:24));cap(typeof missiles!=='undefined'?missiles:null,_techAdaptiveLite?(_isMobLoop?10:28):(_isMobLoop?18:48));
 }
 ctx.clearRect(0,0,canvas.width,canvas.height);
 try{
@@ -13075,23 +13081,13 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
   function wrapGameplay(){
     try{if(typeof startGame==='function'&&!startGame.__techStatsWrapped){const orig=startGame;const wrapped=function(){run={start:0,shots:0,kills:0,meteors:0,ships:0,recorded:false,mode:(typeof gameMode!=='undefined'?String(gameMode):'classic'),diff:(typeof difficulty!=='undefined'?String(difficulty):'normal'),missionId:'',missionTitle:''};try{trackVisitDay();if(!window.__techSessionActive)startSessionTrack()}catch(e){}window.__techRunTelemetry={shots:0,kills:0,meteors:0,ships:0};const r=orig.apply(this,arguments);run.start=typeof runStartTime!=='undefined'?safeNum(runStartTime):performance.now();run.mode=typeof gameMode!=='undefined'?String(gameMode):run.mode;run.diff=typeof difficulty!=='undefined'?String(difficulty):run.diff;if(typeof storyMode!=='undefined'&&storyMode&&typeof STORY_CAMPAIGN!=='undefined'&&STORY_CAMPAIGN[storyChapterIdx]){run.missionId=STORY_CAMPAIGN[storyChapterIdx].id;run.missionTitle=STORY_CAMPAIGN[storyChapterIdx].title}return r};wrapped.__techStatsWrapped=true;startGame=wrapped;window.startGame=wrapped}}
     catch(e){console.warn('No se pudo instrumentar inicio de partida',e)}
-    try{if(typeof shoot==='function'&&!shoot.__techStatsWrapped){const orig=shoot;const wrapped=function(){const before=typeof bullets!=='undefined'&&Array.isArray(bullets)?bullets.length:0;const r=orig.apply(this,arguments);const after=typeof bullets!=='undefined'&&Array.isArray(bullets)?bullets.length:before;const n=Math.max(0,after-before);if(n&&typeof gameRunning!=='undefined'&&gameRunning&&!gamePaused){run.shots+=n;try{window.__techRunTelemetry=window.__techRunTelemetry||{shots:0,kills:0,meteors:0,ships:0};window.__techRunTelemetry.shots=run.shots}catch(e){}/* Guardado por lotes: no leer/escribir localStorage en cada disparo.
-           La escritura se limita a una vez cada 2500 ms mientras se juega. */
-if(!run._pendingShotStats)run._pendingShotStats=0;
-run._pendingShotStats+=n;
-const _shotStatsNow=performance.now();
-if(_shotStatsNow-(run._lastShotStatsSave||0)>=2500){
-  const _pending=run._pendingShotStats;
-  run._pendingShotStats=0;
-  run._lastShotStatsSave=_shotStatsNow;
-  try{const _st=readStats();_st.shots=safeNum(_st.shots)+_pending;saveStats(_st)}catch(_e){}
-}}return r};wrapped.__techStatsWrapped=true;shoot=wrapped;window.shoot=wrapped}}
+    try{if(typeof shoot==='function'&&!shoot.__techStatsWrapped){const orig=shoot;let pendingShotStats=0,lastShotStatsSave=0;const flushShotStats=function(){if(!pendingShotStats)return;const n=pendingShotStats;pendingShotStats=0;lastShotStatsSave=performance.now();try{const st=readStats();st.shots=safeNum(st.shots)+n;saveStats(st)}catch(e){pendingShotStats+=n}};const wrapped=function(){const before=typeof bullets!=='undefined'&&Array.isArray(bullets)?bullets.length:0;const r=orig.apply(this,arguments);const after=typeof bullets!=='undefined'&&Array.isArray(bullets)?bullets.length:before;const n=Math.max(0,after-before);if(n&&typeof gameRunning!=='undefined'&&gameRunning&&!gamePaused){run.shots+=n;pendingShotStats+=n;try{window.__techRunTelemetry=window.__techRunTelemetry||{shots:0,kills:0,meteors:0,ships:0};window.__techRunTelemetry.shots=run.shots}catch(e){}const now=performance.now();if(now-lastShotStatsSave>=4000)flushShotStats()}return r};wrapped.__techFlushShotStats=flushShotStats;wrapped.__techStatsWrapped=true;shoot=wrapped;window.shoot=wrapped}}
     catch(e){console.warn('No se pudo instrumentar disparos',e)}
     try{if(typeof destroyEnemy==='function'&&!destroyEnemy.__techStatsWrapped){const orig=destroyEnemy;const wrapped=function(o,i){const before=!!(o&&o.__techDestroyed);const type=o&&o.type?String(o.type):'';const r=orig.apply(this,arguments);if(o&&!before&&o.__techDestroyed){run.kills++;run.weaponKills=(run.weaponKills||0)+1;if(/meteor|explosive|magnetic|hard|fireball|patrol_drone|space_mine/i.test(type))run.meteors++;else run.ships++;try{window.__techRunTelemetry=window.__techRunTelemetry||{shots:0,kills:0,meteors:0,ships:0};window.__techRunTelemetry.kills=run.kills;window.__techRunTelemetry.meteors=run.meteors;window.__techRunTelemetry.ships=run.ships}catch(e){}}return r};wrapped.__techStatsWrapped=true;destroyEnemy=wrapped;window.destroyEnemy=wrapped}}
     catch(e){console.warn('No se pudo instrumentar eliminaciones',e)}
     try{if(typeof completeStoryMission==='function'&&!completeStoryMission.__techStatsWrapped){const orig=completeStoryMission;const wrapped=function(ok){const active=typeof storyMissionActive!=='undefined'&&storyMissionActive;const ch=typeof STORY_CAMPAIGN!=='undefined'?STORY_CAMPAIGN[storyChapterIdx]:null;const success=!!ok;const scoreAtEnd=typeof score!=='undefined'?safeNum(score):0;const result=orig.apply(this,arguments);if(active&&ch&&!run.recorded){const s=readStats();s.missionStats=s.missionStats||{};const x=s.missionStats[ch.id]||{title:ch.title,attempts:0,wins:0,losses:0,bestScore:0,totalSeconds:0,lastAt:0};x.title=ch.title;x.attempts=safeNum(x.attempts)+1;if(success)x.wins=safeNum(x.wins)+1;else x.losses=safeNum(x.losses)+1;x.bestScore=Math.max(safeNum(x.bestScore),scoreAtEnd);const elapsed=run.start?Math.max(0,Math.round((performance.now()-run.start)/1000)):0;x.totalSeconds=safeNum(x.totalSeconds)+elapsed;x.lastAt=Date.now();s.missionStats[ch.id]=x;saveStats(s);run.mode='story';run.missionId=ch.id;run.missionTitle=ch.title;recordMatch({missionId:ch.id,missionTitle:ch.title,result:success?'won':'lost',objective:ch.type||''});if(success){addNotice('Misión completada: '+ch.title,'mission');toast('🚀 Misión completada: '+ch.title,'mission')}else{addNotice('Misión fallida: '+ch.title,'info');toast('Misión fallida: '+ch.title,'info')}if(panelOpen)render()}return result};wrapped.__techStatsWrapped=true;completeStoryMission=wrapped;window.completeStoryMission=wrapped}}
     catch(e){console.warn('No se pudo instrumentar misiones',e)}
-    try{if(typeof endGame==='function'&&!endGame.__techStatsWrapped){const orig=endGame;const wrapped=function(){const wasRunning=typeof gameRunning!=='undefined'&&gameRunning;const scoreAtEnd=typeof score!=='undefined'?safeNum(score):0;const oldBest=Math.max(safeNum(readStats().highScore),safeNum(record));const activeStory=typeof storyMissionActive!=='undefined'&&storyMissionActive;const r=orig.apply(this,arguments);if(wasRunning&&!run.recorded){const mode=activeStory||run.mode==='story'?'story':(typeof gameMode!=='undefined'?String(gameMode):run.mode);run.mode=mode;const result=activeStory?'abandoned':'lost';const entry=recordMatch({missionId:run.missionId,missionTitle:run.missionTitle,result,objective:activeStory?'Abandonada':''});if(scoreAtEnd>oldBest){addNotice('Nuevo récord personal: '+scoreAtEnd.toLocaleString('es-CO')+' puntos','record');toast('🏆 ¡Nuevo récord personal: '+scoreAtEnd.toLocaleString('es-CO')+' puntos!','record')}if(panelOpen)render();run.recorded=true}return r};wrapped.__techStatsWrapped=true;endGame=wrapped;window.endGame=wrapped}}
+    try{if(typeof endGame==='function'&&!endGame.__techStatsWrapped){const orig=endGame;const wrapped=function(){try{if(typeof shoot==='function'&&shoot.__techFlushShotStats)shoot.__techFlushShotStats()}catch(e){}const wasRunning=typeof gameRunning!=='undefined'&&gameRunning;const scoreAtEnd=typeof score!=='undefined'?safeNum(score):0;const oldBest=Math.max(safeNum(readStats().highScore),safeNum(record));const activeStory=typeof storyMissionActive!=='undefined'&&storyMissionActive;const r=orig.apply(this,arguments);if(wasRunning&&!run.recorded){const mode=activeStory||run.mode==='story'?'story':(typeof gameMode!=='undefined'?String(gameMode):run.mode);run.mode=mode;const result=activeStory?'abandoned':'lost';const entry=recordMatch({missionId:run.missionId,missionTitle:run.missionTitle,result,objective:activeStory?'Abandonada':''});if(scoreAtEnd>oldBest){addNotice('Nuevo récord personal: '+scoreAtEnd.toLocaleString('es-CO')+' puntos','record');toast('🏆 ¡Nuevo récord personal: '+scoreAtEnd.toLocaleString('es-CO')+' puntos!','record')}if(panelOpen)render();run.recorded=true}return r};wrapped.__techStatsWrapped=true;endGame=wrapped;window.endGame=wrapped}}
     catch(e){console.warn('No se pudo instrumentar fin de partida',e)}
   }
   function init(){
