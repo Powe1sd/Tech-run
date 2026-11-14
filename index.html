@@ -2860,13 +2860,13 @@ html,body{width:100%;min-width:320px}
 <canvas id="gameCanvas"></canvas>
 <div class="game-panel" id="startPanel">
 <h2>⚡ TECH RUN</h2>
+<button class="game-btn" id="openTechAccount" style="margin:6px 0 8px;background:linear-gradient(135deg,#35205e,#6b39a8);border-color:#c9a4ff;color:#fff;width:100%">Crear cuenta / Iniciar sesión</button>
 <small>1) Dificultad · 2) Mundo y nave · 3) Iniciar</small>
 <div id="techCoinsBar" aria-label="Puntos juego disponibles">
   <span class="tcb-star">⭐</span>
   <span class="tcb-label">PUNTOS JUEGO</span>
   <span class="tcb-value" id="techCoinsMainValue">0</span>
 </div>
-<button class="game-btn" id="openTechAccount" style="margin-top:8px;background:linear-gradient(135deg,#35205e,#6b39a8);border-color:#c9a4ff;color:#fff">Crear cuenta / Iniciar sesión</button>
 <button class="game-btn" id="startGame" style="margin-top:10px" disabled aria-disabled="true">🚀 Iniciar</button>
 </div>
 <div class="game-panel" id="pvpRoomPanel" style="display:none;z-index:95">
@@ -13274,30 +13274,37 @@ function downloadCSV(rows,name){const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+Stri
       if(hintEl) hintEl.textContent=hint||'';
     }
     try{
+      const card=document.getElementById('statOnlineRankCard');
+      const logged=!!(window.techAuthIsLoggedIn && window.techAuthIsLoggedIn());
+      if(!logged){
+        // Invitado: no mostrar puesto ni mensajes de ranking
+        if(card) card.style.display='none';
+        set('', '');
+        return;
+      }
+      if(card) card.style.display='';
       let nick='';
       try{
-        if(window.techAuthIsLoggedIn && window.techAuthIsLoggedIn() && window.techAuthUsername){
+        if(window.techAuthUsername){
           nick=String(window.techAuthUsername()||'').trim();
         }
       }catch(e){}
       if(!nick){
-        try{ nick=String((typeof shipName!=='undefined'&&shipName)?shipName:'').trim(); }catch(e){}
-      }
-      if(!nick || nick.toLowerCase()==='usuario'){
-        set('—', 'Inicia sesión para ver tu puesto en el ranking online');
+        if(card) card.style.display='none';
+        set('', '');
         return;
       }
       if(typeof window.techFetchOnlineTop!=='function'){
-        set('—', 'Módulo de ranking no disponible');
+        if(card) card.style.display='none';
+        set('', '');
         return;
       }
-      set('…', 'Consultando ranking online…');
+      set('…', '');
       const rows=await window.techFetchOnlineTop();
       if(!Array.isArray(rows)||!rows.length){
-        set('—', 'Aún no hay registros en el ranking online');
+        set('—', '');
         return;
       }
-      /* Mejor puntuación por jugador (nombre antes de ·), orden mayor→menor */
       const bestByUser=new Map();
       rows.forEach(function(r){
         const raw=r['nombre-nave']!=null?r['nombre-nave']:(r.nombre_nave!=null?r.nombre_nave:'');
@@ -13315,7 +13322,9 @@ function downloadCSV(rows,name){const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+Stri
         if(ranking[i].name.toLocaleLowerCase()===myKey){ myIdx=i; my=ranking[i]; break; }
       }
       if(myIdx<0){
-        set('Sin puesto', 'Aún no tienes puntuación publicada en modo Online (mín. 30 pts con sesión)');
+        // Registrado pero sin puntuación online: sin texto de "sin puesto"
+        if(card) card.style.display='none';
+        set('', '');
         return;
       }
       const place=myIdx+1;
@@ -13323,7 +13332,9 @@ function downloadCSV(rows,name){const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+Stri
       set(medal+'#'+place, 'Tu mejor online: '+my.score.toLocaleString('es-CO')+' pts · de '+ranking.length+' jugadores');
     }catch(err){
       console.warn('[TECH stats] online rank', err);
-      set('—', 'No se pudo leer el ranking: '+(err&&err.message?err.message:err));
+      const card=document.getElementById('statOnlineRankCard');
+      if(card) card.style.display='none';
+      set('', '');
     }
   }
 
@@ -16809,10 +16820,10 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
       var mob=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent||'')||('ontouchstart' in window)||(navigator.maxTouchPoints>0);
       try{ if(typeof isMobile==='function') mob=mob||isMobile(); }catch(e){}
       if(!mob) return;
-      /* Respetar calidad alta: no forzar lowPower ni bajar efectos */
       try{
+        // Mantener calidad máxima: no forzar lowPower en high
         var gfx=(window.techGfxQuality||localStorage.getItem('techGfxQuality')||'high').toLowerCase();
-        if(gfx==='high'||gfx==='alto'){
+        if(gfx==='high'||gfx==='alto'||gfx==='medium'||gfx==='medio'){
           if(typeof lowPower!=='undefined') lowPower=false;
           document.body.classList.remove('low-power');
         } else if(gfx==='low'||gfx==='bajo'){
@@ -16824,7 +16835,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
       }catch(e){}
     }catch(e){}
   }
-  setInterval(forceMobilePerf, 5000);
+  setInterval(forceMobilePerf, 10000);
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', forceMobilePerf);
   else forceMobilePerf();
 })();
@@ -17822,21 +17833,30 @@ body.tech-playing .game-top{
   }
 
   function boot(){
-    /* Efectos al máximo por defecto */
-    try{ localStorage.setItem(LS_GFX, 'high'); }catch(e){}
-    applyGfx('high', true);
-    try{ if(typeof lowPower!=='undefined') lowPower=false; }catch(e){}
-    try{ localStorage.setItem('techLowPower','0'); }catch(e){}
+    var mob=isMob();
+    // Todo al máximo (como en PC). Solo 'low' se respeta si el usuario lo elige a mano.
+    var preferred='high';
+    try{
+      var saved=String(localStorage.getItem(LS_GFX)||'').toLowerCase();
+      if(saved==='low'||saved==='bajo') preferred='low';
+      else preferred='high';
+    }catch(e){ preferred='high'; }
+    applyGfx(preferred, true);
+    try{
+      if(typeof lowPower!=='undefined') lowPower = (preferred==='low');
+      localStorage.setItem('techLowPower', lowPower?'1':'0');
+    }catch(e){}
+    try{ localStorage.setItem(LS_GFX, preferred); }catch(e){}
     patchGc();
     injectGfxControls();
     refreshMobileMenu();
     hookRender();
+    // Menú: intervalos suaves sin bajar calidad gráfica
     setInterval(function(){
       injectGfxControls();
       hookRender();
       patchGc();
-      if(isMob()) refreshMobileMenu();
-    }, 2000);
+    }, mob ? 6000 : 4000);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
@@ -18882,6 +18902,66 @@ body.tech-playing .game-top{
 #startExtras[data-tab="extra"] > .tab-extra{display:block !important}
 /* Evitar que hijos sueltos fuera de las 3 columnas se vean mezclados */
 #startExtras > :not(.tab-mundo):not(.tab-nave):not(.tab-extra){display:none !important}
+</style>
+
+
+<style id="tech-account-btn-top">
+#startPanel > #openTechAccount{
+  order: -5 !important;
+  margin-top: 4px !important;
+  margin-bottom: 8px !important;
+  width: 100% !important;
+}
+#startPanel > h2{ order: -6 !important; }
+#startPanel > small{ order: -4 !important; }
+#startPanel > #techCoinsBar{ order: -3 !important; }
+#startPanel > #startGame{ order: -2 !important; }
+#startPanel > #startMobileTabs{ order: -1 !important; }
+#startPanel > #startExtras{ order: 1 !important; }
+@media (min-width:701px){
+  #startPanel > #openTechAccount{
+    grid-column: 1 / -1 !important;
+  }
+}
+</style>
+
+
+<style id="tech-mobile-fluid-v2">
+@media (max-width:1100px), (pointer:coarse){
+  /* Fluidez en partida sin bajar la calidad del canvas */
+  body.game-active, body.tech-playing{
+    background:#03050c !important;
+  }
+  body.game-active::before,
+  body.tech-playing::before{
+    display:none !important;
+    animation:none !important;
+  }
+  body.game-active .tech-game,
+  body.tech-playing .tech-game{
+    contain:strict !important;
+    transform:translateZ(0) !important;
+  }
+  body.game-active #gameCanvas,
+  body.tech-playing #gameCanvas{
+    image-rendering:auto !important;
+    transform:translateZ(0) !important;
+    -webkit-backface-visibility:hidden !important;
+    backface-visibility:hidden !important;
+  }
+  /* Pausar trabajo de DOM fuera del juego (no afecta gráficos del canvas) */
+  body.game-active .data-grid,
+  body.game-active .contact-section,
+  body.game-active .cyber-footer,
+  body.game-active .cyber-hero,
+  body.tech-playing .data-grid,
+  body.tech-playing .contact-section,
+  body.tech-playing .cyber-footer,
+  body.tech-playing .cyber-hero{
+    content-visibility:hidden !important;
+    pointer-events:none !important;
+  }
+}
 </style>
 
 </body>
