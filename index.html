@@ -4336,12 +4336,7 @@ function addScoreCombo(pts){
     if(gained>=2){
       spawnFloatText(px+(Math.random()*24-12), py+(Math.random()*12-6), "+"+gained, "#FFCD00");
     }
-    if(combo>=3 && combo%1===0){
-      /* un solo texto de combo, no en cada diente de sierra */
-      if(combo===3||combo===5||combo===10||combo%5===0){
-        spawnFloatText(px, py-26, "x"+combo, combo>=10?"#FF4466":(combo>=5?"#FF8800":"#88FFAA"));
-      }
-    }
+    /* textos de combo desactivados (visibilidad) */
   }catch(e){}
   try{if(typeof updateComboHud==="function")updateComboHud()}catch(e){}
   checkAchievements();
@@ -4376,28 +4371,13 @@ function drawFloatTexts(){
   ctx.globalAlpha=1;ctx.restore();
 }
 function updateComboHud(){
-  let el=document.getElementById("hudCombo");
-  if(!el){
-    const scoreBox=document.querySelector(".game-score");
-    if(scoreBox){
-      el=document.createElement("div");
-      el.className="hud-stat hud-combo";
-      el.id="hudComboWrap";
-      el.innerHTML='<span class="hud-icon">⚡</span><span class="hud-label">COMBO</span><strong id="hudCombo">—</strong>';
-      scoreBox.appendChild(el);
-      el=document.getElementById("hudCombo");
-    }
-  }
-  if(!el)return;
-  if(combo>=3){
-    el.textContent="x"+combo;
-    el.style.color=combo>=10?"#FF4466":(combo>=5?"#FFAA00":"#88FFAA");
-    el.parentElement&&el.parentElement.classList.add("is-hot");
-  } else {
-    el.textContent="—";
-    el.style.color="#fff";
-    el.parentElement&&el.parentElement.classList.remove("is-hot");
-  }
+  /* Combo oculto: no tapa el HUD ni distrae */
+  try{
+    const w=document.getElementById("hudComboWrap");
+    if(w){w.style.display="none";w.remove();}
+    const el=document.getElementById("hudCombo");
+    if(el&&el.parentElement){el.parentElement.style.display="none";}
+  }catch(e){}
 }
 function triggerHitPause(frames){ hitPauseFrames=0; }
 function makeScoreCard(){
@@ -7308,17 +7288,24 @@ function createExplosion(x,y,size,color){
 }
 
 /* Suelta un poder al azar (máx. pocos en pantalla) */
-function maybeSpawnPickup(x,y){
-  /* Poderes en TODOS los mundos (1–14), sin filtro por escenario */
-  if(pickups.length>=(isMobile()?2:4))return;
-  const r=Math.random(),s=16*getScale();
-  if(r<.10){pickups.push({x,y,type:"coin",size:s*0.9,vy:1.4,value:5+Math.floor(Math.random()*10)});return}
-  /* pool de poderes especiales (hammer, chrono, barrier, stormbolt, bazooka, etc.) */
-  if(r<.72){
-    /* L y ┘ ponderados: aparecen con más frecuencia */
-    const pool=["ammo","hammer","shield","bounce","missile","allies","overdrive","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","invisible","drone","barrier","stormbolt","bazooka","vortex","ion","orbmine","vacuum","railgun","redL","redL","redL","clone","tractor","kinetic","clean_pulse"];
+function maybeSpawnPickup(x,y,forceRate){
+  /* Poderes en todos los mundos — tasa alta para que se noten al eliminar */
+  const maxP=isMobile()?4:7;
+  if(pickups.length>=maxP)return;
+  const r=Math.random();
+  const rate=typeof forceRate==="number"?forceRate:1;
+  /* ~55% poder, ~15% moneda, resto nada (antes casi no salían en cuchillas) */
+  const powerChance=0.55*rate;
+  const coinChance=0.15*rate;
+  const s=16*((typeof getScale==="function")?getScale():1);
+  if(r<coinChance){
+    pickups.push({x:x+(Math.random()*16-8),y:y+(Math.random()*10-5),type:"coin",size:s*0.9,vy:1.4,value:5+Math.floor(Math.random()*10)});
+    return;
+  }
+  if(r<coinChance+powerChance){
+    const pool=["ammo","ammo","hammer","shield","shield","bounce","missile","allies","overdrive","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","drone","barrier","stormbolt","bazooka","vortex","ion","orbmine","vacuum","railgun","redL","redL","clone","tractor","kinetic","clean_pulse","rapid","triple"];
     const type=pool[Math.floor(Math.random()*pool.length)];
-    pickups.push({x,y,type,size:s,vy:1.5});
+    pickups.push({x:x+(Math.random()*20-10),y:y+(Math.random()*12-6),type:type,size:s,vy:1.35+Math.random()*0.4});
   }
 }
 
@@ -7569,8 +7556,9 @@ function destroyEnemy(o,i){
       coins=Math.max(0,(Number(coins)||0)+1);
       try{lsSet("techCoinsV2",coins)}catch(e){}
       if(comboTimer>0){combo++;comboTimer=90}else{combo=1;comboTimer=90}
-      try{if(typeof updateComboHud==="function")updateComboHud()}catch(e){}
     }catch(e){}
+    /* Cuchillas también sueltan poderes (antes se saltaba esto) */
+    try{maybeSpawnPickup(cx,cy,1.15)}catch(e){}
     return;
   } else if(o.type==="explosive"){
     createExplosion(cx,cy,o.size*1.3,"255,100,30");
@@ -19014,6 +19002,11 @@ button[data-orb-color]{
   .go-grid{gap:6px}
   .go-grid b{font-size:13px}
 }
+</style>
+
+
+<style id="tech-hide-combo">
+#hudComboWrap,.hud-combo,#hudCombo{display:none!important;visibility:hidden!important;width:0!important;height:0!important;overflow:hidden!important}
 </style>
 
 </html>
