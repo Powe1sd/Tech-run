@@ -3129,7 +3129,9 @@ let damageFlash=0,introTimer=0;
 let lowPower=(function(){
   const v=lsGet("techLowPower","");
   if(v==="1")return true;
-  /* Efectos al máximo por defecto (solo bajo si el usuario lo elige) */
+  if(v==="0")return false;
+  /* Móvil: bajo consumo por defecto = más FPS y menos lag */
+  try{ if(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent||"")) return true; }catch(e){}
   return false;
 })();
 /* Distancia de cámara / zoom visual: close | standard | far */
@@ -4999,7 +5001,7 @@ try {
   SFX.shield = new Audio("audios/escudo.mp3");
   SFX.overdrive = new Audio("audios/turbo.mp3");
   SFX.allies = new Audio("audios/aliados.mp3");
-  try{SFX.engine = new Audio("audios/motor.mp3"); SFX.engine.loop = true; SFX.engine.preload = "auto";}catch(e){}
+  try{SFX.engine = new Audio("audios/motor.mp3"); SFX.engine.loop = true; SFX.engine.preload = "none";}catch(e){}
   /* TRAMPAS */
   try{SFX.trapNet = SFX.trapNet || new Audio("audios/trampa-red.mp3")}catch(e){}
   try{SFX.trapBomb = SFX.trapBomb || new Audio("audios/trampa-bomba.mp3")}catch(e){}
@@ -5007,6 +5009,26 @@ try {
   try{SFX.shield = SFX.shield || new Audio("audios/escudo.mp3")}catch(e){}
   try{SFX.power = SFX.power || new Audio("audios/poder.mp3")}catch(e){}
   try{SFX.laser = SFX.laser || new Audio("audios/laser.mp3")}catch(e){}
+  /* Alias: cuchillas / trampas / poderes sin archivo propio */
+  try{SFX.trapBlade = SFX.trapBlade || SFX.hit || new Audio("audios/dano.mp3")}catch(e){}
+  try{SFX.trap = SFX.trap || SFX.hit || SFX.trapBlade}catch(e){}
+  try{SFX.mineTrap = SFX.mineTrap || SFX.explode}catch(e){}
+  try{SFX.laserTrap = SFX.laserTrap || SFX.laser}catch(e){}
+  try{SFX.nova = SFX.nova || SFX.explode}catch(e){}
+  try{SFX.burst = SFX.burst || SFX.shoot}catch(e){}
+  try{SFX.rapid = SFX.rapid || SFX.power}catch(e){}
+  try{SFX.reflect = SFX.reflect || SFX.shield}catch(e){}
+  try{SFX.repair = SFX.repair || SFX.power}catch(e){}
+  try{SFX.triple = SFX.triple || SFX.shoot}catch(e){}
+  /* En móvil no precargar todo: solo críticos */
+  try{
+    if(/Mobi|Android|iPhone/i.test(navigator.userAgent||"")){
+      Object.keys(SFX).forEach(function(k){
+        try{ if(SFX[k] && k!=="explode" && k!=="hit" && k!=="shoot") SFX[k].preload="none"; }catch(e){}
+      });
+      try{if(SFX.engine)SFX.engine.preload="none"}catch(e){}
+    }
+  }catch(e){}
 } catch(e) {}
 
 
@@ -5161,61 +5183,93 @@ function _sfxBeep(freq,dur,vol){
     o.stop(ctx.currentTime+dur);
   }catch(e){}
 }
-function playSfx(key){
+function _sfxSynth(key,vol){
+  const v=Math.max(0.08, Math.min(0.45, vol||0.25));
   try{
-    if(audioMuted) return;
-    const now=performance.now();
-    const minGap=(key==="shoot"||key==="ki")?25:(key==="explode"?60:20);
-    if(_sfxLast[key]&&now-_sfxLast[key]<minGap)return;
-    _sfxLast[key]=now;
-    const base=SFX[key];
-    // Disparos mas fuertes
-    const boost=(key==="shoot"||key==="ki")?2.0:1;
-    const vol=Math.max(0.35, Math.min(1, (typeof volSfx==="number"?volSfx:0.5)*boost));
-    if(base && base.src){
-      if(!_sfxPool[key]){ _sfxPool[key]=[]; _sfxPoolIdx[key]=0; }
-      // Round-robin: siempre un audio distinto en rafaga
-      const poolLimit=(typeof isMobile==="function"&&isMobile())?2:3;
-      while(_sfxPool[key].length<poolLimit){
-        const n = new Audio(base.src);
-        n.preload="auto";
-        _sfxPool[key].push(n);
-      }
-      const idx = _sfxPoolIdx[key] % _sfxPool[key].length;
-      _sfxPoolIdx[key] = idx + 1;
-      const n = _sfxPool[key][idx];
-      try{ n.currentTime=0; }catch(e){}
-      n.volume = vol;
-      const p = n.play();
-      if(p && p.catch) p.catch(function(){
-        /* fallback sintético si el mp3 no carga */
-        playSfx._fb=true;
-        if(key==="shoot"){_sfxBeep(920,0.04,0.28)}
-        else if(key==="ki"){_sfxBeep(480,0.05,0.3)}
-        else if(key==="explode"){_sfxBeep(90,0.12,0.3)}
-        else if(key==="hit"){_sfxBeep(220,0.08,0.28)}
-        else if(key==="power"){_sfxBeep(660,0.05,0.22)}
-        else _sfxBeep(700,0.05,0.2);
-      });
-      return;
-    }
-    // Sin mp3 -> sonidos sintéticos por tipo
-    if(key==="shoot"){_sfxBeep(920,0.04,0.28);_sfxBeep(600,0.03,0.12)}
-    else if(key==="ki"){_sfxBeep(480,0.05,0.3);_sfxBeep(720,0.04,0.15)}
-    else if(key==="explode"){_sfxBeep(90,0.12,0.32);_sfxBeep(180,0.08,0.18)}
-    else if(key==="hit"){_sfxBeep(220,0.08,0.28);_sfxBeep(140,0.06,0.15)}
-    else if(key==="power"||key==="pickup"){_sfxBeep(660,0.05,0.22);_sfxBeep(990,0.06,0.18)}
-    else if(key==="shield"){_sfxBeep(400,0.08,0.25);_sfxBeep(800,0.1,0.15)}
-    else if(key==="dash"||key==="overdrive"){_sfxBeep(300,0.04,0.2);_sfxBeep(900,0.06,0.22)}
-    else if(key==="teleport"||key==="nova"){_sfxBeep(250,0.08,0.22);_sfxBeep(500,0.1,0.2);_sfxBeep(1000,0.08,0.15)}
-    else if(key==="boss"||key==="warning"){_sfxBeep(120,0.15,0.3);_sfxBeep(80,0.12,0.2)}
-    else if(key==="wave"||key==="level"){_sfxBeep(523,0.08,0.2);_sfxBeep(659,0.08,0.18);_sfxBeep(784,0.1,0.16)}
-    else if(key==="laser"){_sfxBeep(1100,0.06,0.22)}
-    else if(key==="missile"){_sfxBeep(200,0.05,0.2);_sfxBeep(150,0.12,0.15)}
-    else if(key==="gameover"){_sfxBeep(300,0.2,0.25);_sfxBeep(150,0.25,0.22)}
-    else _sfxBeep(700,0.05,0.2);
+    if(key==="shoot"){_sfxBeep(920,0.04,v);_sfxBeep(600,0.03,v*0.5)}
+    else if(key==="ki"){_sfxBeep(480,0.05,v);_sfxBeep(720,0.04,v*0.55)}
+    else if(key==="explode"||key==="bomb"||key==="trapBomb"){_sfxBeep(90,0.14,v*1.1);_sfxBeep(55,0.18,v*0.9);_sfxBeep(180,0.08,v*0.5)}
+    else if(key==="hit"||key==="trap"||key==="trapBlade"||key==="mineTrap"){_sfxBeep(180,0.07,v);_sfxBeep(90,0.1,v*0.8);_sfxBeep(320,0.04,v*0.45)}
+    else if(key==="power"||key==="pickup"||key==="rapid"||key==="triple"){_sfxBeep(660,0.05,v);_sfxBeep(990,0.07,v*0.75)}
+    else if(key==="shield"||key==="barrier"||key==="reflect"){_sfxBeep(400,0.08,v);_sfxBeep(800,0.1,v*0.6)}
+    else if(key==="dash"||key==="overdrive"){_sfxBeep(300,0.04,v);_sfxBeep(900,0.06,v)}
+    else if(key==="teleport"||key==="nova"){_sfxBeep(250,0.08,v);_sfxBeep(500,0.1,v);_sfxBeep(1000,0.08,v*0.7)}
+    else if(key==="boss"||key==="warning"){_sfxBeep(120,0.15,v);_sfxBeep(80,0.12,v*0.8)}
+    else if(key==="wave"||key==="level"){_sfxBeep(523,0.08,v);_sfxBeep(659,0.08,v*0.9);_sfxBeep(784,0.1,v*0.8)}
+    else if(key==="laser"||key==="stormbolt"){_sfxBeep(1100,0.07,v);_sfxBeep(1400,0.05,v*0.5)}
+    else if(key==="missile"||key==="bazooka"){_sfxBeep(200,0.05,v);_sfxBeep(140,0.12,v*0.7)}
+    else if(key==="hammer"){_sfxBeep(180,0.06,v);_sfxBeep(90,0.12,v);_sfxBeep(1200,0.04,v*0.4)}
+    else if(key==="chrono"){_sfxBeep(880,0.12,v*0.7);_sfxBeep(440,0.15,v*0.5)}
+    else if(key==="allies"){_sfxBeep(520,0.06,v);_sfxBeep(780,0.08,v)}
+    else if(key==="gameover"){_sfxBeep(300,0.2,v);_sfxBeep(150,0.25,v)}
+    else if(key==="trapNet"){_sfxBeep(240,0.09,v);_sfxBeep(160,0.12,v*0.7)}
+    else _sfxBeep(700,0.05,v);
   }catch(e){}
 }
+function playSfx(key){
+  try{
+    if(typeof audioMuted!=="undefined"&&audioMuted) return;
+    /* Alias de claves faltantes → sonidos base */
+    const alias={trapBlade:"hit",trap:"hit",mineTrap:"hit",laserTrap:"laser",burst:"shoot",repair:"power",rapid:"power",triple:"power",pickup:"power"};
+    if(alias[key]) key=alias[key];
+    const now=performance.now();
+    const minGap=(key==="shoot"||key==="ki")?25:(key==="explode"?55:18);
+    if(_sfxLast[key]&&now-_sfxLast[key]<minGap)return;
+    _sfxLast[key]=now;
+    try{_ensureSfxCtx()}catch(e){}
+    let base=SFX[key];
+    /* fallback de archivo si falta la clave */
+    if((!base||!base.src)&&key!=="explode"&&SFX.explode) base=SFX[key]||null;
+    if((!base||!base.src)&&SFX.power&&(key==="power"||key==="pickup")) base=SFX.power;
+    if((!base||!base.src)&&SFX.hit&&(key==="hit")) base=SFX.hit;
+    if((!base||!base.src)&&SFX.explode&&(key==="explode"||key==="bomb")) base=SFX.explode;
+    const boost=(key==="shoot"||key==="ki")?2.0:1;
+    const vol=Math.max(0.4, Math.min(1, (typeof volSfx==="number"?volSfx:0.65)*boost));
+    if(base && base.src){
+      if(!_sfxPool[key]){ _sfxPool[key]=[]; _sfxPoolIdx[key]=0; }
+      const poolLimit=(typeof isMobile==="function"&&isMobile())?2:3;
+      while(_sfxPool[key].length<poolLimit){
+        try{
+          const n=new Audio(base.src);
+          n.preload="auto";
+          _sfxPool[key].push(n);
+        }catch(e){break}
+      }
+      if(_sfxPool[key].length){
+        const idx=_sfxPoolIdx[key]%_sfxPool[key].length;
+        _sfxPoolIdx[key]=idx+1;
+        const n=_sfxPool[key][idx];
+        try{n.currentTime=0}catch(e){}
+        n.volume=vol;
+        const pr=n.play();
+        if(pr&&pr.catch) pr.catch(function(){ _sfxSynth(key, vol*0.45); });
+        return;
+      }
+    }
+    _sfxSynth(key, vol*0.45);
+  }catch(e){ try{_sfxSynth(key,0.25)}catch(_){} }
+}
+/* Desbloquear audio en el primer toque (móvil) */
+(function(){
+  function unlock(){
+    try{_ensureSfxCtx()}catch(e){}
+    try{
+      const silent=new Audio();
+      silent.muted=true;
+      const p=silent.play();
+      if(p&&p.catch)p.catch(function(){});
+    }catch(e){}
+    try{
+      ["hit","explode","power","shoot"].forEach(function(k){
+        if(SFX[k]&&SFX[k].src){ try{SFX[k].load()}catch(e){} }
+      });
+    }catch(e){}
+  }
+  ["pointerdown","touchstart","click","keydown"].forEach(function(ev){
+    document.addEventListener(ev, unlock, {once:true,passive:true});
+  });
+})();
+
 
 
 /* ===== Motor de la nave: archivo + fallback sintético Web Audio ===== */
@@ -7506,6 +7560,7 @@ function destroyEnemy(o,i){
     if(Array.isArray(explosions)&&explosions.length<4){
       explosions.push({x:cx,y:cy,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,size:2.5,opacity:.8,color:"255,140,60"});
     }
+    try{playSfx("explode")}catch(e){}
     try{
       const g=o.type==="space_mine"?2:1;
       score=(Number(score)||0)+g;
@@ -10922,6 +10977,7 @@ for(let i=obstacles.length-1;i>=0;i--){
     if(isSaw){
       /* Contacto cuchilla: sin createExplosion grande ni hitPlayer pesado */
       killFlash=0;hitPauseFrames=0;damageFlash=Math.min(6,(damageFlash||0)+4);
+      try{playSfx("hit")}catch(e){}
       if(invisible>0||dashInvuln>0){
         try{destroyEnemy(o,i)}catch(e){try{obstacles.splice(i,1)}catch(_e){}}
       } else if(shield>0){
@@ -10930,7 +10986,6 @@ for(let i=obstacles.length-1;i>=0;i--){
       } else if(lives>1){
         lives--;try{updateLivesUI()}catch(e){};shield=70;
         try{destroyEnemy(o,i)}catch(e){try{obstacles.splice(i,1)}catch(_e){}}
-        try{playSfx("hit")}catch(e){}
       } else {
         try{destroyEnemy(o,i)}catch(e){try{obstacles.splice(i,1)}catch(_e){}}
         endGame();return;
@@ -18627,19 +18682,37 @@ body.tech-playing .game-top{
     }
   }
   function schedule(){
+    var isMob=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent||'');
     var start=function(){
       try{ runDeferred(); }catch(e){}
-      setTimeout(hideSplash, 150);
+      /* Móvil: ocultar splash casi al instante tras diferidos */
+      setTimeout(hideSplash, isMob ? 40 : 120);
     };
-    if('requestIdleCallback' in window){
-      requestIdleCallback(start, {timeout: 2000});
+    if(isMob){
+      /* No esperar idle largo en móvil */
+      if(document.readyState==='complete') setTimeout(start, 30);
+      else window.addEventListener('load', function(){ setTimeout(start, 30); });
+      setTimeout(hideSplash, 2200); /* tope duro más bajo */
+    } else if('requestIdleCallback' in window){
+      requestIdleCallback(start, {timeout: 1200});
+      if(document.readyState==='complete') schedule;
+      else window.addEventListener('load', function(){ requestIdleCallback(start,{timeout:1200}); });
+      setTimeout(hideSplash, 4500);
     } else {
-      setTimeout(start, 250);
+      setTimeout(start, 180);
+      setTimeout(hideSplash, 4500);
     }
   }
   if(document.readyState==='complete') schedule();
-  else window.addEventListener('load', schedule);
-  setTimeout(hideSplash, 7000);
+  else {
+    /* DOM listo: en móvil ya podemos mostrar menú aunque load no termine */
+    document.addEventListener('DOMContentLoaded', function(){
+      var isMob=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent||'');
+      if(isMob) setTimeout(hideSplash, 900);
+    });
+    window.addEventListener('load', schedule);
+  }
+  setTimeout(hideSplash, 5000);
 })();
 </script>
 </body>
