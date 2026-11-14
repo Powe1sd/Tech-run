@@ -14,8 +14,9 @@
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<!-- Fuentes e iconos no bloquean el primer pintado -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
+<!-- Font Awesome 6: iconos de mundos (carga prioritaria + fallback) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" crossorigin="anonymous">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;800&family=Share+Tech+Mono&family=Inter:wght@400;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
 <noscript>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -5770,37 +5771,37 @@ if(startPanel&&!document.getElementById("startExtras")){
         ${TECH_COUNTRY_CODES.slice().sort((a,b)=>techCountryName(a).localeCompare(techCountryName(b),"es")).map(code=>`<button type="button" class="tech-country-flag-btn ${selectedFlag===code?"active":""}" data-country-flag="${code}" title="${techCountryName(code)}" aria-label="${techCountryName(code)}" aria-pressed="${selectedFlag===code}">${techFlagEmoji(code)}</button>`).join("")}
       </div>
     </section>
-    <h3>🌍 Mundo</h3>
+    <h3><i class="fa-solid fa-globe" style="margin-right:6px;color:#FFCD00"></i>Mundo</h3>
     <div class="diff-btns world-btns">
-      <button type="button" data-world="1" class="${selectedWorld===1?"active":""}"><span class="w-ico" aria-hidden="true">🌌</span><span class="w-meta"><span class="w-num">1</span><span class="w-name">Espacio</span></span></button>
-      <button type="button" data-world="2" class="${selectedWorld===2?"active":""}"><span class="w-ico" aria-hidden="true">❄️</span><span class="w-meta"><span class="w-num">2</span><span class="w-name">Nieve</span></span></button>
-      <button type="button" data-world="3" class="${selectedWorld===3?"active":""}"><span class="w-ico" aria-hidden="true">🔥</span><span class="w-meta"><span class="w-num">3</span><span class="w-name">Fuego</span></span></button>
-      <button type="button" data-world="4" class="${selectedWorld===4?"active":""}"><span class="w-ico" aria-hidden="true">💎</span><span class="w-meta"><span class="w-num">4</span><span class="w-name">Cristal</span></span></button>
-      <button type="button" data-world="5" class="${selectedWorld===5?"active":""}"><span class="w-ico" aria-hidden="true">🌌</span><span class="w-meta"><span class="w-num">5</span><span class="w-name">Nebulosa</span></span></button>
-      <button type="button" data-world="6" class="${selectedWorld===6?"active":""}"><span class="w-ico" aria-hidden="true">💜</span><span class="w-meta"><span class="w-num">6</span><span class="w-name">Neón</span></span></button>
-      <button type="button" data-world="7" class="${selectedWorld===7?"active":""}"><span class="w-ico" aria-hidden="true">☢️</span><span class="w-meta"><span class="w-num">7</span><span class="w-name">Tóxico</span></span></button>
-      <button type="button" data-world="8" class="${selectedWorld===8?"active":""}"><span class="w-ico" aria-hidden="true">🕳️</span><span class="w-meta"><span class="w-num">8</span><span class="w-name">Vacío</span></span></button>
-      <button type="button" data-world="9" class="${selectedWorld===9?"active":""}"><span class="w-ico" aria-hidden="true">🌊</span><span class="w-meta"><span class="w-num">9</span><span class="w-name">Océano</span></span></button>
-      <button type="button" data-world="10" class="${selectedWorld===10?"active":""}"><span class="w-ico" aria-hidden="true">🏜️</span><span class="w-meta"><span class="w-num">10</span><span class="w-name">Desierto</span></span></button>
-      <button type="button" data-world="11" class="${selectedWorld===11?"active":""}"><span class="w-ico" aria-hidden="true">⛈️</span><span class="w-meta"><span class="w-num">11</span><span class="w-name">Tormenta</span></span></button>
-      <button type="button" data-world="12" class="${selectedWorld===12?"active":""}"><span class="w-ico" aria-hidden="true">🌠</span><span class="w-meta"><span class="w-num">12</span><span class="w-name">Aurora</span></span></button>
-      <button type="button" data-world="13" class="${selectedWorld===13?"active":""}"><span class="w-ico" aria-hidden="true">🌋</span><span class="w-meta"><span class="w-num">13</span><span class="w-name">Volcán</span></span></button>
-      <button type="button" data-world="14" class="${selectedWorld===14?"active":""}"><span class="w-ico" aria-hidden="true">👾</span><span class="w-meta"><span class="w-num">14</span><span class="w-name">Glitch</span></span></button>
-      <button type="button" data-world="15" class="${selectedWorld===15?"active":""}"><span class="w-ico" aria-hidden="true">🌋</span><span class="w-meta"><span class="w-num">15</span><span class="w-name">Ráfagas lava</span></span></button>
-      <button type="button" data-world="16" class="${selectedWorld===16?"active":""}"><span class="w-ico" aria-hidden="true">🔥</span><span class="w-meta"><span class="w-num">16</span><span class="w-name">Fuego eterno</span></span></button>
-      <button type="button" data-world="17" class="${selectedWorld===17?"active":""}"><span class="w-ico" aria-hidden="true">🎆</span><span class="w-meta"><span class="w-num">17</span><span class="w-name">Pirotecnia</span></span></button>
-      <button type="button" data-world="18" class="${selectedWorld===18?"active":""}"><span class="w-ico" aria-hidden="true">☀️</span><span class="w-meta"><span class="w-num">18</span><span class="w-name">Infierno solar</span></span></button>
-      <button type="button" data-world="19" class="${selectedWorld===19?"active":""}"><span class="w-ico" aria-hidden="true">💥</span><span class="w-meta"><span class="w-num">19</span><span class="w-name">Núcleo magma</span></span></button>
-      <button type="button" data-world="20" class="${selectedWorld===20?"active":""}"><span class="w-ico" aria-hidden="true">🌙</span><span class="w-meta"><span class="w-num">20</span><span class="w-name">Luna</span></span></button>
-      <button type="button" data-world="21" class="${selectedWorld===21?"active":""}"><span class="w-ico" aria-hidden="true">🧊</span><span class="w-meta"><span class="w-num">21</span><span class="w-name">Hielo</span></span></button>
-      <button type="button" data-world="22" class="${selectedWorld===22?"active":""}"><span class="w-ico" aria-hidden="true">🌑</span><span class="w-meta"><span class="w-num">22</span><span class="w-name">Desolación</span></span></button>
-      <button type="button" data-world="23" class="${selectedWorld===23?"active":""}"><span class="w-ico" aria-hidden="true">🌀</span><span class="w-meta"><span class="w-num">23</span><span class="w-name">Otra dim.</span></span></button>
-      <button type="button" data-world="24" class="${selectedWorld===24?"active":""}"><span class="w-ico" aria-hidden="true">🌧️</span><span class="w-meta"><span class="w-num">24</span><span class="w-name">Lluvia</span></span></button>
-      <button type="button" data-world="25" class="${selectedWorld===25?"active":""}"><span class="w-ico" aria-hidden="true">🌍</span><span class="w-meta"><span class="w-num">25</span><span class="w-name">Tierra</span></span></button>
-      <button type="button" data-world="26" class="${selectedWorld===26?"active":""}"><span class="w-ico" aria-hidden="true">🪐</span><span class="w-meta"><span class="w-num">26</span><span class="w-name">Plutón</span></span></button>
-      <button type="button" data-world="27" class="${selectedWorld===27?"active":""}"><span class="w-ico" aria-hidden="true">⬛</span><span class="w-meta"><span class="w-num">27</span><span class="w-name">Abismo</span></span></button>
-      <button type="button" data-world="28" class="${selectedWorld===28?"active":""}"><span class="w-ico" aria-hidden="true">🌀</span><span class="w-meta"><span class="w-num">28</span><span class="w-name">Dimensión 1</span></span></button>
-      <button type="button" data-world="29" class="${selectedWorld===29?"active":""}"><span class="w-ico" aria-hidden="true">🔥</span><span class="w-meta"><span class="w-num">29</span><span class="w-name">Inframundo</span></span></button>
+      <button type="button" data-world="1" class="${selectedWorld===1?"active":""}"><span class="w-ico" style="color:#7ecbff"><i class="fa-solid fa-rocket" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">1</span><span class="w-name">Espacio</span></span></button>
+      <button type="button" data-world="2" class="${selectedWorld===2?"active":""}"><span class="w-ico" style="color:#b8e4ff"><i class="fa-solid fa-snowflake" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">2</span><span class="w-name">Nieve</span></span></button>
+      <button type="button" data-world="3" class="${selectedWorld===3?"active":""}"><span class="w-ico" style="color:#ff7a45"><i class="fa-solid fa-fire" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">3</span><span class="w-name">Fuego</span></span></button>
+      <button type="button" data-world="4" class="${selectedWorld===4?"active":""}"><span class="w-ico" style="color:#9ad8ff"><i class="fa-solid fa-gem" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">4</span><span class="w-name">Cristal</span></span></button>
+      <button type="button" data-world="5" class="${selectedWorld===5?"active":""}"><span class="w-ico" style="color:#c9a0ff"><i class="fa-solid fa-star" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">5</span><span class="w-name">Nebulosa</span></span></button>
+      <button type="button" data-world="6" class="${selectedWorld===6?"active":""}"><span class="w-ico" style="color:#ff4fd8"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">6</span><span class="w-name">Neón</span></span></button>
+      <button type="button" data-world="7" class="${selectedWorld===7?"active":""}"><span class="w-ico" style="color:#7CFF4F"><i class="fa-solid fa-biohazard" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">7</span><span class="w-name">Tóxico</span></span></button>
+      <button type="button" data-world="8" class="${selectedWorld===8?"active":""}"><span class="w-ico" style="color:#8899aa"><i class="fa-solid fa-circle" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">8</span><span class="w-name">Vacío</span></span></button>
+      <button type="button" data-world="9" class="${selectedWorld===9?"active":""}"><span class="w-ico" style="color:#3dbbff"><i class="fa-solid fa-water" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">9</span><span class="w-name">Océano</span></span></button>
+      <button type="button" data-world="10" class="${selectedWorld===10?"active":""}"><span class="w-ico" style="color:#ffc14d"><i class="fa-solid fa-sun" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">10</span><span class="w-name">Desierto</span></span></button>
+      <button type="button" data-world="11" class="${selectedWorld===11?"active":""}"><span class="w-ico" style="color:#a0c4ff"><i class="fa-solid fa-cloud-bolt" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">11</span><span class="w-name">Tormenta</span></span></button>
+      <button type="button" data-world="12" class="${selectedWorld===12?"active":""}"><span class="w-ico" style="color:#7dffc0"><i class="fa-solid fa-moon" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">12</span><span class="w-name">Aurora</span></span></button>
+      <button type="button" data-world="13" class="${selectedWorld===13?"active":""}"><span class="w-ico" style="color:#ff6b4a"><i class="fa-solid fa-mountain" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">13</span><span class="w-name">Volcán</span></span></button>
+      <button type="button" data-world="14" class="${selectedWorld===14?"active":""}"><span class="w-ico" style="color:#66ff99"><i class="fa-solid fa-bug" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">14</span><span class="w-name">Glitch</span></span></button>
+      <button type="button" data-world="15" class="${selectedWorld===15?"active":""}"><span class="w-ico" style="color:#ff5a2a"><i class="fa-solid fa-fire-flame-curved" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">15</span><span class="w-name">Ráfagas lava</span></span></button>
+      <button type="button" data-world="16" class="${selectedWorld===16?"active":""}"><span class="w-ico" style="color:#ff3b1f"><i class="fa-solid fa-fire-flame-simple" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">16</span><span class="w-name">Fuego eterno</span></span></button>
+      <button type="button" data-world="17" class="${selectedWorld===17?"active":""}"><span class="w-ico" style="color:#ffd24d"><i class="fa-solid fa-burst" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">17</span><span class="w-name">Pirotecnia</span></span></button>
+      <button type="button" data-world="18" class="${selectedWorld===18?"active":""}"><span class="w-ico" style="color:#ffcc33"><i class="fa-solid fa-solar-panel" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">18</span><span class="w-name">Infierno solar</span></span></button>
+      <button type="button" data-world="19" class="${selectedWorld===19?"active":""}"><span class="w-ico" style="color:#ff8844"><i class="fa-solid fa-circle-radiation" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">19</span><span class="w-name">Núcleo magma</span></span></button>
+      <button type="button" data-world="20" class="${selectedWorld===20?"active":""}"><span class="w-ico" style="color:#d7e6ff"><i class="fa-regular fa-moon" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">20</span><span class="w-name">Luna</span></span></button>
+      <button type="button" data-world="21" class="${selectedWorld===21?"active":""}"><span class="w-ico" style="color:#9fe7ff"><i class="fa-solid fa-icicles" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">21</span><span class="w-name">Hielo</span></span></button>
+      <button type="button" data-world="22" class="${selectedWorld===22?"active":""}"><span class="w-ico" style="color:#c4a484"><i class="fa-solid fa-meteor" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">22</span><span class="w-name">Desolación</span></span></button>
+      <button type="button" data-world="23" class="${selectedWorld===23?"active":""}"><span class="w-ico" style="color:#b388ff"><i class="fa-solid fa-circle-nodes" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">23</span><span class="w-name">Otra dim.</span></span></button>
+      <button type="button" data-world="24" class="${selectedWorld===24?"active":""}"><span class="w-ico" style="color:#6ec1ff"><i class="fa-solid fa-cloud-showers-heavy" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">24</span><span class="w-name">Lluvia</span></span></button>
+      <button type="button" data-world="25" class="${selectedWorld===25?"active":""}"><span class="w-ico" style="color:#5ad46a"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">25</span><span class="w-name">Tierra</span></span></button>
+      <button type="button" data-world="26" class="${selectedWorld===26?"active":""}"><span class="w-ico" style="color:#c9b8ff"><i class="fa-solid fa-globe" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">26</span><span class="w-name">Plutón</span></span></button>
+      <button type="button" data-world="27" class="${selectedWorld===27?"active":""}"><span class="w-ico" style="color:#6a7a99"><i class="fa-solid fa-dungeon" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">27</span><span class="w-name">Abismo</span></span></button>
+      <button type="button" data-world="28" class="${selectedWorld===28?"active":""}"><span class="w-ico" style="color:#8e7cff"><i class="fa-solid fa-infinity" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">28</span><span class="w-name">Dimensión 1</span></span></button>
+      <button type="button" data-world="29" class="${selectedWorld===29?"active":""}"><span class="w-ico" style="color:#ff5a5a"><i class="fa-solid fa-skull" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">29</span><span class="w-name">Inframundo</span></span></button>
     </div>
         <h3>🚀 Seleccionar nave</h3>
     <div id="shipCarousel" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 4px;user-select:none;-webkit-user-select:none">
@@ -19011,66 +19012,88 @@ button[data-orb-color]{
 
 
 <style id="tech-world-btns">
+/* Iconos Font Awesome en selector de mundos + grid móvil */
 .world-btns{
   display:grid!important;
   grid-template-columns:repeat(3,minmax(0,1fr));
   gap:8px!important;
-  margin:8px 0 12px!important;
+  margin:8px 0 14px!important;
+  width:100%!important;
 }
 .world-btns button[data-world]{
   display:flex!important;
   flex-direction:column!important;
   align-items:center!important;
   justify-content:center!important;
-  gap:4px!important;
-  min-height:64px!important;
-  padding:8px 6px!important;
+  gap:5px!important;
+  min-height:72px!important;
+  padding:10px 6px!important;
   margin:0!important;
-  border-radius:12px!important;
-  font-size:11px!important;
+  border-radius:14px!important;
   line-height:1.15!important;
   text-align:center!important;
   white-space:normal!important;
+  background:rgba(8,16,32,.9)!important;
+  border:1px solid rgba(93,229,255,.22)!important;
+  color:#eaf4ff!important;
+  -webkit-text-fill-color:#eaf4ff!important;
+}
+.world-btns button[data-world].active{
+  border-color:#FFCD00!important;
+  box-shadow:0 0 0 1px rgba(255,205,0,.35),0 0 16px rgba(255,205,0,.18)!important;
+  background:linear-gradient(180deg,rgba(40,30,0,.55),rgba(8,16,32,.95))!important;
 }
 .world-btns .w-ico{
-  font-size:22px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:34px!important;
+  height:34px!important;
+  border-radius:10px!important;
+  background:rgba(255,255,255,.06)!important;
+  font-size:18px!important;
   line-height:1!important;
-  filter:drop-shadow(0 1px 2px rgba(0,0,0,.45));
+}
+.world-btns .w-ico i{
+  font-size:18px!important;
+  line-height:1!important;
+  display:inline-block!important;
+  width:1em!important;
+  text-align:center!important;
 }
 .world-btns .w-meta{
   display:flex!important;
   flex-direction:column!important;
   align-items:center!important;
-  gap:1px!important;
+  gap:2px!important;
+  max-width:100%!important;
 }
 .world-btns .w-num{
   font-size:9px!important;
-  opacity:.75!important;
-  letter-spacing:.5px!important;
+  opacity:.7!important;
+  letter-spacing:.6px!important;
   font-family:'Share Tech Mono',monospace!important;
 }
 .world-btns .w-name{
   font-size:11px!important;
   font-weight:700!important;
-  color:inherit!important;
   max-width:100%!important;
   overflow:hidden!important;
   text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+@media(max-width:400px){
+  .world-btns{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}
+  .world-btns button[data-world]{min-height:68px!important;padding:8px 4px!important}
+  .world-btns .w-ico{width:32px!important;height:32px!important}
+  .world-btns .w-ico i{font-size:16px!important}
+  .world-btns .w-name{font-size:10px!important}
 }
 @media(min-width:520px){
   .world-btns{grid-template-columns:repeat(4,minmax(0,1fr))!important}
-  .world-btns button[data-world]{min-height:70px!important}
-  .world-btns .w-ico{font-size:24px!important}
-  .world-btns .w-name{font-size:12px!important}
 }
-@media(min-width:820px){
+@media(min-width:860px){
   .world-btns{grid-template-columns:repeat(5,minmax(0,1fr))!important}
-}
-@media(max-width:380px){
-  .world-btns{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
-  .world-btns button[data-world]{min-height:58px!important;padding:6px 4px!important}
-  .world-btns .w-ico{font-size:20px!important}
-  .world-btns .w-name{font-size:10px!important}
 }
 </style>
 
