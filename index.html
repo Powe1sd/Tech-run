@@ -8107,7 +8107,7 @@ function spawnTrap(){
   else if(roll<.80)traps.push({type:"shrapnel",x:50+Math.random()*(canvas.width-100),y:-30,size:16*s,vy:(1.8+Math.random())*getSpeedScale(),armed:true});
   else if(roll<.86)traps.push({type:"spike",x:30+Math.random()*(canvas.width-60),y:canvas.height+10,size:16*s,vy:-(2.2+Math.random()*1.5)*getSpeedScale(),wiggle:0});
   else if(roll<.88)traps.push({type:"vortex",x:50+Math.random()*(canvas.width-100),y:-30,size:20*s,vy:(1.2+Math.random()*.8)*getSpeedScale(),spin:0});
-  else if(roll<.92)traps.push({type:"blade",x:40+Math.random()*(canvas.width-80),y:-25,size:22*s,vy:(2.6+Math.random()*1.2)*getSpeedScale(),spin:0}); /* sierra horizontal */
+  else if(roll<.92)traps.push({type:"blade",x:40+Math.random()*(canvas.width-80),y:-25,size:22*s,vy:(5.4+Math.random()*2.4)*getSpeedScale(),spin:0}); /* sierra horizontal más rápida */
   else if(roll<.96)traps.push({type:"net",x:canvas.width*(.2+Math.random()*.6),y:-20,w:90*s,h:14*s,vy:(1.5+Math.random())*getSpeedScale(),life:260}); /* red que frena */
   else traps.push({type:"cluster",x:50+Math.random()*(canvas.width-100),y:-30,size:14*s,vy:(1.7+Math.random())*getSpeedScale(),armed:true}); /* bomba racimo */
 }
@@ -8361,7 +8361,7 @@ function updateTraps(){
       if(t.life<=0){traps.splice(i,1);storm=0}
     }
     else if(t.type==="saw"){
-      t.y+=t.vy;t.spin+=.25;ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.spin);ctx.shadowColor="#FFAA00";ctx.shadowBlur=10;
+      t.y+=(t.vy||3)*1.85;t.spin+=.55;ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.spin);ctx.shadowColor="#FFAA00";ctx.shadowBlur=10;
       ctx.fillStyle="#888";ctx.beginPath();ctx.arc(0,0,t.size*.35,0,Math.PI*2);ctx.fill();ctx.fillStyle="#DDD";
       for(let k=0;k<8;k++){const a=(k/8)*Math.PI*2;ctx.beginPath();ctx.moveTo(Math.cos(a)*t.size*.3,Math.sin(a)*t.size*.3);ctx.lineTo(Math.cos(a+.15)*t.size,Math.sin(a+.15)*t.size);ctx.lineTo(Math.cos(a-.15)*t.size*.3,Math.sin(a-.15)*t.size*.3);ctx.closePath();ctx.fill()}
       ctx.restore();ctx.shadowBlur=0;
@@ -9683,8 +9683,8 @@ function updateExtraTraps(){
   for(let i=traps.length-1;i>=0;i--){
     const t=traps[i];
     if(t.type==="blade"){
-      t.y+=Math.max(t.vy||2.2, 2.4)*((typeof getSpeedScale==="function")?getSpeedScale():1);
-      t.spin=(t.spin||0)+0.28;
+      t.y+=Math.max(t.vy||5.2, 5.6)*((typeof getSpeedScale==="function")?getSpeedScale():1);
+      t.spin=(t.spin||0)+0.62;
       ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.spin);
       ctx.fillStyle="#FFD700";ctx.fillRect(-t.size, -3, t.size*2, 6);
       ctx.fillStyle="#FFAA00";ctx.beginPath();ctx.arc(0,0,t.size*.35,0,Math.PI*2);ctx.fill();
