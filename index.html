@@ -3006,7 +3006,7 @@ function updateLivesUI(){if(livesElement)livesElement.textContent=lives}
 
 function lsGet(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch(e){return d}}
 
-function techGetRecord(){try{const store=(typeof window.techStatsStorage==='function'?window.techStatsStorage():(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn()?localStorage:sessionStorage));const key=(typeof window.techStatsScopedKey==='function'?window.techStatsScopedKey('techRunRecordV4'):'techRunRecordV4::guest');const v=store.getItem(key);if(v!=null)return Number(v)||0}catch(e){}try{return Number(localStorage.getItem('techRunRecordV4'))||0}catch(e){return 0}}
+function techGetRecord(){try{const store=(typeof window.techStatsStorage==='function'?window.techStatsStorage():localStorage);const key=(typeof window.techStatsScopedKey==='function'?window.techStatsScopedKey('techRunRecordV4'):'techRunRecordV4::guest');const v=store.getItem(key);if(v!=null)return Number(v)||0}catch(e){}try{return Number(localStorage.getItem('techRunRecordV4'))||0}catch(e){return 0}}
 function lsSet(k,v){try{localStorage.setItem(k,String(v));return true}catch(e){return false}}
 
 let record=Number(typeof techGetRecord==='function'?techGetRecord():lsGet("techRunRecordV4",0))||0;
@@ -5837,6 +5837,11 @@ if(startPanel&&!document.getElementById("startExtras")){
         ${SHIP_GALLERY.map((_,i)=>`<span data-gal="${i}" style="width:7px;height:7px;border-radius:50%;display:inline-block;cursor:pointer;background:${i===getShipGalleryIndex()?"#FFCD00":"rgba(255,255,255,.25)"}"></span>`).join("")}
       </div>
       <p style="font-size:9px;color:#888;margin:6px 0 4px">◀ ▶ o desliza · o elige abajo</p>
+      <div id="shipNameWrap" style="margin:10px auto 6px;max-width:280px;text-align:center">
+        <label for="shipNameInput" style="display:block;font-size:11px;color:#FFCD00;letter-spacing:.6px;margin:0 0 4px;font-family:Orbitron,sans-serif">✏️ Nombre de la nave</label>
+        <input id="shipNameInput" type="text" maxlength="10" value="${shipName && shipName !== 'Br7' && shipName !== 'Usuario' ? shipName.replace(/"/g,"") : ''}" placeholder="Nombre de tu nave"
+          style="width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,205,0,.55);background:#0a1020;color:#FFCD00;font-family:Orbitron,sans-serif;font-size:14px;text-align:center;box-sizing:border-box">
+      </div>
     </div>
     <h3>🚀 Todas las naves</h3>
     <div class="diff-btns">
@@ -5877,9 +5882,6 @@ if(startPanel&&!document.getElementById("startExtras")){
       <p style="font-size:9px;color:#aaa;margin:2px 0 6px">Cada fase cambia el aspecto y otorga poderes</p>
     </div>
 
-    <input id="shipNameInput" type="text" maxlength="10" value="${shipName && shipName !== 'Br7' ? shipName.replace(/"/g,"") : ''}" placeholder="usuario"
-      style="width:90%;padding:8px;border-radius:8px;border:1px solid rgba(255,205,0,.4);background:#0a1020;color:#FFCD00;font-family:Orbitron,sans-serif;font-size:14px;text-align:center;margin:4px 0 8px">
-    <p style="font-size:9px;color:#888;margin:0 0 6px">Máx. 10 letras · se ve en la nave</p>
     <h3>🎨 Color</h3>
     <div class="diff-btns">
       <button type="button" data-skin="white" class="${shipSkin==="white"?"active":""}">Blanca</button>
@@ -6001,11 +6003,37 @@ if(startPanel&&!document.getElementById("startExtras")){
     const sni=box.querySelector("#shipNameInput");
     if(sni){
       const logged = !!(window.techAuthIsLoggedIn && window.techAuthIsLoggedIn());
-      if(!logged){ sni.value="Usuario"; sni.readOnly=true; sni.disabled=true; sni.title="Nombre fijo para invitados"; shipName="Usuario"; lsSet("techShipName","Usuario"); }
-      else { sni.value=String(window.techAuthUsername ? window.techAuthUsername() : shipName).slice(0,10); sni.readOnly=true; sni.disabled=true; sni.title="Nombre de usuario de tu cuenta"; shipName=sni.value; }
+      if(logged){
+        sni.value=String(window.techAuthUsername ? window.techAuthUsername() : shipName).slice(0,10);
+        sni.readOnly=true; sni.disabled=true;
+        sni.title="Nombre de usuario de tu cuenta";
+        shipName=sni.value;
+        try{ lsSet("techShipName", shipName); }catch(e){}
+      } else {
+        // Invitado: nombre manual de la nave, guardado en local
+        let localName="";
+        try{ localName=String(lsGet("techShipName","")||"").trim(); }catch(e){}
+        if(!localName || localName==="Usuario" || localName==="Br7"){
+          try{ localName=String(shipName||"").trim(); }catch(e){}
+        }
+        if(!localName || localName==="Usuario" || localName==="Br7") localName="";
+        sni.value=localName.slice(0,10);
+        sni.readOnly=false; sni.disabled=false;
+        sni.placeholder="Nombre de tu nave";
+        sni.title="Escribe el nombre de tu nave (se guarda en este dispositivo)";
+        shipName=sni.value || "Nave";
+        const saveLocalShip=()=>{
+          let v=String(sni.value||"").trim().slice(0,10);
+          if(!v) v="Nave";
+          shipName=v;
+          try{ lsSet("techShipName", v); }catch(e){}
+          try{ localStorage.setItem("techShipName", v); }catch(e){}
+        };
+        sni.oninput=()=>{ saveLocalShip(); };
+        sni.onchange=()=>{ saveLocalShip(); };
+        sni.onblur=()=>{ saveLocalShip(); };
+      }
       sni.onclick=e=>e.stopPropagation();
-      sni.oninput=()=>{ if(!window.techAuthIsLoggedIn || !window.techAuthIsLoggedIn()){sni.value="Usuario";shipName="Usuario";return;} };
-      sni.onchange=()=>{ if(!window.techAuthIsLoggedIn || !window.techAuthIsLoggedIn()){sni.value="Usuario";shipName="Usuario";return;} };
     }
     box.querySelectorAll("[data-world]").forEach(b=>b.onclick=()=>{
       selectedWorld=Number(b.getAttribute("data-world"))||1;lsSet("techWorld",selectedWorld);renderStart();
@@ -7411,10 +7439,7 @@ function __techStatsStore(){
   try{
     if(typeof window.techStatsStorage==='function') return window.techStatsStorage();
   }catch(e){}
-  try{
-    if(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn()) return window.localStorage;
-  }catch(e){}
-  return window.sessionStorage||window.localStorage;
+  return window.localStorage;
 }
 function __techGamesPlayedKey(){
   try{
@@ -7545,7 +7570,7 @@ function saveCurrentMatchToHistory(){
   });
 }
 function __scopedRecordKey(){try{if(typeof window.techStatsScopedKey==='function')return window.techStatsScopedKey('techRunRecordV4')}catch(e){}return 'techRunRecordV4::guest'}
-function __scopedRecordStore(){try{if(typeof window.techStatsStorage==='function')return window.techStatsStorage()}catch(e){}try{if(window.techAuthIsLoggedIn&&window.techAuthIsLoggedIn())return localStorage}catch(e){}return sessionStorage||localStorage}
+function __scopedRecordStore(){try{if(typeof window.techStatsStorage==='function')return window.techStatsStorage()}catch(e){}return localStorage}
 function saveRecord(){const store=__scopedRecordStore();const key=__scopedRecordKey();const saved=Number(store.getItem(key)||lsGet("techRunRecordV4",0))||0;if(score>saved){record=score;try{store.setItem(key,String(record))}catch(e){}try{if(typeof window.techStatsMarkDirty==='function')window.techStatsMarkDirty()}catch(e){}}else{record=saved}if(recordElement)recordElement.textContent=record}
 function addScore(pts){score+=pts;if(scoreElement)scoreElement.textContent=score;saveRecord();checkScenario()}
 
@@ -11226,12 +11251,25 @@ try{document.querySelector(".tech-game")&&document.querySelector(".tech-game").c
 async function validateUsernameBeforeStart(){
   const input = document.getElementById("shipNameInput");
   const loggedIn = !!(window.techAuthIsLoggedIn && window.techAuthIsLoggedIn());
-  // Los modos Clásico e Infinito siempre se pueden iniciar sin cuenta.
-  // Online también permite jugar como invitado; solo las cuentas registradas guardan ranking.
+  // Invitado: usa el nombre manual de la nave y lo guarda en localStorage.
+  // Cuenta: usa el nombre de usuario de la cuenta.
   if(!loggedIn){
-    shipName = "Usuario";
-    try { lsSet("techShipName", "Usuario"); } catch(e) {}
-    if(input){ input.value="Usuario"; input.readOnly=true; input.disabled=true; input.setAttribute("aria-label","Nombre fijo para invitado"); input.title="Regístrate e inicia sesión para usar el nombre de tu cuenta"; }
+    let nick = "";
+    if(input){ nick = String(input.value||"").trim().slice(0,10); }
+    if(!nick){
+      try{ nick = String(lsGet("techShipName","")||"").trim().slice(0,10); }catch(e){}
+    }
+    if(!nick || nick==="Usuario" || nick==="Br7") nick = "Nave";
+    shipName = nick;
+    try { lsSet("techShipName", nick); } catch(e) {}
+    try { localStorage.setItem("techShipName", nick); } catch(e) {}
+    if(input){
+      input.value = nick;
+      input.readOnly = false;
+      input.disabled = false;
+      input.setAttribute("aria-label","Nombre de tu nave");
+      input.title = "Nombre de tu nave (guardado en este dispositivo)";
+    }
     startGame();
     return;
   }
@@ -12664,7 +12702,7 @@ function runAdded(node){if(!node||node.nodeType!==1)return;run(node);}
     try{
       if(typeof window.techStatsStorage==='function') return window.techStatsStorage();
     }catch(e){}
-    return isGuestScope()?sessionStorage:localStorage;
+    return localStorage;
   }
   function k(base){return base+'::'+accountScope()}
   function STORE(){return k(STORE_BASE)}
@@ -14512,9 +14550,9 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
   'use strict';
   /**
    * Estadísticas por cuenta:
-   * - Invitado: solo sessionStorage (se borra al cerrar la pestaña/ventana).
+   * - Invitado: localStorage (persiste en este dispositivo, clave ::guest).
    * - Cuenta registrada: localStorage por userId + sincronización en Supabase.
-   * Al cerrar sesión vuelven las estadísticas de invitado (vacías o de la sesión actual).
+   * Al cerrar sesión se muestran las estadísticas de invitado del dispositivo.
    * Al iniciar sesión se cargan las de esa cuenta (local y BD).
    */
   const SUPABASE_URL = 'https://bkfpvwsahffrrkckjfre.supabase.co';
@@ -14545,12 +14583,24 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     return 'guest';
   }
   function isGuest(){ return scopeId() === 'guest'; }
-  function store(){ return isGuest() ? sessionStorage : localStorage; }
+  function store(){ return localStorage; }
   function scopedKey(base){ return String(base) + '::' + scopeId(); }
 
   window.techStatsAccountScope = scopeId;
   window.techStatsStorage = store;
   window.techStatsScopedKey = scopedKey;
+
+  // Migrar estadísticas de invitado desde sessionStorage a localStorage (una vez)
+  try{
+    BASES.forEach(function(b){
+      const k = String(b) + '::guest';
+      if(localStorage.getItem(k) == null){
+        const fromSession = sessionStorage.getItem(k);
+        if(fromSession != null) localStorage.setItem(k, fromSession);
+      }
+    });
+  }catch(e){}
+
   window.techStatsMarkDirty = function(){
     dirty = true;
     if(isGuest()) return;
@@ -14594,18 +14644,10 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
   }
 
   function clearGuestData(){
+    // Las estadísticas de invitado ahora persisten en localStorage.
+    // Solo se limpian si se pide explícitamente (p. ej. botón de borrar).
     try{
-      BASES.forEach(function(b){
-        sessionStorage.removeItem(b + '::guest');
-        // claves antiguas globales solo de invitado (no tocar cuentas)
-        try{ sessionStorage.removeItem(b); }catch(e){}
-      });
-      try{ sessionStorage.removeItem('techMatchHistory'); }catch(e){}
-    }catch(e){}
-    try{
-      if(typeof record !== 'undefined') record = 0;
-      if(typeof window.record !== 'undefined') window.record = 0;
-      window.__techLastGamesPlayed = 0;
+      // No borrar localStorage ::guest aquí.
     }catch(e){}
   }
 
@@ -14616,7 +14658,11 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
       BASES.forEach(function(b){
         const gKey = b + '::guest';
         const uKey = b + '::' + userScope;
-        const gVal = sessionStorage.getItem(gKey);
+        let gVal = null;
+        try{ gVal = localStorage.getItem(gKey); }catch(e){}
+        if(gVal == null){
+          try{ gVal = sessionStorage.getItem(gKey); }catch(e){}
+        }
         if(gVal == null) return;
         const existing = localStorage.getItem(uKey);
         // Solo copiar si la cuenta aún no tiene ese dato
@@ -14625,8 +14671,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
           moved = true;
         }
       });
-      // Limpiar invitado tras migrar al registrarse / iniciar sesión
-      clearGuestData();
+      // No borrar datos de invitado: deben seguir disponibles al cerrar sesión.
     }catch(e){ console.warn('[TECH stats] migrate guest', e); }
     return moved;
   }
@@ -14795,11 +14840,13 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     refreshUI();
   };
 
-  // Al cerrar ventana: invitado a 0; cuenta sincroniza
+  // Al cerrar ventana: invitado conserva local; cuenta sincroniza
   function onLeave(){
     try{
-      if(isGuest()) clearGuestData();
-      else {
+      if(isGuest()) {
+        // Mantener estadísticas de invitado en localStorage
+        return;
+      } else {
         // beacon sync best-effort
         const uid = window.techAuthUserId && window.techAuthUserId();
         if(!uid || !dirty) return;
@@ -14846,8 +14893,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
       await pullFromCloud();
       refreshUI();
     } else {
-      // Asegurar que no se mezclen claves globales antiguas en invitado
-      // (los datos de invitado viven solo en sessionStorage)
+      // Invitado: estadísticas locales en localStorage (::guest)
     }
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function(){ setTimeout(boot, 300); });
@@ -17625,8 +17671,8 @@ body.tech-playing .game-top{
     tabs=document.createElement('div');
     tabs.id='startMobileTabs';
     tabs.innerHTML=
-      '<button type="button" data-mtab="mundo" class="active">🌍 Mundo</button>'+
-      '<button type="button" data-mtab="nave">🚀 Nave</button>'+
+      '<button type="button" data-mtab="mundo">🌍 Mundo</button>'+
+      '<button type="button" data-mtab="nave" class="active">🚀 Nave</button>'+
       '<button type="button" data-mtab="extra">✦ Extra</button>';
     var extras=document.getElementById('startExtras');
     if(extras && extras.parentNode===panel){
@@ -17662,7 +17708,7 @@ body.tech-playing .game-top{
       }
       /* Agrupar también todos los botones de mundos, aunque cambie el contenedor */
       if(node.matches && (node.matches('[data-world]') || node.querySelector('[data-world]'))) section='mundo';
-      if(id==='shipCarousel' || id==='gokuFormMenu' || (node.querySelector && (node.querySelector('#shipCarousel') || node.querySelector('#gokuFormMenu')))) section='nave';
+      if(id==='shipCarousel' || id==='shipNameWrap' || id==='shipNameInput' || id==='gokuFormMenu' || (node.querySelector && (node.querySelector('#shipCarousel') || node.querySelector('#shipNameInput') || node.querySelector('#gokuFormMenu')))) section='nave';
       if(id==='startInGameActions' || id==='btnLoadSave' || id==='btnDailyMissions' || id==='btnWeaponShop' || id==='guestDataNotice') section='extra';
       if(section==='mundo') mundo.appendChild(node);
       else if(section==='nave') nave.appendChild(node);
@@ -17677,7 +17723,7 @@ body.tech-playing .game-top{
 
   function setTab(name){
     if(name==='play') name='mundo';
-    if(name!=='mundo' && name!=='nave' && name!=='extra') name='mundo';
+    if(name!=='mundo' && name!=='nave' && name!=='extra') name='nave';
     var box=document.getElementById('startExtras');
     if(box) box.setAttribute('data-tab', name);
     var tabs=document.getElementById('startMobileTabs');
@@ -17695,10 +17741,8 @@ body.tech-playing .game-top{
     var box=document.getElementById('startExtras');
     if(!box) return;
     classifyExtras();
-    var saved='mundo';
-    try{ saved=localStorage.getItem('techStartTab')||'mundo'; }catch(e){}
-    if(saved==='play') saved='mundo';
-    setTab(saved);
+    // Al abrir el menú, por defecto mostrar pestaña Nave (nombre + carrusel)
+    setTab('nave');
   }
 
   /* Hook renderStart refresh */
