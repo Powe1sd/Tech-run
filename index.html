@@ -2867,7 +2867,10 @@ html,body{width:100%;min-width:320px}
   <span class="tcb-label">PUNTOS JUEGO</span>
   <span class="tcb-value" id="techCoinsMainValue">0</span>
 </div>
-<button class="game-btn" id="startGame" style="margin-top:10px" disabled aria-disabled="true">🚀 Iniciar</button>
+<div id="startGameRow" class="start-game-row">
+  <button class="game-btn" id="startGame" style="margin-top:0" disabled aria-disabled="true">🚀 Iniciar</button>
+  <div id="techAuthorSign" class="tech-author-sign" title="Creador del juego">✦ Brayhan Rubio</div>
+</div>
 </div>
 <div class="game-panel" id="pvpRoomPanel" style="display:none;z-index:95">
   <h2>⚔ Duelo 1v1</h2>
@@ -6144,8 +6147,12 @@ if(startPanel&&!document.getElementById("startExtras")){
   try{ if(startPanel) startPanel.scrollTop = 0; }catch(e){}
 
   const btn=document.getElementById("startGame");
-  if(btn&&btn.parentNode===startPanel){
-    /* Opciones justo debajo del botón INICIAR */
+  const startRow=document.getElementById("startGameRow");
+  if(startRow&&startRow.parentNode===startPanel){
+    /* Opciones justo debajo de Iniciar + firma */
+    if(startRow.nextSibling) startPanel.insertBefore(box, startRow.nextSibling);
+    else startPanel.appendChild(box);
+  } else if(btn&&btn.parentNode===startPanel){
     if(btn.nextSibling) startPanel.insertBefore(box, btn.nextSibling);
     else startPanel.appendChild(box);
   } else startPanel.appendChild(box);
@@ -18893,7 +18900,8 @@ body.tech-playing .game-top{
 #startPanel > h2{ order: -6 !important; }
 #startPanel > small{ order: -4 !important; }
 #startPanel > #techCoinsBar{ order: -3 !important; }
-#startPanel > #startGame{ order: -2 !important; }
+#startPanel > #startGame,
+#startPanel > #startGameRow{ order: -2 !important; }
 #startPanel > #startMobileTabs{ order: -1 !important; }
 #startPanel > #startExtras{ order: 1 !important; }
 @media (min-width:701px){
@@ -18941,6 +18949,94 @@ body.tech-playing .game-top{
   }
 }
 </style>
+
+
+<style id="tech-author-sign-styles">
+.start-game-row{
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  gap:12px !important;
+  width:100% !important;
+  margin-top:10px !important;
+  flex-wrap:wrap !important;
+}
+.start-game-row #startGame{
+  flex:1 1 auto !important;
+  min-width:min(100%,180px) !important;
+  margin:0 !important;
+}
+.tech-author-sign,
+#techAuthorSign{
+  flex:0 0 auto !important;
+  font-family:'Orbitron',system-ui,sans-serif !important;
+  font-weight:800 !important;
+  font-size:clamp(12px,3.2vw,15px) !important;
+  letter-spacing:1.2px !important;
+  color:#FFCD00 !important;
+  -webkit-text-fill-color:#FFCD00 !important;
+  text-shadow:0 0 12px rgba(255,205,0,.45), 0 1px 2px #000 !important;
+  padding:10px 12px !important;
+  border:1px solid rgba(255,205,0,.45) !important;
+  border-radius:12px !important;
+  background:linear-gradient(145deg,rgba(40,28,0,.75),rgba(12,10,20,.9)) !important;
+  white-space:nowrap !important;
+  line-height:1.2 !important;
+  user-select:none !important;
+}
+/* Parte inferior del menú: firma también junto a acciones de abajo si existen */
+#startBottomActions .tech-author-sign{
+  display:inline-flex !important;
+  margin-left:8px !important;
+}
+@media (max-width:480px){
+  .start-game-row{gap:8px !important}
+  .tech-author-sign, #techAuthorSign{
+    font-size:12px !important;
+    padding:8px 10px !important;
+    letter-spacing:.8px !important;
+  }
+}
+</style>
+
+
+<script type="text/plain" data-tech-defer="1" id="tech-author-sign-keep">
+(function(){
+  function ensureSign(){
+    try{
+      var row=document.getElementById('startGameRow');
+      var btn=document.getElementById('startGame');
+      if(!document.getElementById('techAuthorSign')){
+        var sign=document.createElement('div');
+        sign.id='techAuthorSign';
+        sign.className='tech-author-sign';
+        sign.title='Creador del juego';
+        sign.textContent='✦ Brayhan Rubio';
+        if(row) row.appendChild(sign);
+        else if(btn&&btn.parentNode){
+          var wrap=document.createElement('div');
+          wrap.id='startGameRow';
+          wrap.className='start-game-row';
+          btn.parentNode.insertBefore(wrap, btn);
+          wrap.appendChild(btn);
+          wrap.appendChild(sign);
+        }
+      }
+      // Parte inferior: si hay barra de acciones, repetir firma visible al lado
+      var foot=document.getElementById('startBottomActions');
+      if(foot && !foot.querySelector('.tech-author-sign')){
+        var s2=document.createElement('div');
+        s2.className='tech-author-sign';
+        s2.textContent='✦ Brayhan Rubio';
+        foot.appendChild(s2);
+      }
+    }catch(e){}
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', ensureSign);
+  else ensureSign();
+  setInterval(ensureSign, 4000);
+})();
+</script>
 
 </body>
 
