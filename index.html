@@ -4394,32 +4394,88 @@ function updateComboHud(){
   }catch(e){}
 }
 function triggerHitPause(frames){ hitPauseFrames=0; }
+function drawJesusChrist(g,cx,cy,scale){
+  /* Figura estilizada de Jesucristo para la tarjeta compartida */
+  const s=scale||1;
+  g.save();
+  g.translate(cx,cy);
+  g.scale(s,s);
+  /* resplandor / aureola */
+  const halo=g.createRadialGradient(0,-58,6,0,-58,54);
+  halo.addColorStop(0,"rgba(255,230,120,.95)");
+  halo.addColorStop(.45,"rgba(255,205,0,.45)");
+  halo.addColorStop(1,"rgba(255,205,0,0)");
+  g.fillStyle=halo;
+  g.beginPath();g.arc(0,-58,54,0,Math.PI*2);g.fill();
+  g.strokeStyle="rgba(255,220,100,.85)";g.lineWidth=3;
+  g.beginPath();g.arc(0,-58,38,0,Math.PI*2);g.stroke();
+  /* cruz suave de fondo */
+  g.strokeStyle="rgba(255,255,255,.18)";g.lineWidth=6;
+  g.beginPath();g.moveTo(0,-120);g.lineTo(0,70);g.stroke();
+  g.beginPath();g.moveTo(-42,-70);g.lineTo(42,-70);g.stroke();
+  /* cabello */
+  g.fillStyle="#3b2414";
+  g.beginPath();g.ellipse(0,-62,28,34,0,0,Math.PI*2);g.fill();
+  /* rostro */
+  g.fillStyle="#f0c9a0";
+  g.beginPath();g.ellipse(0,-58,20,24,0,0,Math.PI*2);g.fill();
+  /* barba */
+  g.fillStyle="#4a2e18";
+  g.beginPath();g.moveTo(-16,-48);g.quadraticCurveTo(0,-28,16,-48);g.quadraticCurveTo(18,-40,0,-22);g.quadraticCurveTo(-18,-40,-16,-48);g.fill();
+  /* ojos */
+  g.fillStyle="#1a120c";
+  g.beginPath();g.arc(-7,-60,2.2,0,Math.PI*2);g.fill();
+  g.beginPath();g.arc(7,-60,2.2,0,Math.PI*2);g.fill();
+  /* túnica */
+  const robe=g.createLinearGradient(0,-10,0,90);
+  robe.addColorStop(0,"#f5f5f5");robe.addColorStop(1,"#c8c8d0");
+  g.fillStyle=robe;
+  g.beginPath();g.moveTo(-34,-20);g.lineTo(34,-20);g.lineTo(42,95);g.lineTo(-42,95);g.closePath();g.fill();
+  /* manto rojo */
+  g.fillStyle="#9b1c1c";
+  g.beginPath();g.moveTo(-8,-18);g.lineTo(36,-12);g.lineTo(40,88);g.lineTo(8,90);g.closePath();g.fill();
+  /* manos abiertas */
+  g.fillStyle="#f0c9a0";
+  g.beginPath();g.ellipse(-48,20,8,11,0.4,0,Math.PI*2);g.fill();
+  g.beginPath();g.ellipse(48,20,8,11,-0.4,0,Math.PI*2);g.fill();
+  /* brazos */
+  g.strokeStyle="#e8b890";g.lineWidth=7;g.lineCap="round";
+  g.beginPath();g.moveTo(-22,-8);g.lineTo(-46,16);g.stroke();
+  g.beginPath();g.moveTo(22,-8);g.lineTo(46,16);g.stroke();
+  g.restore();
+}
 function makeScoreCard(){
-  /* Imagen tipo pantallazo con la puntuación */
-  const W=720,H=900;
+  /* Imagen tipo pantallazo con la puntuación + Jesucristo */
+  const W=720,H=1000;
   const cv=document.createElement("canvas");
   cv.width=W;cv.height=H;
   const g=cv.getContext("2d");
   const bg=g.createLinearGradient(0,0,0,H);
-  bg.addColorStop(0,"#020b22");bg.addColorStop(.5,"#0a1a3a");bg.addColorStop(1,"#050510");
+  bg.addColorStop(0,"#020b22");bg.addColorStop(.45,"#0a1a3a");bg.addColorStop(1,"#120808");
   g.fillStyle=bg;g.fillRect(0,0,W,H);
-  for(let i=0;i<60;i++){g.fillStyle=`rgba(200,220,255,${0.2+Math.random()*0.5})`;g.beginPath();g.arc(Math.random()*W,Math.random()*H,Math.random()*2+0.5,0,Math.PI*2);g.fill()}
+  for(let i=0;i<70;i++){g.fillStyle=`rgba(200,220,255,${0.15+Math.random()*0.45})`;g.beginPath();g.arc(Math.random()*W,Math.random()*H,Math.random()*2+0.5,0,Math.PI*2);g.fill()}
   g.strokeStyle="rgba(255,205,0,.45)";g.lineWidth=4;g.strokeRect(24,24,W-48,H-48);
   g.fillStyle="#FFCD00";g.font="bold 42px Orbitron,Arial,sans-serif";g.textAlign="center";
-  g.fillText("TECH RUN",W/2,90);
-  g.fillStyle="#CE1126";g.font="bold 28px Orbitron,Arial,sans-serif";g.fillText(String(shipName||"Br7"),W/2,130);
-  g.fillStyle="rgba(255,255,255,.15)";g.fillRect(80,170,W-160,2);
-  g.fillStyle="#fff";g.font="20px Share Tech Mono,monospace";g.fillText("PUNTUACIÓN",W/2,230);
-  g.fillStyle="#FFCD00";g.font="bold 96px Orbitron,Arial,sans-serif";g.fillText(String(score),W/2,340);
-  g.fillStyle="#ddd";g.font="22px Share Tech Mono,monospace";
-  g.fillText("Récord: "+record,W/2,400);
-  g.fillText("Meteoritos: "+meteorsDestroyed+" · Naves: "+shipsDestroyed,W/2,445);
-  g.fillText("Dificultad: "+String(difficulty),W/2,490);
-  g.fillStyle="rgba(255,255,255,.12)";g.fillRect(80,530,W-160,2);
-  /* marca casi invisible */
-  g.fillStyle="rgba(255,205,0,.28)";g.font="9px Share Tech Mono,monospace";g.fillText("Brayhan Estiven Coy Rubio · TECH",W/2,600);
-
-  g.fillStyle="#666";g.font="14px Share Tech Mono,monospace";g.fillText(new Date().toLocaleString(),W/2,760);
+  g.fillText("TECH RUN",W/2,78);
+  g.fillStyle="#CE1126";g.font="bold 26px Orbitron,Arial,sans-serif";g.fillText(String(shipName||"Br7"),W/2,114);
+  g.fillStyle="rgba(255,255,255,.15)";g.fillRect(80,132,W-160,2);
+  g.fillStyle="#fff";g.font="18px Share Tech Mono,monospace";g.fillText("PUNTUACIÓN",W/2,170);
+  g.fillStyle="#FFCD00";g.font="bold 84px Orbitron,Arial,sans-serif";g.fillText(String(score),W/2,255);
+  g.fillStyle="#ddd";g.font="20px Share Tech Mono,monospace";
+  g.fillText("Récord: "+record,W/2,300);
+  g.fillText("Meteoritos: "+meteorsDestroyed+" · Naves: "+shipsDestroyed,W/2,335);
+  g.fillText("Dificultad: "+String(difficulty),W/2,370);
+  g.fillStyle="rgba(255,255,255,.12)";g.fillRect(80,395,W-160,2);
+  /* Jesucristo centrado */
+  try{drawJesusChrist(g,W/2,620,1.35)}catch(e){}
+  g.fillStyle="#FFCD00";g.font="bold 22px Orbitron,Arial,sans-serif";
+  g.fillText("JESUCRISTO",W/2,820);
+  g.fillStyle="rgba(255,255,255,.75)";g.font="16px Share Tech Mono,monospace";
+  g.fillText(""Yo soy el camino, la verdad y la vida"",W/2,850);
+  g.fillStyle="rgba(255,205,0,.35)";g.font="10px Share Tech Mono,monospace";
+  g.fillText("Brayhan Estiven Coy Rubio · TECH RUN",W/2,900);
+  g.fillStyle="#666";g.font="13px Share Tech Mono,monospace";
+  g.fillText(new Date().toLocaleString(),W/2,940);
   return cv;
 }
 function scoreCardToBlob(cb){
@@ -4437,7 +4493,7 @@ function downloadScoreCard(){
   });
 }
 function shareScoreText(){
-  return "🚀 TECH RUN "+(shipName||"Br7")+"\n⭐ "+score+" puntos (récord "+record+")\n☄️ Meteoritos: "+meteorsDestroyed+" · Naves: "+shipsDestroyed+"\n🎯 "+String(difficulty).toUpperCase();
+  return "🚀 TECH RUN "+(shipName||"Br7")+"\n⭐ "+score+" puntos (récord "+record+")\n☄️ Meteoritos: "+meteorsDestroyed+" · Naves: "+shipsDestroyed+"\n🎯 "+String(difficulty).toUpperCase()+"\n✝️ Con Jesucristo";
 }
 async function shareScoreNative(){
   const text=shareScoreText();
