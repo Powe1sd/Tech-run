@@ -16355,6 +16355,45 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
     var btn=ensureOrb();
     flash(btn);
 
+    function showStart(){
+      try{
+        var start=document.getElementById('startPanel');
+        if(start){ start.style.setProperty('display','block','important'); start.scrollTop=0; }
+      }catch(e){}
+    }
+    function openStoryMenuSafe(){
+      try{
+        if(typeof openStoryMenu==='function'){ openStoryMenu(); return true; }
+      }catch(e){}
+      try{
+        var m=document.getElementById('storyMenuPanel');
+        if(m){ m.style.setProperty('display','block','important'); return true; }
+      }catch(e){}
+      return false;
+    }
+
+    /* —— Modo historia: volver paso a paso —— */
+    try{
+      var result=document.getElementById('storyResultPanel');
+      var brief=document.getElementById('storyBriefPanel');
+      var menu=document.getElementById('storyMenuPanel');
+      if(result && isVisible(result)){
+        closeIfOpen('storyResultPanel');
+        if(!openStoryMenuSafe()) showStart();
+        return;
+      }
+      if(brief && isVisible(brief)){
+        closeIfOpen('storyBriefPanel');
+        if(!openStoryMenuSafe()) showStart();
+        return;
+      }
+      if(menu && isVisible(menu)){
+        closeIfOpen('storyMenuPanel');
+        showStart();
+        return;
+      }
+    }catch(e){}
+
     var closed=
       closeIfOpen('techStatisticsPanel') ||
       closeIfOpen('onlineRankingPanel') ||
@@ -16363,19 +16402,13 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
       closeIfOpen('pausePanel') ||
       closeIfOpen('manualPanel') ||
       closeIfOpen('dailyMissionsPanel') ||
-      closeIfOpen('storyMenuPanel') ||
-      closeIfOpen('storyBriefPanel') ||
-      closeIfOpen('storyResultPanel') ||
       closeIfOpen('gameOverPanel') ||
       closeIfOpen('gokuAccessModal') ||
       closeIfOpen('programmerProfileModal') ||
       closeIfOpen('pvpRoomPanel');
 
     if(closed){
-      try{
-        var start=document.getElementById('startPanel');
-        if(start){ start.style.setProperty('display','block','important'); start.scrollTop=0; }
-      }catch(e){}
+      showStart();
       return;
     }
 
@@ -16398,7 +16431,14 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
       }
     }catch(e){}
 
-    try{ if(window.history.length>1){ window.history.back(); return; } }catch(e){}
+    /* Si no hay panel que cerrar: historial del navegador */
+    try{
+      if(window.history && window.history.length>1){
+        window.history.back();
+        return;
+      }
+    }catch(e){}
+    showStart();
   }
 
   function syncConfigToggle(){
@@ -16430,7 +16470,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
       if(panel.querySelector('#'+c.id)) return;
       var label=document.createElement('label');
       label.style.cssText='display:flex;align-items:center;gap:10px;margin:10px 0;color:#fff;font-size:13px;cursor:pointer;text-align:left';
-      label.innerHTML='<input type="checkbox" id="'+c.id+'" style="width:18px;height:18px;accent-color:#FFCD00"> 🔴 Bolita volver (atrás)';
+      label.innerHTML='<input type="checkbox" id="'+c.id+'" style="width:18px;height:18px;accent-color:#FFCD00"> 🔴 Bolita devolver (atrás)';
       /* insert near low power or at end of labels */
       var low=panel.querySelector('#lowPowerToggle, #pauseLowPower');
       if(low && low.closest('label')){
@@ -16447,7 +16487,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
         if(host && host.closest('label')){
           var lab=document.createElement('label');
           lab.style.cssText='display:flex;align-items:center;gap:8px;margin:8px 0;color:#fff;font-size:12px;cursor:pointer';
-          lab.innerHTML='<input type="checkbox" id="startBackOrb" style="accent-color:#FFCD00"> 🔴 Bolita volver';
+          lab.innerHTML='<input type="checkbox" id="startBackOrb" style="accent-color:#FFCD00"> 🔴 Bolita devolver';
           host.closest('label').parentNode.insertBefore(lab, host.closest('label').nextSibling);
         }
       }
@@ -16529,6 +16569,85 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
 </script>
 
 
+
+<style id="tech-orb-color-swatches">
+/* Swatches de color de la bolita volver: siempre visibles */
+.tech-orb-colors{
+  margin:12px 0 8px !important;
+  padding:10px 12px !important;
+  border-radius:12px !important;
+  border:1px solid rgba(255,255,255,.15) !important;
+  background:rgba(0,0,0,.35) !important;
+  text-align:left !important;
+}
+.tech-orb-colors .tech-orb-colors-label{
+  color:#fff !important;
+  -webkit-text-fill-color:#fff !important;
+  font-size:12px !important;
+  font-weight:700 !important;
+  margin:0 0 10px !important;
+  letter-spacing:.3px;
+}
+.tech-orb-colors .tech-orb-swatch-row{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:10px !important;
+  align-items:center !important;
+}
+button[data-orb-color],
+.tech-orb-colors button[data-orb-color],
+.game-panel button[data-orb-color],
+#configPanel button[data-orb-color],
+#pausePanel button[data-orb-color]{
+  width:34px !important;
+  height:34px !important;
+  min-width:34px !important;
+  min-height:34px !important;
+  padding:0 !important;
+  border-radius:50% !important;
+  border:2px solid rgba(255,255,255,.55) !important;
+  cursor:pointer !important;
+  box-shadow:0 0 10px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.35) !important;
+  filter:none !important;
+  opacity:1 !important;
+  transform:none !important;
+  color:transparent !important;
+  -webkit-text-fill-color:transparent !important;
+  font-size:0 !important;
+  line-height:0 !important;
+  overflow:hidden !important;
+}
+button[data-orb-color="gold"], .game-panel button[data-orb-color="gold"]{
+  background:radial-gradient(circle at 32% 28%, #fff 0%, #FFE566 22%, #FFCD00 48%, #CE1126 100%) !important;
+}
+button[data-orb-color="cyan"], .game-panel button[data-orb-color="cyan"]{
+  background:radial-gradient(circle at 32% 28%, #fff 0%, #9ff 22%, #00E5FF 48%, #0066aa 100%) !important;
+}
+button[data-orb-color="lime"], .game-panel button[data-orb-color="lime"]{
+  background:radial-gradient(circle at 32% 28%, #fff 0%, #dfff9a 22%, #88FF44 48%, #228800 100%) !important;
+}
+button[data-orb-color="violet"], .game-panel button[data-orb-color="violet"]{
+  background:radial-gradient(circle at 32% 28%, #fff 0%, #e0c0ff 22%, #AA66FF 48%, #5500aa 100%) !important;
+}
+button[data-orb-color="red"], .game-panel button[data-orb-color="red"]{
+  background:radial-gradient(circle at 32% 28%, #fff 0%, #ffb0b8 22%, #FF4455 48%, #990020 100%) !important;
+}
+button[data-orb-color="white"], .game-panel button[data-orb-color="white"]{
+  background:radial-gradient(circle at 32% 28%, #fff 0%, #f0f4ff 35%, #c8d6e8 70%, #8899aa 100%) !important;
+}
+button[data-orb-color].is-active,
+.game-panel button[data-orb-color].is-active{
+  outline:3px solid #FFCD00 !important;
+  outline-offset:2px !important;
+  border-color:#fff !important;
+  box-shadow:0 0 14px rgba(255,205,0,.65), 0 0 0 1px #FFCD00 !important;
+}
+#techBackOrb{
+  /* asegurar que el color inline se vea por encima de reglas genéricas */
+  background-image:none;
+}
+</style>
+
 <script type="text/plain" data-tech-defer="1" id="tech-back-orb-color">
 (function(){
   'use strict';
@@ -16549,9 +16668,14 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
     if(!PRESETS[name]) name='gold';
     try{ localStorage.setItem(LS_COLOR, name); }catch(e){}
     var btn=document.getElementById('techBackOrb');
-    if(btn) btn.style.background=PRESETS[name];
+    if(btn){
+      btn.style.setProperty('background', PRESETS[name], 'important');
+      btn.style.setProperty('background-image', PRESETS[name], 'important');
+    }
     document.querySelectorAll('[data-orb-color]').forEach(function(el){
-      el.style.outline = (el.getAttribute('data-orb-color')===name) ? '2px solid #FFCD00' : '2px solid transparent';
+      var on = el.getAttribute('data-orb-color')===name;
+      el.classList.toggle('is-active', on);
+      el.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
   }
   window.techBackOrbSetColor=applyColor;
@@ -16565,11 +16689,11 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
       var wrap=document.createElement('div');
       wrap.className='tech-orb-colors';
       wrap.style.cssText='margin:10px 0 6px;text-align:left';
-      wrap.innerHTML='<div style="color:#c8d6e8;font-size:12px;margin-bottom:6px">🎨 Color bolita volver</div>'+
-        '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">'+
+      wrap.innerHTML='<div class="tech-orb-colors-label">🎨 Color de devolver</div>'+
+        '<div class="tech-orb-swatch-row">'+
         Object.keys(PRESETS).map(function(k){
-          var bg=PRESETS[k];
-          return '<button type="button" data-orb-color="'+k+'" title="'+k+'" style="width:28px;height:28px;border-radius:50%;border:none;cursor:pointer;background:'+bg+';box-shadow:0 0 8px rgba(0,0,0,.4)"></button>';
+          var labels={gold:'Dorado',cyan:'Cian',lime:'Lima',violet:'Violeta',red:'Rojo',white:'Blanco'};
+          return '<button type="button" data-orb-color="'+k+'" title="'+(labels[k]||k)+'" aria-label="Color devolver '+(labels[k]||k)+'"></button>';
         }).join('')+
         '</div>';
       var anchor=panel.querySelector('#cfgBackOrb, #pauseBackOrb');
