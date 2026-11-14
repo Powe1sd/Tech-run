@@ -213,8 +213,8 @@ body::before{content:"";position:fixed;width:100%;height:200%;background-image:r
 .flag-label{text-align:center;color:#FFCD00;font-size:.75rem;letter-spacing:2px;opacity:.85;margin-bottom:4px}
 .flag-label{font-size:.7rem;color:#CE1126;margin-top:5px}
 .triangle-container{display:flex;justify-content:center;align-items:center;padding:12px 0 4px}
-.mini-triangle{width:0;height:0;border-top:9px solid transparent;border-bottom:9px solid transparent;border-left:16px solid #CE1126;animation:colorCycle 3s infinite linear;will-change:border-left-color,filter}
-@keyframes colorCycle{0%{border-left-color:#CE1126;filter:drop-shadow(0 0 12px #CE1126)}25%{border-left-color:#FFCD00;filter:drop-shadow(0 0 12px #FFCD00)}50%{border-left-color:#0038A8;filter:drop-shadow(0 0 12px #0038A8)}75%{border-left-color:#00A0E9;filter:drop-shadow(0 0 12px #00A0E9)}100%{border-left-color:#CE1126;filter:drop-shadow(0 0 12px #CE1126)}}
+.mini-triangle{width:0;height:0;border-top:9px solid transparent;border-bottom:9px solid transparent;border-left:16px solid #CE1126;animation:colorCycle 4s infinite linear;will-change:border-left-color;transform:translateZ(0)}
+@keyframes colorCycle{0%{border-left-color:#CE1126}25%{border-left-color:#FFCD00}50%{border-left-color:#0038A8}75%{border-left-color:#00A0E9}100%{border-left-color:#CE1126}}
 .floating-name{position:fixed;bottom:12px;right:14px;font-size:.8rem;color:#CE1126;z-index:50}
 @media(max-width:600px){.tech-game-section{padding:0 10px;margin-top:4px}.tech-game{height:min(78vh,520px);min-height:420px}.game-top{left:42px;right:140px;top:8px}.game-title{font-size:10px}.game-score{font-size:11px;text-align:left}.game-score span{font-size:12px}.game-help{font-size:9px}.game-panel{width:94%;max-width:94%;padding:14px 12px;max-height:95%}.game-panel h2{font-size:22px}.cyber-hero h1{font-size:1.7rem}}
 
@@ -509,7 +509,7 @@ body::before{content:"";position:fixed;width:100%;height:200%;background-image:r
     background: none !important;
     content: none !important;
   }
-  .mini-triangle { animation: colorCycle 3s infinite linear !important; }
+  .mini-triangle { animation: colorCycle 4s infinite linear !important; filter:none !important; }
   * { scroll-behavior: auto !important; }
   .game-panel, .game-panel * {
     backdrop-filter: none !important;
@@ -1843,7 +1843,7 @@ select,textarea{
   font-family:var(--font-ui) !important;
   font-size:.86rem !important;
 }
-.mini-triangle{filter:drop-shadow(0 0 10px rgba(225,29,58,.45))}
+.mini-triangle{filter:none;box-shadow:none}
 
 /* —— Touch pad —— */
 .touch-pad-inner{
@@ -3130,8 +3130,7 @@ let lowPower=(function(){
   const v=lsGet("techLowPower","");
   if(v==="1")return true;
   if(v==="0")return false;
-  /* Móvil: bajo consumo por defecto = más FPS y menos lag */
-  try{ if(/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent||"")) return true; }catch(e){}
+  /* Por defecto calidad completa (móvil = PC) */
   return false;
 })();
 /* Distancia de cámara / zoom visual: close | standard | far */
@@ -6329,19 +6328,18 @@ function resizeCanvas(force){
   }
   let dpr=window.devicePixelRatio||1;
   if(mobile){
-    /* Alta calidad: más nitidez; bajo: dpr 1 */
+    /* Nitidez similar a PC según calidad */
     try{
       var gfx=(window.techGfxQuality||localStorage.getItem('techGfxQuality')||'high').toLowerCase();
       if(gfx==='high'||gfx==='alto'){
-        /* En móviles priorizamos estabilidad: evitar renderizar a 1.3x en pantallas densas. */
-        dpr=Math.min(Math.max(window.devicePixelRatio||1,1),1.05);
+        dpr=Math.min(Math.max(window.devicePixelRatio||1,1),2);
       } else if(gfx==='medium'||gfx==='medio'){
-        dpr=1;
+        dpr=Math.min(Math.max(window.devicePixelRatio||1,1),1.5);
       } else {
         dpr=1;
         if(typeof lowPower!=='undefined') lowPower=true;
       }
-    }catch(e){ dpr=1; }
+    }catch(e){ dpr=Math.min(window.devicePixelRatio||1,1.5); }
   }
   else dpr=Math.min(Math.max(dpr,1), lowPower?1.25:2);
   const w=Math.max(1,Math.floor(cssW*dpr));
@@ -6354,8 +6352,9 @@ function resizeCanvas(force){
   canvas.style.height=cssH+"px";
   _lastCanvasCssW=cssW; _lastCanvasCssH=cssH;
   try{
-    ctx.imageSmoothingEnabled=!mobile;
-    if(!mobile) ctx.imageSmoothingQuality=(typeof lowPower!=="undefined"&&lowPower)?"low":"high";
+    // Suavizado moderado: nítido sin pixelado extremo
+    ctx.imageSmoothingEnabled=true;
+    ctx.imageSmoothingQuality=(typeof lowPower!=="undefined"&&lowPower)?"low":"high";
   }catch(e){}
   const baseShip=12.1*((typeof getViewMult==="function")?getViewMult():1);
   player.size=Math.max(9,Math.min(22,baseShip*Math.min(1.15,(canvas.clientWidth||400)/400*((canvas.clientWidth>0)?(canvas.width/canvas.clientWidth):1))));
@@ -7364,16 +7363,15 @@ function createExplosion(x,y,size,color){
   for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=1+Math.random()*2;explosions.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,size:1.5+Math.random()*2,opacity:1,color:color||(Math.random()>.5?"255,80,40":"255,200,50")})}
 }
 
-/* Suelta un poder al azar (máx. pocos en pantalla) */
+/* Suelta un poder al azar (más frecuentes, más en pantalla) */
 function maybeSpawnPickup(x,y){
-  /* Poderes en TODOS los mundos (1–14), sin filtro por escenario */
-  if(pickups.length>=(isMobile()?2:4))return;
+  /* Poderes en TODOS los mundos, sin filtro por escenario */
+  if(pickups.length>=(isMobile()?6:8))return;
   const r=Math.random(),s=16*getScale();
-  if(r<.10){pickups.push({x,y,type:"coin",size:s*0.9,vy:1.4,value:5+Math.floor(Math.random()*10)});return}
-  /* pool de poderes especiales (hammer, chrono, barrier, stormbolt, bazooka, etc.) */
-  if(r<.72){
-    /* L y ┘ ponderados: aparecen con más frecuencia */
-    const pool=["ammo","hammer","shield","bounce","missile","allies","overdrive","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","invisible","drone","barrier","stormbolt","bazooka","vortex","ion","orbmine","vacuum","railgun","redL","redL","redL","clone","tractor","kinetic","clean_pulse"];
+  if(r<.08){pickups.push({x,y,type:"coin",size:s*0.9,vy:1.4,value:5+Math.floor(Math.random()*10)});return}
+  /* Alta probabilidad de poder especial */
+  if(r<.92){
+    const pool=["ammo","ammo","hammer","shield","shield","bounce","missile","allies","overdrive","reflect","burst","repair","life","laser","laser","laser","bomb","invisible","invisible","drone","barrier","stormbolt","bazooka","vortex","ion","orbmine","vacuum","railgun","redL","redL","redL","clone","tractor","kinetic","clean_pulse","hammer","missile","drone","barrier"];
     const type=pool[Math.floor(Math.random()*pool.length)];
     pickups.push({x,y,type,size:s,vy:1.5});
   }
@@ -9997,8 +9995,9 @@ function drawMinimap(){
   try{
     if(window.showMinimap===false){try{window.__hudHit.map=null}catch(e){}return;}
     const mob=(typeof isMobile==="function"?isMobile():false)||(canvas.clientWidth||canvas.width)<500;
-    const mw=Math.min(mob?72:108, Math.max(58, canvas.width*0.16));
-    const mh=Math.min(mob?96:138, Math.max(82, canvas.height*0.23));
+    const mw=Math.min(mob?96:112, Math.max(70, canvas.width*0.18));
+    const mh=Math.min(mob?120:142, Math.max(96, canvas.height*0.25));
+    try{ ctx.imageSmoothingEnabled=false; }catch(e){}
     const pad=Math.max(5, Math.min(mob?6:10, canvas.width*0.015));
     const mx=Math.max(pad, Math.min(canvas.width-mw-pad, canvas.width-mw-pad));
     const my=Math.max(pad, Math.min(canvas.height-mh-pad, pad+(mob?28:30)));
@@ -10007,9 +10006,9 @@ function drawMinimap(){
     const scaleY=mh/Math.max(1,canvas.height);
     /* fondo más transparente para ver poderes detrás */
     ctx.save();
-    ctx.globalAlpha=0.42;
-    ctx.fillStyle="rgba(0,8,20,.55)";
-    ctx.strokeStyle="rgba(255,205,0,.35)";
+    ctx.globalAlpha=0.72;
+    ctx.fillStyle="rgba(0,10,24,.82)";
+    ctx.strokeStyle="rgba(255,205,0,.55)";
     ctx.lineWidth=1.2;
     ctx.beginPath();
     if(ctx.roundRect){ctx.roundRect(mx,my,mw,mh,6)}else{ctx.rect(mx,my,mw,mh)}
@@ -10114,31 +10113,10 @@ function drawSpaceBG(){
   const t=performance.now();
   const w=selectedWorld||1;
   const mobile=(typeof isMobile==="function"&&isMobile())||false;
+  // Mundos iguales en móvil y PC: solo 'low' reduce capas
   const lite=!!lowPower || ((window.techGfxQuality||'high')==='low');
-  if(mobile){
-    const colors={1:'#050b1a',2:'#081428',3:'#120808',4:'#0a1020',5:'#100818',6:'#061018',7:'#0c1408',8:'#080818',9:'#041420',10:'#1a1408',11:'#0a1020',12:'#061428',13:'#180800',14:'#100818',15:'#1a0800',16:'#140400',17:'#120810',18:'#1a0a00',19:'#140000',20:'#0a0c10',21:'#081018',22:'#0a0808',23:'#100820',24:'#060810',25:'#071a28',26:'#0c1018',27:'#020208',28:'#0a0420',29:'#140404'};
-    ctx.fillStyle=colors[w]||'#050b1a';
-    ctx.fillRect(0,0,W,H);
-    if(typeof starsBG!=='undefined'&&starsBG.length){
-      const maxS=Math.min(starsBG.length,3);
-      for(let i=0;i<maxS;i++){
-        const st=starsBG[i];
-        st.y+=st.sp; if(st.y>H){st.y=-2;st.x=Math.random()*W}
-        ctx.fillStyle='rgba(200,220,255,'+(st.a*.8)+')';
-        ctx.fillRect(st.x|0,st.y|0,1,1);
-      }
-    }
-    if(typeof scenarioTransition!=='undefined'&&scenarioTransition>0){
-      scenarioTransition--;
-      const a=Math.min(1,scenarioTransition/60);
-      ctx.fillStyle='rgba(255,205,0,'+(a*.9)+')';
-      ctx.font='bold 14px Orbitron';ctx.textAlign='center';
-      ctx.fillText(typeof scenarioMsg!=='undefined'?scenarioMsg:'',W/2,H/2);
-    }
-    return;
-  }
-  const nStar=lite?6:22;
-  const nFx=lite?3:14;
+  const nStar=lite?10:22;
+  const nFx=lite?6:14;
 
   // ——— helpers de capas ———
   function baseGradient(c0,c1,c2){
