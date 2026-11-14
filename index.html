@@ -5710,6 +5710,17 @@ if(startPanel&&!document.getElementById("startExtras")){
     const rank=getRanking().map((r,i)=>(i+1)+". "+r.score).join(" · ")||"Sin récords aún";
     const ach=Object.values(getAchievements()).map(a=>a.title).slice(0,6).join(", ")||"—";
     const histHtml=formatMatchHistoryHtml(20);
+    let __keepStartTab='nave';
+    try{
+      const cur=(box && box.getAttribute('data-tab'))||'';
+      if(cur==='mundo'||cur==='nave'||cur==='extra') __keepStartTab=cur;
+      else {
+        const saved=localStorage.getItem('techStartTab');
+        if(saved==='mundo'||saved==='nave'||saved==='extra') __keepStartTab=saved;
+      }
+    }catch(e){}
+    // Reset clasificación de pestañas (contenido nuevo)
+    try{ box.__tabsClassified=false; }catch(e){}
     box.innerHTML=`
 
     <div class="diff-btns">
@@ -5796,7 +5807,7 @@ if(startPanel&&!document.getElementById("startExtras")){
       <button type="button" data-world="2" class="${selectedWorld===2?"active":""}">2 Nieve</button>
       <button type="button" data-world="3" class="${selectedWorld===3?"active":""}">3 Fuego</button>
       <button type="button" data-world="4" class="${selectedWorld===4?"active":""}">4 Cristal</button>
-      <button type="button" data-world="5" class="${selectedWorld===5?"active":""}">5 Halloween</button>
+      <button type="button" data-world="5" class="${selectedWorld===5?"active":""}">5 🌲 Bosque</button>
       <button type="button" data-world="6" class="${selectedWorld===6?"active":""}">6 Neón</button>
       <button type="button" data-world="7" class="${selectedWorld===7?"active":""}">7 Tóxico</button>
       <button type="button" data-world="8" class="${selectedWorld===8?"active":""}">8 Vacío</button>
@@ -6036,7 +6047,17 @@ if(startPanel&&!document.getElementById("startExtras")){
       sni.onclick=e=>e.stopPropagation();
     }
     box.querySelectorAll("[data-world]").forEach(b=>b.onclick=()=>{
-      selectedWorld=Number(b.getAttribute("data-world"))||1;lsSet("techWorld",selectedWorld);renderStart();
+      selectedWorld=Number(b.getAttribute("data-world"))||1;
+      lsSet("techWorld",selectedWorld);
+      // Mantener la pestaña actual: solo marcar activo, sin re-render del menú
+      try{
+        document.querySelectorAll("[data-world]").forEach(x=>{
+          const on=Number(x.getAttribute("data-world"))===selectedWorld;
+          x.classList.toggle("active", on);
+          x.setAttribute("aria-pressed", on?"true":"false");
+        });
+      }catch(e){}
+      try{if(typeof setWorldAmbient==="function")setWorldAmbient(selectedWorld)}catch(e){}
     });
     const countrySelect=box.querySelector("#techCountrySelect");
     const chooseCountryFlag=(rawCode)=>{
@@ -6110,6 +6131,14 @@ if(startPanel&&!document.getElementById("startExtras")){
       phase=d.phase||"meteors";phaseTimer=d.phaseTimer||0;meteorsDestroyed=d.meteorsDestroyed||0;shipsDestroyed=d.shipsDestroyed||0;
       if(scoreElement)scoreElement.textContent=score;updateLivesUI();
     };
+    // Reclasificar pestañas y restaurar la que el usuario tenía (no saltar a otra)
+    try{
+      if(typeof window.techRefreshStartTabs==='function'){
+        window.techRefreshStartTabs(__keepStartTab||'nave');
+      } else {
+        try{ box.setAttribute('data-tab', __keepStartTab||'nave'); }catch(e){}
+      }
+    }catch(e){}
   }
   window.techRefreshStartMenu = renderStart;
   renderStart();
@@ -6838,10 +6867,10 @@ function spawnShipWave(){
   if(waveCount>=3||scenario>=3)poolTop.push("bigship","hunter","kamikaze","armored","missile_ship","elite_sniper","shield_bearer");
   if(scenario>=3)poolTop.push("sniper","teleport","bigship","turret","strafer","necrophage","disruptor");
   if(waveCount>=4)poolTop.push("bomber","armored","missile_ship","drone","swarm_queen","elite_sniper");
-  /* Mundo Halloween: pocos fantasmas/calabazas (rendimiento) */
+  /* Mundo Bosque: enemigos más ligeros / orgánicos */
   if((selectedWorld===5||scenario===5)){
-    poolTop=["ghost","pumpkin","ghost"];
-    if(waveCount>=3)poolTop.push("pumpkin");
+    poolTop=["drone","hunter","drone","ship"];
+    if(waveCount>=3)poolTop.push("strafer","parasite");
   }
   for(let i=0;i<nTop;i++)setTimeout(()=>{
     if(!gameRunning||gamePaused||phase!=="ships")return;
@@ -7507,7 +7536,7 @@ function formatMatchDate(ts){
   }catch(e){return "—"}
 }
 function worldNameHist(w){
-  const n={1:"Espacio",2:"Nieve",3:"Fuego",4:"Cristal",5:"Halloween",6:"Neón",7:"Tóxico",8:"Vacío",9:"Océano",10:"Desierto",11:"Tormenta",12:"Aurora",13:"Volcán",14:"Glitch",15:"Ráfagas de lava",16:"Fuego eterno",17:"Pirotecnia",18:"Infierno solar",19:"Núcleo magma",20:"Luna",21:"Hielo",22:"Desolación",23:"Otra dimensión",24:"Lluvia",25:"Tierra",26:"Plutón",27:"Abismo",28:"Dimensión 1",29:"Inframundo"};
+  const n={1:"Espacio",2:"Nieve",3:"Fuego",4:"Cristal",5:"Bosque",6:"Neón",7:"Tóxico",8:"Vacío",9:"Océano",10:"Desierto",11:"Tormenta",12:"Aurora",13:"Volcán",14:"Glitch",15:"Ráfagas de lava",16:"Fuego eterno",17:"Pirotecnia",18:"Infierno solar",19:"Núcleo magma",20:"Luna",21:"Hielo",22:"Desolación",23:"Otra dimensión",24:"Lluvia",25:"Tierra",26:"Plutón",27:"Abismo",28:"Dimensión 1",29:"Inframundo"};
   return n[w]||("M"+w);
 }
 function formatMatchHistoryHtml(limit){
@@ -8357,7 +8386,7 @@ function teleportWorld(){
   selectedWorld=next;
   lsSet("techWorld",selectedWorld);
   scenario=selectedWorld;
-  const names={1:"ESPACIO",2:"NIEVE",3:"FUEGO",4:"CRISTAL",5:"HALLOWEEN",6:"NEÓN",7:"TÓXICO",8:"VACÍO",9:"OCÉANO",10:"DESIERTO",11:"TORMENTA",12:"AURORA",13:"VOLCÁN",14:"GLITCH",15:"RÁFAGAS DE LAVA",16:"FUEGO ETERNO",17:"PIROTECNIA",18:"INFIERNO SOLAR",19:"NÚCLEO MAGMA",20:"LUNA",21:"HIELO",22:"DESOLACIÓN",23:"OTRA DIMENSIÓN",24:"LLUVIA",25:"TIERRA",26:"PLUTÓN",27:"ABISMO",28:"DIMENSIÓN 1",29:"INFRAMUNDO"};
+  const names={1:"ESPACIO",2:"NIEVE",3:"FUEGO",4:"CRISTAL",5:"BOSQUE",6:"NEÓN",7:"TÓXICO",8:"VACÍO",9:"OCÉANO",10:"DESIERTO",11:"TORMENTA",12:"AURORA",13:"VOLCÁN",14:"GLITCH",15:"RÁFAGAS DE LAVA",16:"FUEGO ETERNO",17:"PIROTECNIA",18:"INFIERNO SOLAR",19:"NÚCLEO MAGMA",20:"LUNA",21:"HIELO",22:"DESOLACIÓN",23:"OTRA DIMENSIÓN",24:"LLUVIA",25:"TIERRA",26:"PLUTÓN",27:"ABISMO",28:"DIMENSIÓN 1",29:"INFRAMUNDO"};
   scenarioMsg="🌍 TELEPORTE → "+(names[selectedWorld]||("MUNDO "+selectedWorld));
   try{if(typeof setWorldAmbient==="function")setWorldAmbient(selectedWorld)}catch(e){}
   scenarioTransition=100;
@@ -10240,27 +10269,32 @@ function drawSpaceBG(){
     if(!lite)dustLayer(nFx,.03,"180,160,255",.8);
     vignette(.32);
   } else if(w===5){
-    /* HALLOWEEN */
-    baseGradient("#070308","#120800","#0a0400");
-    nebula(W*.5,H*.3,W*.5,"rgba(80,30,0,A)",.1);
-    // luna + cráter
-    const mx=W*.84, my=H*.13, mr=mobile?13:24;
-    const moon=ctx.createRadialGradient(mx-mr*.3,my-mr*.3,2,mx,my,mr);
-    moon.addColorStop(0,"rgba(255,240,200,.55)");moon.addColorStop(1,"rgba(255,200,120,.15)");
-    ctx.fillStyle=moon;ctx.beginPath();ctx.arc(mx,my,mr,0,Math.PI*2);ctx.fill();
+    /* BOSQUE */
+    baseGradient("#020a04","#0a1c0c","#061408");
+    nebula(W*.4,H*.35,W*.45,"rgba(40,120,50,A)",.12);
+    nebula(W*.75,H*.55,W*.35,"rgba(20,80,40,A)",.08);
     if(!lite){
-      ctx.fillStyle="rgba(20,10,5,.25)";
-      ctx.beginPath();ctx.arc(mx+mr*.25,my+mr*.1,mr*.22,0,Math.PI*2);ctx.fill();
-      // silueta suelo
-      ctx.fillStyle="rgba(12,6,2,.5)";
-      ctx.beginPath();ctx.moveTo(0,H*.88);
-      for(let x=0;x<=W;x+=40)ctx.lineTo(x,H*.88-Math.sin(x*.02+t/2000)*8-(x%80===0?12:0));
+      // copas / silueta de árboles
+      ctx.fillStyle="rgba(8,28,12,.72)";
+      ctx.beginPath();ctx.moveTo(0,H*.9);
+      for(let x=0;x<=W;x+=28){
+        const h=18+(x*13%30);
+        ctx.lineTo(x,H*.9-h);
+        ctx.lineTo(x+10,H*.9-h*0.45);
+      }
       ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.fill();
+      // luciérnagas
+      for(let i=0;i<nFx;i++){
+        const x=(i*67+Math.sin(t/700+i)*20+W)%W;
+        const y=H*0.35+(i*37+Math.cos(t/900+i)*30)%(H*0.45);
+        ctx.fillStyle="rgba(180,255,120,"+(0.25+(i%3)*0.12)+")";
+        ctx.beginPath();ctx.arc(x,y,1.2+(i%2),0,Math.PI*2);ctx.fill();
+      }
     } else {
-      ctx.fillStyle="rgba(15,8,4,.4)";ctx.fillRect(0,H*.9,W,H*.1);
+      ctx.fillStyle="rgba(10,30,14,.45)";ctx.fillRect(0,H*.88,W,H*.12);
     }
-    farStars("255,210,150");
-    vignette(.4);
+    farStars("160,255,180");
+    vignette(.34);
   } else if(w===6){
     /* NEÓN */
     baseGradient("#040010","#0a0024","#001018");
@@ -11829,26 +11863,26 @@ function storyOnWaveComplete(){
 /* === Parche final i18n: traducción completa del menú de inicio y textos dinámicos === */
 (function(){
   const LANGS = {
-    es:{label:'Idioma',choose:'Elige dificultad y nave · Desliza para ver más',start:'🚀 Iniciar',easy:'Fácil',normal:'NORMAL',hard:'Difícil',mode:'Modo de juego',classic:'Clásico',infinite:'Infinito',infiniteDesc:'Infinito: oleadas interminables, sin jefes; la velocidad y la dificultad aumentan con cada oleada.',upgrades:'Mejoras permanentes',speed:'Velocidad',ammo:'Munición',lives:'Vidas',damage:'Daño',world:'Mundo',space:'Espacio',snow:'Nieve',fire:'Fuego',crystal:'Cristal',halloween:'Halloween',neon:'Neón',toxic:'Tóxico',void:'Vacío',selectShip:'Seleccionar nave',allShips:'Todas las naves',scroll:'◀ ▶ o desliza · o elige abajo',max:'Máx. 10 letras · se ve en la nave',color:'🎨 Color',white:'Blanca',black:'Negra',gold:'Oro',cyan:'Cian',crimson:'Carmesí',violet:'Violeta',lime:'Lima',steel:'Acero',orange:'Naranja',points:'⭐ Puntos juego:',basic:'Básica',double:'Doble',piercing:'Perfora',spread:'Abanico',bonuses:'Bonos por récord',record:'Récord:',bullets:'balas',life:'vida',agile:'ágil',manual:'📖 Manual de usuario',equipment:'🛡️ Equipamiento',missions:'📋 Misiones diarias',boss:'Derrota de jefes',combo:'Maestro del combo',top:'TOP: Sin récords aún',history:'📜 Historial de partidas',noHistory:'Sin partidas aún. ¡Juega una!',clear:'🗑 Borrar historial',settings:'Ajustes en ⚙ Config (arriba a la izquierda)',continue:'💾 Continuar partida',story:'📖 Modo historia',controls:'⌨️ Flechas · Espacio · 🎮 Mando · ⚙ Config · Pausa',shown:'se ve en la nave'},
-    en:{label:'Language',choose:'Choose difficulty and ship · Scroll for more',start:'🚀 Start',easy:'Easy',normal:'NORMAL',hard:'Hard',mode:'Game mode',classic:'Classic',infinite:'Infinite',infiniteDesc:'Infinite: endless waves, no bosses; speed and difficulty rise with each wave.',upgrades:'Permanent upgrades',speed:'Speed',ammo:'Ammo',lives:'Lives',damage:'Damage',world:'World',space:'Space',snow:'Snow',fire:'Fire',crystal:'Crystal',halloween:'Halloween',neon:'Neon',toxic:'Toxic',void:'Void',selectShip:'Select ship',allShips:'All ships',scroll:'◀ ▶ or swipe · or choose below',max:'Max. 10 characters · shown on the ship',color:'🎨 Color',white:'White',black:'Black',gold:'Gold',cyan:'Cyan',crimson:'Crimson',violet:'Violet',lime:'Lime',steel:'Steel',orange:'Orange',points:'⭐ Game points:',basic:'Basic',double:'Double',piercing:'Piercing',spread:'Spread',bonuses:'Record bonuses',record:'Record:',bullets:'bullets',life:'life',agile:'agile',manual:'📖 User manual',equipment:'🛡️ Equipment',missions:'📋 Daily missions',boss:'Boss hunter',combo:'Combo master',top:'TOP: No records yet',history:'📜 Match history',noHistory:'No matches yet. Play one!',clear:'🗑 Clear history',settings:'Settings in ⚙ Config (top left)',continue:'💾 Continue game',story:'📖 Story mode',controls:'⌨️ Arrows · Space · 🎮 Gamepad · ⚙ Settings · Pause',shown:'shown on the ship'},
-    fr:{label:'Langue',choose:'Choisissez la difficulté et le vaisseau · Faites défiler',start:'🚀 Démarrer',easy:'FACILE',normal:'NORMAL',hard:'DIFFICILE',mode:'Mode de jeu',classic:'Classique',infinite:'Infini',infiniteDesc:'Infini : vagues sans fin sans boss, difficulté croissante',upgrades:'Améliorations permanentes',speed:'Vitesse',ammo:'Munitions',lives:'Vies',damage:'Dégâts',world:'Monde',space:'Espace',snow:'Neige',fire:'Feu',crystal:'Cristal',halloween:'Halloween',neon:'Néon',toxic:'Toxique',void:'Vide',selectShip:'Choisir un vaisseau',allShips:'Tous les vaisseaux',scroll:'◀ ▶ ou glissez · ou choisissez ci-dessous',max:'10 caractères max. · visible sur le vaisseau',color:'🎨 Couleur',white:'Blanche',black:'Noire',gold:'Or',cyan:'Cyan',crimson:'Cramoisi',violet:'Violet',lime:'Vert citron',steel:'Acier',orange:'Orange',points:'⭐ Points de jeu :',basic:'Basique',double:'Double',piercing:'Perforant',spread:'Éventail',bonuses:'Bonus de record',record:'Record :',bullets:'balles',life:'vie',agile:'agile',manual:'📖 Manuel utilisateur',equipment:'🛡️ Équipement',missions:'📋 Missions quotidiennes',boss:'Chasseur de boss',combo:'Maître du combo',top:'TOP : aucun record',history:'📜 Historique des parties',noHistory:'Aucune partie. Jouez-en une !',clear:'🗑 Effacer l’historique',settings:'Réglages dans ⚙ Config (en haut à gauche)',continue:'💾 Continuer la partie',story:'📖 Mode histoire',controls:'⌨️ Flèches · Espace · 🎮 Manette · ⚙ Réglages · Pause',shown:'visible sur le vaisseau'},
+    es:{label:'Idioma',choose:'Elige dificultad y nave · Desliza para ver más',start:'🚀 Iniciar',easy:'Fácil',normal:'NORMAL',hard:'Difícil',mode:'Modo de juego',classic:'Clásico',infinite:'Infinito',infiniteDesc:'Infinito: oleadas interminables, sin jefes; la velocidad y la dificultad aumentan con cada oleada.',upgrades:'Mejoras permanentes',speed:'Velocidad',ammo:'Munición',lives:'Vidas',damage:'Daño',world:'Mundo',space:'Espacio',snow:'Nieve',fire:'Fuego',crystal:'Cristal',halloween:'Bosque',neon:'Neón',toxic:'Tóxico',void:'Vacío',selectShip:'Seleccionar nave',allShips:'Todas las naves',scroll:'◀ ▶ o desliza · o elige abajo',max:'Máx. 10 letras · se ve en la nave',color:'🎨 Color',white:'Blanca',black:'Negra',gold:'Oro',cyan:'Cian',crimson:'Carmesí',violet:'Violeta',lime:'Lima',steel:'Acero',orange:'Naranja',points:'⭐ Puntos juego:',basic:'Básica',double:'Doble',piercing:'Perfora',spread:'Abanico',bonuses:'Bonos por récord',record:'Récord:',bullets:'balas',life:'vida',agile:'ágil',manual:'📖 Manual de usuario',equipment:'🛡️ Equipamiento',missions:'📋 Misiones diarias',boss:'Derrota de jefes',combo:'Maestro del combo',top:'TOP: Sin récords aún',history:'📜 Historial de partidas',noHistory:'Sin partidas aún. ¡Juega una!',clear:'🗑 Borrar historial',settings:'Ajustes en ⚙ Config (arriba a la izquierda)',continue:'💾 Continuar partida',story:'📖 Modo historia',controls:'⌨️ Flechas · Espacio · 🎮 Mando · ⚙ Config · Pausa',shown:'se ve en la nave'},
+    en:{label:'Language',choose:'Choose difficulty and ship · Scroll for more',start:'🚀 Start',easy:'Easy',normal:'NORMAL',hard:'Hard',mode:'Game mode',classic:'Classic',infinite:'Infinite',infiniteDesc:'Infinite: endless waves, no bosses; speed and difficulty rise with each wave.',upgrades:'Permanent upgrades',speed:'Speed',ammo:'Ammo',lives:'Lives',damage:'Damage',world:'World',space:'Space',snow:'Snow',fire:'Fire',crystal:'Crystal',halloween:'Bosque',neon:'Neon',toxic:'Toxic',void:'Void',selectShip:'Select ship',allShips:'All ships',scroll:'◀ ▶ or swipe · or choose below',max:'Max. 10 characters · shown on the ship',color:'🎨 Color',white:'White',black:'Black',gold:'Gold',cyan:'Cyan',crimson:'Crimson',violet:'Violet',lime:'Lime',steel:'Steel',orange:'Orange',points:'⭐ Game points:',basic:'Basic',double:'Double',piercing:'Piercing',spread:'Spread',bonuses:'Record bonuses',record:'Record:',bullets:'bullets',life:'life',agile:'agile',manual:'📖 User manual',equipment:'🛡️ Equipment',missions:'📋 Daily missions',boss:'Boss hunter',combo:'Combo master',top:'TOP: No records yet',history:'📜 Match history',noHistory:'No matches yet. Play one!',clear:'🗑 Clear history',settings:'Settings in ⚙ Config (top left)',continue:'💾 Continue game',story:'📖 Story mode',controls:'⌨️ Arrows · Space · 🎮 Gamepad · ⚙ Settings · Pause',shown:'shown on the ship'},
+    fr:{label:'Langue',choose:'Choisissez la difficulté et le vaisseau · Faites défiler',start:'🚀 Démarrer',easy:'FACILE',normal:'NORMAL',hard:'DIFFICILE',mode:'Mode de jeu',classic:'Classique',infinite:'Infini',infiniteDesc:'Infini : vagues sans fin sans boss, difficulté croissante',upgrades:'Améliorations permanentes',speed:'Vitesse',ammo:'Munitions',lives:'Vies',damage:'Dégâts',world:'Monde',space:'Espace',snow:'Neige',fire:'Feu',crystal:'Cristal',halloween:'Bosque',neon:'Néon',toxic:'Toxique',void:'Vide',selectShip:'Choisir un vaisseau',allShips:'Tous les vaisseaux',scroll:'◀ ▶ ou glissez · ou choisissez ci-dessous',max:'10 caractères max. · visible sur le vaisseau',color:'🎨 Couleur',white:'Blanche',black:'Noire',gold:'Or',cyan:'Cyan',crimson:'Cramoisi',violet:'Violet',lime:'Vert citron',steel:'Acier',orange:'Orange',points:'⭐ Points de jeu :',basic:'Basique',double:'Double',piercing:'Perforant',spread:'Éventail',bonuses:'Bonus de record',record:'Record :',bullets:'balles',life:'vie',agile:'agile',manual:'📖 Manuel utilisateur',equipment:'🛡️ Équipement',missions:'📋 Missions quotidiennes',boss:'Chasseur de boss',combo:'Maître du combo',top:'TOP : aucun record',history:'📜 Historique des parties',noHistory:'Aucune partie. Jouez-en une !',clear:'🗑 Effacer l’historique',settings:'Réglages dans ⚙ Config (en haut à gauche)',continue:'💾 Continuer la partie',story:'📖 Mode histoire',controls:'⌨️ Flèches · Espace · 🎮 Manette · ⚙ Réglages · Pause',shown:'visible sur le vaisseau'},
     ja:{label:'言語',choose:'難易度と機体を選択 · 下へスクロール',start:'🚀 スタート',easy:'かんたん',normal:'ふつう',hard:'むずかしい',mode:'ゲームモード',classic:'クラシック',infinite:'無限',infiniteDesc:'無限：ボスなしでウェーブが続き、難易度が上がります',upgrades:'恒久アップグレード',speed:'速度',ammo:'弾薬',lives:'ライフ',damage:'ダメージ',world:'世界',space:'宇宙',snow:'雪',fire:'炎',crystal:'クリスタル',halloween:'ハロウィン',neon:'ネオン',toxic:'毒',void:'虚無',selectShip:'機体を選択',allShips:'すべての機体',scroll:'◀ ▶ またはスワイプ・下から選択',max:'最大10文字・機体に表示',color:'🎨 色',white:'白',black:'黒',gold:'金',cyan:'シアン',crimson:'深紅',violet:'紫',lime:'ライム',steel:'スチール',orange:'オレンジ',points:'⭐ ゲームポイント：',basic:'基本',double:'ダブル',piercing:'貫通',spread:'拡散',bonuses:'記録ボーナス',record:'記録：',bullets:'弾',life:'ライフ',agile:'敏捷',manual:'📖 ユーザーマニュアル',equipment:'🛡️ 装備',missions:'📋 デイリーミッション',boss:'ボスハンター',combo:'コンボマスター',top:'TOP：記録なし',history:'📜 プレイ履歴',noHistory:'まだプレイ記録がありません。プレイしましょう！',clear:'🗑 履歴を削除',settings:'設定は左上の ⚙ Config',continue:'💾 ゲームを続ける',story:'📖 ストーリーモード',controls:'⌨️ 矢印 · スペース · 🎮 コントローラー · ⚙ 設定 · 一時停止',shown:'機体に表示'},
     zh:{label:'语言',choose:'选择难度和飞船 · 向下滚动查看更多',start:'🚀 开始',easy:'简单',normal:'普通',hard:'困难',mode:'游戏模式',classic:'经典',infinite:'无限',infiniteDesc:'无限模式：没有首领的连续波次，难度不断提高',upgrades:'永久升级',speed:'速度',ammo:'弹药',lives:'生命',damage:'伤害',world:'世界',space:'太空',snow:'雪地',fire:'火焰',crystal:'水晶',halloween:'万圣节',neon:'霓虹',toxic:'毒域',void:'虚空',selectShip:'选择飞船',allShips:'所有飞船',scroll:'◀ ▶ 或滑动 · 也可在下方选择',max:'最多10个字符·显示在飞船上',color:'🎨 颜色',white:'白色',black:'黑色',gold:'金色',cyan:'青色',crimson:'深红色',violet:'紫色',lime:'青柠绿',steel:'钢色',orange:'橙色',points:'⭐ 游戏积分：',basic:'基础',double:'双发',piercing:'穿透',spread:'散射',bonuses:'纪录奖励',record:'纪录：',bullets:'子弹',life:'生命',agile:'敏捷',manual:'📖 用户手册',equipment:'🛡️ 装备',missions:'📋 每日任务',boss:'首领猎手',combo:'连击大师',top:'TOP：暂无记录',history:'📜 对局记录',noHistory:'还没有对局，来玩一局吧！',clear:'🗑 清除记录',settings:'设置位于左上角 ⚙ Config',continue:'💾 继续游戏',story:'📖 故事模式',controls:'⌨️ 方向键 · 空格 · 🎮 手柄 · ⚙ 设置 · 暂停',shown:'显示在飞船上'}
   };
   Object.assign(LANGS, {
-    pt:{...LANGS.es,label:'Idioma',choose:'Escolha a dificuldade e a nave · Deslize para ver mais',start:'🚀 Iniciar',easy:'Fácil',normal:'NORMAL',hard:'Difícil',mode:'Modo de jogo',classic:'Clássico',infinite:'Infinito',infiniteDesc:'Infinito: ondas sem chefes, dificuldade crescente',upgrades:'Melhorias permanentes',speed:'Velocidade',ammo:'Munição',lives:'Vidas',damage:'Dano',world:'Mundo',space:'Espaço',snow:'Neve',fire:'Fogo',crystal:'Cristal',halloween:'Halloween',neon:'Neon',toxic:'Tóxico',void:'Vazio',selectShip:'Selecionar nave',allShips:'Todas as naves',scroll:'◀ ▶ ou deslize · ou escolha abaixo',max:'Máx. 10 caracteres · aparece na nave',color:'🎨 Cor',white:'Branca',black:'Preta',gold:'Ouro',cyan:'Ciano',crimson:'Carmesim',violet:'Violeta',lime:'Lima',steel:'Aço',orange:'Laranja',points:'⭐ Pontos do jogo:',basic:'Básica',double:'Dupla',piercing:'Perfurante',spread:'Dispersão',bonuses:'Bônus de recorde',record:'Recorde:',bullets:'balas',life:'vida',agile:'ágil',manual:'📖 Manual do usuário',equipment:'🛡️ Equipamento',missions:'📋 Missões diárias',boss:'Caçador de chefes',combo:'Mestre do combo',top:'TOP: Ainda sem recordes',history:'📜 Histórico de partidas',noHistory:'Nenhuma partida ainda. Jogue uma!',clear:'🗑 Limpar histórico',settings:'Configurações em ⚙ Config (canto superior esquerdo)',continue:'💾 Continuar partida',story:'📖 MODO HISTÓRIA',controls:'⌨️ Setas · Espaço · 🎮 Controle · ⚙ Config · Pausa',shown:'aparece na nave'},
-    de:{...LANGS.en,label:'Sprache',choose:'Schwierigkeit und Schiff wählen · Für mehr scrollen',start:'🚀 Start',easy:'EINFACH',normal:'NORMAL',hard:'SCHWER',mode:'Spielmodus',classic:'Klassisch',infinite:'Endlos',infiniteDesc:'Endlos: Wellen ohne Bosse, der Schwierigkeitsgrad steigt ständig',upgrades:'Dauerhafte Verbesserungen',speed:'Geschwindigkeit',ammo:'Munition',lives:'Leben',damage:'Schaden',world:'Welt',space:'Weltraum',snow:'Schnee',fire:'Feuer',crystal:'Kristall',halloween:'Halloween',neon:'Neon',toxic:'Giftig',void:'Leere',selectShip:'Schiff auswählen',allShips:'Alle Schiffe',scroll:'◀ ▶ oder wischen · oder unten auswählen',max:'Max. 10 Zeichen · auf dem Schiff sichtbar',color:'🎨 Farbe',white:'Weiß',black:'Schwarz',gold:'Gold',cyan:'Cyan',crimson:'Karmesinrot',violet:'Violett',lime:'Limette',steel:'Stahl',orange:'Orange',points:'⭐ Spielpunkte:',basic:'Basis',double:'Doppelt',piercing:'Durchschlag',spread:'Streuung',bonuses:'Rekordboni',record:'Rekord:',bullets:'Kugeln',life:'Leben',agile:'agil',manual:'📖 Benutzerhandbuch',equipment:'🛡️ Ausrüstung',missions:'📋 Tagesmissionen',boss:'Bossjäger',combo:'Combo-Meister',top:'TOP: Noch keine Rekorde',history:'📜 Spielverlauf',noHistory:'Noch keine Spiele. Spiele jetzt!',clear:'🗑 Verlauf löschen',settings:'Einstellungen unter ⚙ Config (oben links)',continue:'💾 Spiel fortsetzen',story:'📖 STORY-MODUS',controls:'⌨️ Pfeile · Leertaste · 🎮 Controller · ⚙ Config · Pause',shown:'auf dem Schiff sichtbar'}
+    pt:{...LANGS.es,label:'Idioma',choose:'Escolha a dificuldade e a nave · Deslize para ver mais',start:'🚀 Iniciar',easy:'Fácil',normal:'NORMAL',hard:'Difícil',mode:'Modo de jogo',classic:'Clássico',infinite:'Infinito',infiniteDesc:'Infinito: ondas sem chefes, dificuldade crescente',upgrades:'Melhorias permanentes',speed:'Velocidade',ammo:'Munição',lives:'Vidas',damage:'Dano',world:'Mundo',space:'Espaço',snow:'Neve',fire:'Fogo',crystal:'Cristal',halloween:'Bosque',neon:'Neon',toxic:'Tóxico',void:'Vazio',selectShip:'Selecionar nave',allShips:'Todas as naves',scroll:'◀ ▶ ou deslize · ou escolha abaixo',max:'Máx. 10 caracteres · aparece na nave',color:'🎨 Cor',white:'Branca',black:'Preta',gold:'Ouro',cyan:'Ciano',crimson:'Carmesim',violet:'Violeta',lime:'Lima',steel:'Aço',orange:'Laranja',points:'⭐ Pontos do jogo:',basic:'Básica',double:'Dupla',piercing:'Perfurante',spread:'Dispersão',bonuses:'Bônus de recorde',record:'Recorde:',bullets:'balas',life:'vida',agile:'ágil',manual:'📖 Manual do usuário',equipment:'🛡️ Equipamento',missions:'📋 Missões diárias',boss:'Caçador de chefes',combo:'Mestre do combo',top:'TOP: Ainda sem recordes',history:'📜 Histórico de partidas',noHistory:'Nenhuma partida ainda. Jogue uma!',clear:'🗑 Limpar histórico',settings:'Configurações em ⚙ Config (canto superior esquerdo)',continue:'💾 Continuar partida',story:'📖 MODO HISTÓRIA',controls:'⌨️ Setas · Espaço · 🎮 Controle · ⚙ Config · Pausa',shown:'aparece na nave'},
+    de:{...LANGS.en,label:'Sprache',choose:'Schwierigkeit und Schiff wählen · Für mehr scrollen',start:'🚀 Start',easy:'EINFACH',normal:'NORMAL',hard:'SCHWER',mode:'Spielmodus',classic:'Klassisch',infinite:'Endlos',infiniteDesc:'Endlos: Wellen ohne Bosse, der Schwierigkeitsgrad steigt ständig',upgrades:'Dauerhafte Verbesserungen',speed:'Geschwindigkeit',ammo:'Munition',lives:'Leben',damage:'Schaden',world:'Welt',space:'Weltraum',snow:'Schnee',fire:'Feuer',crystal:'Kristall',halloween:'Bosque',neon:'Neon',toxic:'Giftig',void:'Leere',selectShip:'Schiff auswählen',allShips:'Alle Schiffe',scroll:'◀ ▶ oder wischen · oder unten auswählen',max:'Max. 10 Zeichen · auf dem Schiff sichtbar',color:'🎨 Farbe',white:'Weiß',black:'Schwarz',gold:'Gold',cyan:'Cyan',crimson:'Karmesinrot',violet:'Violett',lime:'Limette',steel:'Stahl',orange:'Orange',points:'⭐ Spielpunkte:',basic:'Basis',double:'Doppelt',piercing:'Durchschlag',spread:'Streuung',bonuses:'Rekordboni',record:'Rekord:',bullets:'Kugeln',life:'Leben',agile:'agil',manual:'📖 Benutzerhandbuch',equipment:'🛡️ Ausrüstung',missions:'📋 Tagesmissionen',boss:'Bossjäger',combo:'Combo-Meister',top:'TOP: Noch keine Rekorde',history:'📜 Spielverlauf',noHistory:'Noch keine Spiele. Spiele jetzt!',clear:'🗑 Verlauf löschen',settings:'Einstellungen unter ⚙ Config (oben links)',continue:'💾 Spiel fortsetzen',story:'📖 STORY-MODUS',controls:'⌨️ Pfeile · Leertaste · 🎮 Controller · ⚙ Config · Pause',shown:'auf dem Schiff sichtbar'}
   });
   Object.assign(LANGS, {
-    it:{label:'Lingua',choose:'Scegli difficoltà e nave · Scorri per altro',start:'🚀 AVVIA',easy:'FACILE',normal:'NORMALE',hard:'DIFFICILE',mode:'Modalità di gioco',classic:'Classico',infinite:'Infinito',infiniteDesc:'Infinito: ondate senza boss, difficoltà in aumento',upgrades:'Migliorie permanenti',speed:'Velocità',ammo:'Munizioni',lives:'Vite',damage:'Danno',world:'Mondo',space:'Spazio',snow:'Neve',fire:'Fuoco',crystal:'Cristallo',halloween:'Halloween',neon:'Neon',toxic:'Tossico',void:'Vuoto',selectShip:'Seleziona nave',allShips:'Tutte le navi',scroll:'◀ ▶ o scorri · o scegli sotto',max:'Max. 10 caratteri · sulla nave',color:'🎨 Colore',white:'Bianca',black:'Nera',gold:'Oro',cyan:'Ciano',crimson:'Cremisi',violet:'Viola',lime:'Lime',steel:'Acciaio',orange:'Arancio',points:'⭐ Punti gioco:',basic:'Base',double:'Doppio',piercing:'Perforante',spread:'Ventaglio',bonuses:'Bonus record',record:'Record:',bullets:'proiettili',life:'vita',agile:'agile',manual:'📖 Manuale utente',equipment:'🛡️ Equipaggiamento',missions:'📋 Missioni giornaliere',boss:'Cacciatore di boss',combo:'Maestro del combo',top:'TOP: Nessun record',history:'📜 Cronologia partite',noHistory:'Nessuna partita. Giocane una!',clear:'🗑 Cancella cronologia',settings:'Impostazioni in ⚙ Config (in alto a sinistra)',continue:'💾 Continua partita',story:'📖 MODALITÀ STORIA',controls:'⌨️ Frecce · Spazio · 🎮 Pad · ⚙ Config · Pausa',shown:'sulla nave'},
+    it:{label:'Lingua',choose:'Scegli difficoltà e nave · Scorri per altro',start:'🚀 AVVIA',easy:'FACILE',normal:'NORMALE',hard:'DIFFICILE',mode:'Modalità di gioco',classic:'Classico',infinite:'Infinito',infiniteDesc:'Infinito: ondate senza boss, difficoltà in aumento',upgrades:'Migliorie permanenti',speed:'Velocità',ammo:'Munizioni',lives:'Vite',damage:'Danno',world:'Mondo',space:'Spazio',snow:'Neve',fire:'Fuoco',crystal:'Cristallo',halloween:'Bosque',neon:'Neon',toxic:'Tossico',void:'Vuoto',selectShip:'Seleziona nave',allShips:'Tutte le navi',scroll:'◀ ▶ o scorri · o scegli sotto',max:'Max. 10 caratteri · sulla nave',color:'🎨 Colore',white:'Bianca',black:'Nera',gold:'Oro',cyan:'Ciano',crimson:'Cremisi',violet:'Viola',lime:'Lime',steel:'Acciaio',orange:'Arancio',points:'⭐ Punti gioco:',basic:'Base',double:'Doppio',piercing:'Perforante',spread:'Ventaglio',bonuses:'Bonus record',record:'Record:',bullets:'proiettili',life:'vita',agile:'agile',manual:'📖 Manuale utente',equipment:'🛡️ Equipaggiamento',missions:'📋 Missioni giornaliere',boss:'Cacciatore di boss',combo:'Maestro del combo',top:'TOP: Nessun record',history:'📜 Cronologia partite',noHistory:'Nessuna partita. Giocane una!',clear:'🗑 Cancella cronologia',settings:'Impostazioni in ⚙ Config (in alto a sinistra)',continue:'💾 Continua partita',story:'📖 MODALITÀ STORIA',controls:'⌨️ Frecce · Spazio · 🎮 Pad · ⚙ Config · Pausa',shown:'sulla nave'},
     ru:{label:'Язык',choose:'Выберите сложность и корабль',start:'🚀 СТАРТ',easy:'ЛЕГКО',normal:'НОРМА',hard:'СЛОЖНО',mode:'Режим игры',classic:'Классика',infinite:'Бесконечный',infiniteDesc:'Бесконечный: волны без боссов',upgrades:'Постоянные улучшения',speed:'Скорость',ammo:'Боеприпасы',lives:'Жизни',damage:'Урон',world:'Мир',space:'Космос',snow:'Снег',fire:'Огонь',crystal:'Кристалл',halloween:'Хэллоуин',neon:'Неон',toxic:'Токсик',void:'Пустота',selectShip:'Выбрать корабль',allShips:'Все корабли',scroll:'◀ ▶ или свайп',max:'Макс. 10 символов',color:'🎨 Цвет',white:'Белый',black:'Чёрный',gold:'Золото',cyan:'Голубой',crimson:'Алый',violet:'Фиолетовый',lime:'Лайм',steel:'Сталь',orange:'Оранжевый',points:'⭐ Очки:',basic:'Базовый',double:'Двойной',piercing:'Пробивной',spread:'Веер',bonuses:'Бонусы рекорда',record:'Рекорд:',bullets:'пули',life:'жизнь',agile:'ловкий',manual:'📖 Руководство',equipment:'🛡️ Снаряжение',missions:'📋 Ежедневные миссии',boss:'Охотник на боссов',combo:'Мастер комбо',top:'TOP: Нет рекордов',history:'📜 История',noHistory:'Пока нет партий',clear:'🗑 Очистить историю',settings:'Настройки в ⚙ Config',continue:'💾 Продолжить',story:'📖 РЕЖИМ ИСТОРИИ',controls:'⌨️ Стрелки · Пробел · 🎮 · ⚙ · Пауза',shown:'на корабле'},
     ko:{label:'언어',choose:'난이도와 기체 선택',start:'🚀 시작',easy:'쉬움',normal:'보통',hard:'어려움',mode:'게임 모드',classic:'클래식',infinite:'무한',infiniteDesc:'무한: 보스 없이 웨이브 지속',upgrades:'영구 업그레이드',speed:'속도',ammo:'탄약',lives:'생명',damage:'데미지',world:'세계',space:'우주',snow:'눈',fire:'불',crystal:'크리스탈',halloween:'할로윈',neon:'네온',toxic:'독성',void:'공허',selectShip:'기체 선택',allShips:'모든 기체',scroll:'◀ ▶ 또는 스와이프',max:'최대 10자',color:'🎨 색상',white:'흰색',black:'검정',gold:'금색',cyan:'시안',crimson:'진홍',violet:'보라',lime:'라임',steel:'강철',orange:'주황',points:'⭐ 포인트:',basic:'기본',double:'더블',piercing:'관통',spread:'확산',bonuses:'기록 보너스',record:'기록:',bullets:'탄',life:'생명',agile:'민첩',manual:'📖 매뉴얼',equipment:'🛡️ 장비',missions:'📋 일일 미션',boss:'보스 헌터',combo:'콤보 마스터',top:'TOP: 기록 없음',history:'📜 기록',noHistory:'아직 기록이 없습니다',clear:'🗑 기록 삭제',settings:'설정은 ⚙ Config',continue:'💾 이어하기',story:'📖 스토리 모드',controls:'⌨️ 방향키 · 스페이스 · 🎮 · ⚙ · 일시정지',shown:'기체에 표시'},
     ar:{label:'اللغة',choose:'اختر الصعوبة والسفينة',start:'🚀 ابدأ',easy:'سهل',normal:'عادي',hard:'صعب',mode:'وضع اللعب',classic:'كلاسيكي',infinite:'لا نهائي',infiniteDesc:'لا نهائي: موجات بلا زعماء',upgrades:'ترقيات دائمة',speed:'السرعة',ammo:'الذخيرة',lives:'الأرواح',damage:'الضرر',world:'العالم',space:'فضاء',snow:'ثلج',fire:'نار',crystal:'بلور',halloween:'هالوين',neon:'نيون',toxic:'سام',void:'فراغ',selectShip:'اختر سفينة',allShips:'كل السفن',scroll:'◀ ▶ أو اسحب',max:'حد أقصى 10 أحرف',color:'🎨 لون',white:'أبيض',black:'أسود',gold:'ذهبي',cyan:'سماوي',crimson:'قرمزي',violet:'بنفسجي',lime:'ليموني',steel:'فولاذي',orange:'برتقالي',points:'⭐ نقاط:',basic:'أساسي',double:'مزدوج',piercing:'ثاقب',spread:'منتشر',bonuses:'مكافآت الرقم القياسي',record:'رقم قياسي:',bullets:'رصاصات',life:'حياة',agile:'رشيق',manual:'📖 الدليل',equipment:'🛡️ المعدات',missions:'📋 مهام يومية',boss:'صياد الزعماء',combo:'سيد الكومبو',top:'TOP: لا سجلات',history:'📜 السجل',noHistory:'لا مباريات بعد',clear:'🗑 مسح السجل',settings:'الإعدادات في ⚙ Config',continue:'💾 متابعة',story:'📖 وضع القصة',controls:'⌨️ أسهم · مسافة · 🎮 · ⚙ · إيقاف',shown:'على السفينة'},
     hi:{label:'भाषा',choose:'कठिनाई और जहाज चुनें',start:'🚀 शुरू',easy:'आसान',normal:'सामान्य',hard:'कठिन',mode:'गेम मोड',classic:'क्लासिक',infinite:'अनंत',infiniteDesc:'अनंत: बिना बॉस के लहरें',upgrades:'स्थायी अपग्रेड',speed:'गति',ammo:'गोला-बारूद',lives:'लाइव्स',damage:'नुकसान',world:'दुनिया',space:'अंतरिक्ष',snow:'बर्फ',fire:'आग',crystal:'क्रिस्टल',halloween:'हैलोवीन',neon:'नियॉन',toxic:'विषैला',void:'शून्य',selectShip:'जहाज चुनें',allShips:'सभी जहाज',scroll:'◀ ▶ या स्वाइप',max:'अधिकतम 10 अक्षर',color:'🎨 रंग',white:'सफेद',black:'काला',gold:'सोना',cyan:'सियान',crimson:'क्रिमसन',violet:'बैंगनी',lime:'लाइम',steel:'स्टील',orange:'नारंगी',points:'⭐ अंक:',basic:'बेसिक',double:'डबल',piercing:'भेदन',spread:'फैलाव',bonuses:'रिकॉर्ड बोनस',record:'रिकॉर्ड:',bullets:'गोलियां',life:'जीवन',agile:'चुस्त',manual:'📖 मैनुअल',equipment:'🛡️ उपकरण',missions:'📋 दैनिक मिशन',boss:'बॉस हंटर',combo:'कॉम्बो मास्टर',top:'TOP: कोई रिकॉर्ड नहीं',history:'📜 इतिहास',noHistory:'अभी कोई मैच नहीं',clear:'🗑 इतिहास मिटाएँ',settings:'सेटिंग्स ⚙ Config में',continue:'💾 जारी रखें',story:'📖 स्टोरी मोड',controls:'⌨️ तीर · स्पेस · 🎮 · ⚙ · पॉज़',shown:'जहाज पर'},
-    tr:{label:'Dil',choose:'Zorluk ve gemi seçin',start:'🚀 BAŞLAT',easy:'KOLAY',normal:'NORMAL',hard:'ZOR',mode:'Oyun modu',classic:'Klasik',infinite:'Sonsuz',infiniteDesc:'Sonsuz: bossuz dalgalar',upgrades:'Kalıcı yükseltmeler',speed:'Hız',ammo:'Cephane',lives:'Can',damage:'Hasar',world:'Dünya',space:'Uzay',snow:'Kar',fire:'Ateş',crystal:'Kristal',halloween:'Halloween',neon:'Neon',toxic:'Zehirli',void:'Boşluk',selectShip:'Gemi seç',allShips:'Tüm gemiler',scroll:'◀ ▶ veya kaydır',max:'En fazla 10 karakter',color:'🎨 Renk',white:'Beyaz',black:'Siyah',gold:'Altın',cyan:'Camgöbeği',crimson:'Kırmızı',violet:'Mor',lime:'Limon',steel:'Çelik',orange:'Turuncu',points:'⭐ Puan:',basic:'Temel',double:'Çift',piercing:'Delici',spread:'Yayılım',bonuses:'Rekor bonusları',record:'Rekor:',bullets:'mermi',life:'can',agile:'çevik',manual:'📖 Kullanım kılavuzu',equipment:'🛡️ Ekipman',missions:'📋 Günlük görevler',boss:'Boss avcısı',combo:'Kombo ustası',top:'TOP: Rekor yok',history:'📜 Geçmiş',noHistory:'Henüz maç yok',clear:'🗑 Geçmişi sil',settings:'Ayarlar ⚙ Config',continue:'💾 Devam et',story:'📖 HİKÂYE MODU',controls:'⌨️ Oklar · Boşluk · 🎮 · ⚙ · Duraklat',shown:'gemide görünür'},
-    nl:{label:'Taal',choose:'Kies moeilijkheid en schip',start:'🚀 Start',easy:'MAKKELIJK',normal:'NORMAAL',hard:'MOEILIJK',mode:'Spelmodus',classic:'Klassiek',infinite:'Oneindig',infiniteDesc:'Oneindig: golven zonder bosses',upgrades:'Permanente upgrades',speed:'Snelheid',ammo:'Munitie',lives:'Levens',damage:'Schade',world:'Wereld',space:'Ruimte',snow:'Sneeuw',fire:'Vuur',crystal:'Kristal',halloween:'Halloween',neon:'Neon',toxic:'Giftig',void:'Leegte',selectShip:'Kies schip',allShips:'Alle schepen',scroll:'◀ ▶ of veeg',max:'Max. 10 tekens',color:'🎨 Kleur',white:'Wit',black:'Zwart',gold:'Goud',cyan:'Cyaan',crimson:'Karmozijn',violet:'Violet',lime:'Limoen',steel:'Staal',orange:'Oranje',points:'⭐ Punten:',basic:'Basis',double:'Dubbel',piercing:'Doordringend',spread:'Spreiding',bonuses:'Recordbonussen',record:'Record:',bullets:'kogels',life:'leven',agile:'behendig',manual:'📖 Handleiding',equipment:'🛡️ Uitrusting',missions:'📋 Dagelijkse missies',boss:'Bossjager',combo:'Combomeester',top:'TOP: Geen records',history:'📜 Geschiedenis',noHistory:'Nog geen wedstrijden',clear:'🗑 Geschiedenis wissen',settings:'Instellingen in ⚙ Config',continue:'💾 Doorgaan',story:'📖 VERHAALMODUS',controls:'⌨️ Pijlen · Spatie · 🎮 · ⚙ · Pauze',shown:'op het schip'},
-    pl:{label:'Język',choose:'Wybierz poziom i statek',start:'🚀 Start',easy:'ŁATWY',normal:'NORMALNY',hard:'TRUDNY',mode:'Tryb gry',classic:'Klasyczny',infinite:'Nieskończony',infiniteDesc:'Nieskończony: fale bez bossów',upgrades:'Ulepszenia stałe',speed:'Prędkość',ammo:'Amunicja',lives:'Życia',damage:'Obrażenia',world:'Świat',space:'Kosmos',snow:'Śnieg',fire:'Ogień',crystal:'Kryształ',halloween:'Halloween',neon:'Neon',toxic:'Toksyczny',void:'Pustka',selectShip:'Wybierz statek',allShips:'Wszystkie statki',scroll:'◀ ▶ lub przesuń',max:'Maks. 10 znaków',color:'🎨 Kolor',white:'Biały',black:'Czarny',gold:'Złoty',cyan:'Cyjan',crimson:'Karmazyn',violet:'Fiolet',lime:'Limonka',steel:'Stal',orange:'Pomarańcz',points:'⭐ Punkty:',basic:'Podstawowy',double:'Podwójny',piercing:'Przebijający',spread:'Wachlarz',bonuses:'Bonusy rekordu',record:'Rekord:',bullets:'pociski',life:'życie',agile:'zwinny',manual:'📖 Instrukcja',equipment:'🛡️ Ekwipunek',missions:'📋 Misje dzienne',boss:'Łowca bossów',combo:'Mistrz combo',top:'TOP: Brak rekordów',history:'📜 Historia',noHistory:'Brak partii',clear:'🗑 Wyczyść historię',settings:'Ustawienia w ⚙ Config',continue:'💾 Kontynuuj',story:'📖 TRYB FABUŁY',controls:'⌨️ Strzałki · Spacja · 🎮 · ⚙ · Pauza',shown:'na statku'},
-    vi:{label:'Ngôn ngữ',choose:'Chọn độ khó và tàu',start:'🚀 BẮT ĐẦU',easy:'DỄ',normal:'THƯỜNG',hard:'KHÓ',mode:'Chế độ chơi',classic:'Cổ điển',infinite:'Vô hạn',infiniteDesc:'Vô hạn: sóng không boss',upgrades:'Nâng cấp vĩnh viễn',speed:'Tốc độ',ammo:'Đạn',lives:'Mạng',damage:'Sát thương',world:'Thế giới',space:'Không gian',snow:'Tuyết',fire:'Lửa',crystal:'Pha lê',halloween:'Halloween',neon:'Neon',toxic:'Độc',void:'Hư không',selectShip:'Chọn tàu',allShips:'Tất cả tàu',scroll:'◀ ▶ hoặc vuốt',max:'Tối đa 10 ký tự',color:'🎨 Màu',white:'Trắng',black:'Đen',gold:'Vàng',cyan:'Xanh cyan',crimson:'Đỏ thẫm',violet:'Tím',lime:'Chanh',steel:'Thép',orange:'Cam',points:'⭐ Điểm:',basic:'Cơ bản',double:'Đôi',piercing:'Xuyên',spread:'Lan',bonuses:'Thưởng kỷ lục',record:'Kỷ lục:',bullets:'đạn',life:'mạng',agile:'nhanh nhẹn',manual:'📖 Hướng dẫn',equipment:'🛡️ Trang bị',missions:'📋 Nhiệm vụ hàng ngày',boss:'Thợ săn boss',combo:'Bậc thầy combo',top:'TOP: Chưa có kỷ lục',history:'📜 Lịch sử',noHistory:'Chưa có trận nào',clear:'🗑 Xóa lịch sử',settings:'Cài đặt trong ⚙ Config',continue:'💾 Tiếp tục',story:'📖 CHẾ ĐỘ CỐT TRUYỆN',controls:'⌨️ Phím mũi tên · Space · 🎮 · ⚙ · Tạm dừng',shown:'hiện trên tàu'},
+    tr:{label:'Dil',choose:'Zorluk ve gemi seçin',start:'🚀 BAŞLAT',easy:'KOLAY',normal:'NORMAL',hard:'ZOR',mode:'Oyun modu',classic:'Klasik',infinite:'Sonsuz',infiniteDesc:'Sonsuz: bossuz dalgalar',upgrades:'Kalıcı yükseltmeler',speed:'Hız',ammo:'Cephane',lives:'Can',damage:'Hasar',world:'Dünya',space:'Uzay',snow:'Kar',fire:'Ateş',crystal:'Kristal',halloween:'Bosque',neon:'Neon',toxic:'Zehirli',void:'Boşluk',selectShip:'Gemi seç',allShips:'Tüm gemiler',scroll:'◀ ▶ veya kaydır',max:'En fazla 10 karakter',color:'🎨 Renk',white:'Beyaz',black:'Siyah',gold:'Altın',cyan:'Camgöbeği',crimson:'Kırmızı',violet:'Mor',lime:'Limon',steel:'Çelik',orange:'Turuncu',points:'⭐ Puan:',basic:'Temel',double:'Çift',piercing:'Delici',spread:'Yayılım',bonuses:'Rekor bonusları',record:'Rekor:',bullets:'mermi',life:'can',agile:'çevik',manual:'📖 Kullanım kılavuzu',equipment:'🛡️ Ekipman',missions:'📋 Günlük görevler',boss:'Boss avcısı',combo:'Kombo ustası',top:'TOP: Rekor yok',history:'📜 Geçmiş',noHistory:'Henüz maç yok',clear:'🗑 Geçmişi sil',settings:'Ayarlar ⚙ Config',continue:'💾 Devam et',story:'📖 HİKÂYE MODU',controls:'⌨️ Oklar · Boşluk · 🎮 · ⚙ · Duraklat',shown:'gemide görünür'},
+    nl:{label:'Taal',choose:'Kies moeilijkheid en schip',start:'🚀 Start',easy:'MAKKELIJK',normal:'NORMAAL',hard:'MOEILIJK',mode:'Spelmodus',classic:'Klassiek',infinite:'Oneindig',infiniteDesc:'Oneindig: golven zonder bosses',upgrades:'Permanente upgrades',speed:'Snelheid',ammo:'Munitie',lives:'Levens',damage:'Schade',world:'Wereld',space:'Ruimte',snow:'Sneeuw',fire:'Vuur',crystal:'Kristal',halloween:'Bosque',neon:'Neon',toxic:'Giftig',void:'Leegte',selectShip:'Kies schip',allShips:'Alle schepen',scroll:'◀ ▶ of veeg',max:'Max. 10 tekens',color:'🎨 Kleur',white:'Wit',black:'Zwart',gold:'Goud',cyan:'Cyaan',crimson:'Karmozijn',violet:'Violet',lime:'Limoen',steel:'Staal',orange:'Oranje',points:'⭐ Punten:',basic:'Basis',double:'Dubbel',piercing:'Doordringend',spread:'Spreiding',bonuses:'Recordbonussen',record:'Record:',bullets:'kogels',life:'leven',agile:'behendig',manual:'📖 Handleiding',equipment:'🛡️ Uitrusting',missions:'📋 Dagelijkse missies',boss:'Bossjager',combo:'Combomeester',top:'TOP: Geen records',history:'📜 Geschiedenis',noHistory:'Nog geen wedstrijden',clear:'🗑 Geschiedenis wissen',settings:'Instellingen in ⚙ Config',continue:'💾 Doorgaan',story:'📖 VERHAALMODUS',controls:'⌨️ Pijlen · Spatie · 🎮 · ⚙ · Pauze',shown:'op het schip'},
+    pl:{label:'Język',choose:'Wybierz poziom i statek',start:'🚀 Start',easy:'ŁATWY',normal:'NORMALNY',hard:'TRUDNY',mode:'Tryb gry',classic:'Klasyczny',infinite:'Nieskończony',infiniteDesc:'Nieskończony: fale bez bossów',upgrades:'Ulepszenia stałe',speed:'Prędkość',ammo:'Amunicja',lives:'Życia',damage:'Obrażenia',world:'Świat',space:'Kosmos',snow:'Śnieg',fire:'Ogień',crystal:'Kryształ',halloween:'Bosque',neon:'Neon',toxic:'Toksyczny',void:'Pustka',selectShip:'Wybierz statek',allShips:'Wszystkie statki',scroll:'◀ ▶ lub przesuń',max:'Maks. 10 znaków',color:'🎨 Kolor',white:'Biały',black:'Czarny',gold:'Złoty',cyan:'Cyjan',crimson:'Karmazyn',violet:'Fiolet',lime:'Limonka',steel:'Stal',orange:'Pomarańcz',points:'⭐ Punkty:',basic:'Podstawowy',double:'Podwójny',piercing:'Przebijający',spread:'Wachlarz',bonuses:'Bonusy rekordu',record:'Rekord:',bullets:'pociski',life:'życie',agile:'zwinny',manual:'📖 Instrukcja',equipment:'🛡️ Ekwipunek',missions:'📋 Misje dzienne',boss:'Łowca bossów',combo:'Mistrz combo',top:'TOP: Brak rekordów',history:'📜 Historia',noHistory:'Brak partii',clear:'🗑 Wyczyść historię',settings:'Ustawienia w ⚙ Config',continue:'💾 Kontynuuj',story:'📖 TRYB FABUŁY',controls:'⌨️ Strzałki · Spacja · 🎮 · ⚙ · Pauza',shown:'na statku'},
+    vi:{label:'Ngôn ngữ',choose:'Chọn độ khó và tàu',start:'🚀 BẮT ĐẦU',easy:'DỄ',normal:'THƯỜNG',hard:'KHÓ',mode:'Chế độ chơi',classic:'Cổ điển',infinite:'Vô hạn',infiniteDesc:'Vô hạn: sóng không boss',upgrades:'Nâng cấp vĩnh viễn',speed:'Tốc độ',ammo:'Đạn',lives:'Mạng',damage:'Sát thương',world:'Thế giới',space:'Không gian',snow:'Tuyết',fire:'Lửa',crystal:'Pha lê',halloween:'Bosque',neon:'Neon',toxic:'Độc',void:'Hư không',selectShip:'Chọn tàu',allShips:'Tất cả tàu',scroll:'◀ ▶ hoặc vuốt',max:'Tối đa 10 ký tự',color:'🎨 Màu',white:'Trắng',black:'Đen',gold:'Vàng',cyan:'Xanh cyan',crimson:'Đỏ thẫm',violet:'Tím',lime:'Chanh',steel:'Thép',orange:'Cam',points:'⭐ Điểm:',basic:'Cơ bản',double:'Đôi',piercing:'Xuyên',spread:'Lan',bonuses:'Thưởng kỷ lục',record:'Kỷ lục:',bullets:'đạn',life:'mạng',agile:'nhanh nhẹn',manual:'📖 Hướng dẫn',equipment:'🛡️ Trang bị',missions:'📋 Nhiệm vụ hàng ngày',boss:'Thợ săn boss',combo:'Bậc thầy combo',top:'TOP: Chưa có kỷ lục',history:'📜 Lịch sử',noHistory:'Chưa có trận nào',clear:'🗑 Xóa lịch sử',settings:'Cài đặt trong ⚙ Config',continue:'💾 Tiếp tục',story:'📖 CHẾ ĐỘ CỐT TRUYỆN',controls:'⌨️ Phím mũi tên · Space · 🎮 · ⚙ · Tạm dừng',shown:'hiện trên tàu'},
     th:{label:'ภาษา',choose:'เลือกความยากและยาน',start:'🚀 เริ่ม',easy:'ง่าย',normal:'ปกติ',hard:'ยาก',mode:'โหมดเกม',classic:'คลาสสิก',infinite:'ไม่จำกัด',infiniteDesc:'ไม่จำกัด: คลื่นไม่มีบอส',upgrades:'อัปเกรดถาวร',speed:'ความเร็ว',ammo:'กระสุน',lives:'ชีวิต',damage:'ความเสียหาย',world:'โลก',space:'อวกาศ',snow:'หิมะ',fire:'ไฟ',crystal:'คริสตัล',halloween:'ฮาโลวีน',neon:'นีออน',toxic:'พิษ',void:'สุญญากาศ',selectShip:'เลือกยาน',allShips:'ยานทั้งหมด',scroll:'◀ ▶ หรือปัด',max:'สูงสุด 10 ตัวอักษร',color:'🎨 สี',white:'ขาว',black:'ดำ',gold:'ทอง',cyan:'ฟ้า',crimson:'แดงเข้ม',violet:'ม่วง',lime:'เขียวมะนาว',steel:'เหล็ก',orange:'ส้ม',points:'⭐ คะแนน:',basic:'พื้นฐาน',double:'คู่',piercing:'เจาะ',spread:'กระจาย',bonuses:'โบนัสสถิติ',record:'สถิติ:',bullets:'กระสุน',life:'ชีวิต',agile:'ว่องไว',manual:'📖 คู่มือ',equipment:'🛡️ อุปกรณ์',missions:'📋 ภารกิจรายวัน',boss:'นักล่าบอส',combo:'เซียนคอมโบ',top:'TOP: ยังไม่มีสถิติ',history:'📜 ประวัติ',noHistory:'ยังไม่มีแมตช์',clear:'🗑 ล้างประวัติ',settings:'ตั้งค่าใน ⚙ Config',continue:'💾 เล่นต่อ',story:'📖 โหมดเรื่องราว',controls:'⌨️ ลูกศร · Space · 🎮 · ⚙ · หยุด',shown:'แสดงบนยาน'}
   });
 
@@ -12144,12 +12178,12 @@ function storyOnWaveComplete(){
     out=out.replace(/\uE000GOKU_BLACK\uE000/g,'Goku Black').replace(/\uE000GOKU_ROSE\uE000/g,'Goku Rose');
     // Restaurar protegidos y traducir mundos de forma segura
     const worldMap={
-      es:{1:'Espacio',2:'Nieve',3:'Fuego',4:'Cristal',5:'Halloween',6:'Neón',7:'Tóxico',8:'Vacío',9:'Océano',10:'Desierto',11:'Tormenta',12:'Aurora',13:'Volcán',14:'Glitch',15:'Ráfagas de lava',16:'Fuego eterno',17:'Pirotecnia',18:'Infierno solar',19:'Núcleo magma',20:'Luna',21:'Hielo',22:'Desolación',23:'Otra dimensión',24:'Lluvia',25:'Tierra',26:'Plutón',27:'Abismo',28:'Dimensión 1',29:'Inframundo'},
-      en:{1:'Space',2:'Snow',3:'Fire',4:'Crystal',5:'Halloween',6:'Neon',7:'Toxic',8:'Void',9:'Ocean',10:'Desert',11:'Storm',12:'Aurora',13:'Volcano',14:'Glitch',15:'Lava bursts',16:'Eternal fire',17:'Pyrotechnics',18:'Solar hell',19:'Magma core',20:'Moon',21:'Ice',22:'Desolation',23:'Other dimension',24:'Rain',25:'Earth',26:'Pluto',27:'Abyss',28:'Dimension 1',29:'Underworld'},
-      fr:{1:'Espace',2:'Neige',3:'Feu',4:'Cristal',5:'Halloween',6:'Néon',7:'Toxique',8:'Vide',9:'Océan',10:'Désert',11:'Tempête',12:'Aurore',13:'Volcan',14:'Glitch'},
-      ja:{1:'宇宙',2:'雪',3:'火',4:'クリスタル',5:'ハロウィン',6:'ネオン',7:'有毒',8:'虚無',9:'海洋',10:'砂漠',11:'嵐',12:'オーロラ',13:'火山',14:'グリッチ'},
-      zh:{1:'太空',2:'雪',3:'火',4:'水晶',5:'万圣节',6:'霓虹',7:'毒素',8:'虚空',9:'海洋',10:'沙漠',11:'风暴',12:'极光',13:'火山',14:'故障'},
-      pt:{1:'Espaço',2:'Neve',3:'Fogo',4:'Cristal',5:'Halloween',6:'Neon',7:'Tóxico',8:'Vazio',9:'Oceano',10:'Deserto',11:'Tempestade',12:'Aurora',13:'Vulcão',14:'Glitch'}
+      es:{1:'Espacio',2:'Nieve',3:'Fuego',4:'Cristal',5:'Bosque',6:'Neón',7:'Tóxico',8:'Vacío',9:'Océano',10:'Desierto',11:'Tormenta',12:'Aurora',13:'Volcán',14:'Glitch',15:'Ráfagas de lava',16:'Fuego eterno',17:'Pirotecnia',18:'Infierno solar',19:'Núcleo magma',20:'Luna',21:'Hielo',22:'Desolación',23:'Otra dimensión',24:'Lluvia',25:'Tierra',26:'Plutón',27:'Abismo',28:'Dimensión 1',29:'Inframundo'},
+      en:{1:'Space',2:'Snow',3:'Fire',4:'Crystal',5:'Forest',6:'Neon',7:'Toxic',8:'Void',9:'Ocean',10:'Desert',11:'Storm',12:'Aurora',13:'Volcano',14:'Glitch',15:'Lava bursts',16:'Eternal fire',17:'Pyrotechnics',18:'Solar hell',19:'Magma core',20:'Moon',21:'Ice',22:'Desolation',23:'Other dimension',24:'Rain',25:'Earth',26:'Pluto',27:'Abyss',28:'Dimension 1',29:'Underworld'},
+      fr:{1:'Espace',2:'Neige',3:'Feu',4:'Cristal',5:'Forêt',6:'Néon',7:'Toxique',8:'Vide',9:'Océan',10:'Désert',11:'Tempête',12:'Aurore',13:'Volcan',14:'Glitch'},
+      ja:{1:'宇宙',2:'雪',3:'火',4:'クリスタル',5:'森',6:'ネオン',7:'有毒',8:'虚無',9:'海洋',10:'砂漠',11:'嵐',12:'オーロラ',13:'火山',14:'グリッチ'},
+      zh:{1:'太空',2:'雪',3:'火',4:'水晶',5:'森林',6:'霓虹',7:'毒素',8:'虚空',9:'海洋',10:'沙漠',11:'风暴',12:'极光',13:'火山',14:'故障'},
+      pt:{1:'Espaço',2:'Neve',3:'Fogo',4:'Cristal',5:'Forest',6:'Neon',7:'Tóxico',8:'Vazio',9:'Oceano',10:'Deserto',11:'Tempestade',12:'Aurora',13:'Vulcão',14:'Glitch'}
     };
     const wm=worldMap[code]||worldMap.es;
     out=out.replace(/\uE001P(\d+)\uE001/g,function(_,i){
@@ -12208,12 +12242,12 @@ function run(root){const code=current();window.__techLangCurrent=code; if(!root)
       });
       // Mundos por data-world (evita Desdesdesierto, etc.)
       const worldNames={
-        es:{1:'Espacio',2:'Nieve',3:'Fuego',4:'Cristal',5:'Halloween',6:'Neón',7:'Tóxico',8:'Vacío',9:'Océano',10:'Desierto',11:'Tormenta',12:'Aurora',13:'Volcán',14:'Glitch',15:'Ráfagas de lava',16:'Fuego eterno',17:'Pirotecnia',18:'Infierno solar',19:'Núcleo magma',20:'Luna',21:'Hielo',22:'Desolación',23:'Otra dimensión',24:'Lluvia',25:'Tierra',26:'Plutón',27:'Abismo',28:'Dimensión 1',29:'Inframundo'},
-        en:{1:'Space',2:'Snow',3:'Fire',4:'Crystal',5:'Halloween',6:'Neon',7:'Toxic',8:'Void',9:'Ocean',10:'Desert',11:'Storm',12:'Aurora',13:'Volcano',14:'Glitch',15:'Lava bursts',16:'Eternal fire',17:'Pyrotechnics',18:'Solar hell',19:'Magma core',20:'Moon',21:'Ice',22:'Desolation',23:'Other dimension',24:'Rain',25:'Earth',26:'Pluto',27:'Abyss',28:'Dimension 1',29:'Underworld'},
-        fr:{1:'Espace',2:'Neige',3:'Feu',4:'Cristal',5:'Halloween',6:'Néon',7:'Toxique',8:'Vide',9:'Océan',10:'Désert',11:'Tempête',12:'Aurore',13:'Volcan',14:'Glitch'},
-        ja:{1:'宇宙',2:'雪',3:'火',4:'クリスタル',5:'ハロウィン',6:'ネオン',7:'有毒',8:'虚無',9:'海洋',10:'砂漠',11:'嵐',12:'オーロラ',13:'火山',14:'グリッチ'},
-        zh:{1:'太空',2:'雪',3:'火',4:'水晶',5:'万圣节',6:'霓虹',7:'毒素',8:'虚空',9:'海洋',10:'沙漠',11:'风暴',12:'极光',13:'火山',14:'故障'},
-        pt:{1:'Espaço',2:'Neve',3:'Fogo',4:'Cristal',5:'Halloween',6:'Neon',7:'Tóxico',8:'Vazio',9:'Oceano',10:'Deserto',11:'Tempestade',12:'Aurora',13:'Vulcão',14:'Glitch'}
+        es:{1:'Espacio',2:'Nieve',3:'Fuego',4:'Cristal',5:'Bosque',6:'Neón',7:'Tóxico',8:'Vacío',9:'Océano',10:'Desierto',11:'Tormenta',12:'Aurora',13:'Volcán',14:'Glitch',15:'Ráfagas de lava',16:'Fuego eterno',17:'Pirotecnia',18:'Infierno solar',19:'Núcleo magma',20:'Luna',21:'Hielo',22:'Desolación',23:'Otra dimensión',24:'Lluvia',25:'Tierra',26:'Plutón',27:'Abismo',28:'Dimensión 1',29:'Inframundo'},
+        en:{1:'Space',2:'Snow',3:'Fire',4:'Crystal',5:'Forest',6:'Neon',7:'Toxic',8:'Void',9:'Ocean',10:'Desert',11:'Storm',12:'Aurora',13:'Volcano',14:'Glitch',15:'Lava bursts',16:'Eternal fire',17:'Pyrotechnics',18:'Solar hell',19:'Magma core',20:'Moon',21:'Ice',22:'Desolation',23:'Other dimension',24:'Rain',25:'Earth',26:'Pluto',27:'Abyss',28:'Dimension 1',29:'Underworld'},
+        fr:{1:'Espace',2:'Neige',3:'Feu',4:'Cristal',5:'Forêt',6:'Néon',7:'Toxique',8:'Vide',9:'Océan',10:'Désert',11:'Tempête',12:'Aurore',13:'Volcan',14:'Glitch'},
+        ja:{1:'宇宙',2:'雪',3:'火',4:'クリスタル',5:'森',6:'ネオン',7:'有毒',8:'虚無',9:'海洋',10:'砂漠',11:'嵐',12:'オーロラ',13:'火山',14:'グリッチ'},
+        zh:{1:'太空',2:'雪',3:'火',4:'水晶',5:'森林',6:'霓虹',7:'毒素',8:'虚空',9:'海洋',10:'沙漠',11:'风暴',12:'极光',13:'火山',14:'故障'},
+        pt:{1:'Espaço',2:'Neve',3:'Fogo',4:'Cristal',5:'Forest',6:'Neon',7:'Tóxico',8:'Vazio',9:'Oceano',10:'Deserto',11:'Tempestade',12:'Aurora',13:'Vulcão',14:'Glitch'}
       };
       const wn=worldNames[code]||worldNames.es;
       root.querySelectorAll('[data-world]').forEach(btn=>{
@@ -17689,12 +17723,23 @@ body.tech-playing .game-top{
   function classifyExtras(){
     var box=document.getElementById('startExtras');
     if(!box) return;
-    if(box.__tabsClassified && box.querySelector('.tab-mundo')) return;
+    // Si ya está bien separado en 3 bloques, no tocar
+    if(box.__tabsClassified && box.querySelector(':scope > .tab-mundo') && box.querySelector(':scope > .tab-nave') && box.querySelector(':scope > .tab-extra')) return;
 
     var mundo=document.createElement('div'); mundo.className='tab-mundo';
     var nave=document.createElement('div'); nave.className='tab-nave';
     var extra=document.createElement('div'); extra.className='tab-extra';
-    var nodes=Array.prototype.slice.call(box.childNodes);
+
+    // Aplanar si venía de una clasificación previa incompleta
+    var nodes=[];
+    Array.prototype.slice.call(box.childNodes).forEach(function(node){
+      if(node.nodeType===1 && (node.classList.contains('tab-mundo')||node.classList.contains('tab-nave')||node.classList.contains('tab-extra'))){
+        Array.prototype.push.apply(nodes, Array.prototype.slice.call(node.childNodes));
+      } else {
+        nodes.push(node);
+      }
+    });
+
     var section='extra';
     nodes.forEach(function(node){
       if(node.nodeType!==1){ extra.appendChild(node); return; }
@@ -17703,13 +17748,21 @@ body.tech-playing .game-top{
       var id=node.id||'';
       if(tag==='H3'){
         if(/\bmundo\b|\bmundos\b/.test(text)) section='mundo';
-        else if(/nave|skin|color|goku|fase|modelo/.test(text)) section='nave';
+        else if(/nave|skin|color|goku|fase|modelo|seleccionar nave|todas las naves/.test(text)) section='nave';
         else section='extra';
       }
-      /* Agrupar también todos los botones de mundos, aunque cambie el contenedor */
+      // Contenedores / controles de mundos siempre en Mundo
       if(node.matches && (node.matches('[data-world]') || node.querySelector('[data-world]'))) section='mundo';
-      if(id==='shipCarousel' || id==='shipNameWrap' || id==='shipNameInput' || id==='gokuFormMenu' || (node.querySelector && (node.querySelector('#shipCarousel') || node.querySelector('#shipNameInput') || node.querySelector('#gokuFormMenu')))) section='nave';
-      if(id==='startInGameActions' || id==='btnLoadSave' || id==='btnDailyMissions' || id==='btnWeaponShop' || id==='guestDataNotice') section='extra';
+      // Carrusel y nombre de nave siempre en Nave
+      if(id==='shipCarousel' || id==='shipNameWrap' || id==='shipNameInput' || id==='gokuFormMenu' || (node.querySelector && (node.querySelector('#shipCarousel') || node.querySelector('#shipNameInput') || node.querySelector('#shipNameWrap') || node.querySelector('#gokuFormMenu')))) section='nave';
+      // Color de nave
+      if(tag==='H3' && /color|skin/.test(text)) section='nave';
+      if(node.matches && node.matches('[data-skin], [data-model], [data-gform]')) section='nave';
+      if(node.querySelector && (node.querySelector('[data-skin]') || node.querySelector('[data-model]') || node.querySelector('[data-gform]'))) section='nave';
+      // Extra: acciones, misiones, equipo, historial
+      if(id==='startInGameActions' || id==='btnLoadSave' || id==='btnDailyMissions' || id==='btnWeaponShop' || id==='guestDataNotice' || id==='techCoinsBar') section='extra';
+      if(tag==='H3' && /puntos juego|bonos|misi|equip|historial|manual|cr[eé]dito|ajustes|extra/.test(text)) section='extra';
+
       if(section==='mundo') mundo.appendChild(node);
       else if(section==='nave') nave.appendChild(node);
       else extra.appendChild(node);
@@ -17735,15 +17788,22 @@ body.tech-playing .game-top{
     try{ localStorage.setItem('techStartTab', name); }catch(e){}
   }
 
-  function refreshMobileMenu(){
+  function refreshMobileMenu(forceTab){
     var tabs=ensureTabs();
     if(tabs) tabs.classList.add('is-on');
     var box=document.getElementById('startExtras');
     if(!box) return;
+    var prevTab = forceTab || box.getAttribute('data-tab');
+    box.__tabsClassified=false;
     classifyExtras();
-    // Al abrir el menú, por defecto mostrar pestaña Nave (nombre + carrusel)
-    setTab('nave');
+    if(!prevTab) setTab('nave');
+    else setTab(prevTab);
   }
+
+  window.techRefreshStartTabs = function(tabName){
+    try{ refreshMobileMenu(tabName); }catch(e){}
+  };
+  window.techSetStartTab = setTab;
 
   /* Hook renderStart refresh */
   function hookRender(){
@@ -18759,6 +18819,71 @@ body.tech-playing .game-top{
   setTimeout(hideSplash, 5000);
 })();
 </script>
+
+<style id="tech-world-btn-themes">
+/* Mundos: color e interfaz propia (texto legible) */
+#startExtras [data-world],
+.diff-btns [data-world]{
+  color:#fff !important;
+  -webkit-text-fill-color:#fff !important;
+  border:1px solid rgba(255,255,255,.35) !important;
+  font-weight:700 !important;
+  text-shadow:0 1px 2px rgba(0,0,0,.65) !important;
+}
+#startExtras [data-world].active,
+.diff-btns [data-world].active{
+  outline:2px solid #FFCD00 !important;
+  outline-offset:1px !important;
+  box-shadow:0 0 14px rgba(255,205,0,.35) !important;
+  color:#111 !important;
+  -webkit-text-fill-color:#111 !important;
+  text-shadow:none !important;
+}
+[data-world="1"]{background:linear-gradient(145deg,#0a1a40,#123a7a) !important;}
+[data-world="2"]{background:linear-gradient(145deg,#1a3a55,#c8e8ff) !important;color:#062033 !important;-webkit-text-fill-color:#062033 !important;text-shadow:none !important;}
+[data-world="3"]{background:linear-gradient(145deg,#4a1008,#ff4d1a) !important;}
+[data-world="4"]{background:linear-gradient(145deg,#1a2848,#7ec8ff) !important;}
+[data-world="5"]{background:linear-gradient(145deg,#0d2a14,#2d8a3e) !important;} /* Bosque */
+[data-world="6"]{background:linear-gradient(145deg,#2a0050,#ff00cc) !important;}
+[data-world="7"]{background:linear-gradient(145deg,#143000,#7dff3a) !important;color:#081400 !important;-webkit-text-fill-color:#081400 !important;text-shadow:none !important;}
+[data-world="8"]{background:linear-gradient(145deg,#050508,#2a2a35) !important;border-color:rgba(180,180,220,.45) !important;}
+[data-world="9"]{background:linear-gradient(145deg,#003050,#00a0e0) !important;}
+[data-world="10"]{background:linear-gradient(145deg,#4a3008,#e0a040) !important;}
+[data-world="11"]{background:linear-gradient(145deg,#1a2038,#6070a0) !important;}
+[data-world="12"]{background:linear-gradient(145deg,#102818,#40e0a0) !important;}
+[data-world="13"]{background:linear-gradient(145deg,#3a1008,#ff6020) !important;}
+[data-world="14"]{background:linear-gradient(145deg,#201030,#c040ff) !important;}
+[data-world="15"]{background:linear-gradient(145deg,#401008,#ff5020) !important;}
+[data-world="16"]{background:linear-gradient(145deg,#500800,#ff2000) !important;}
+[data-world="17"]{background:linear-gradient(145deg,#401020,#ff4080) !important;}
+[data-world="18"]{background:linear-gradient(145deg,#502000,#ffaa00) !important;color:#1a0a00 !important;-webkit-text-fill-color:#1a0a00 !important;text-shadow:none !important;}
+[data-world="19"]{background:linear-gradient(145deg,#300808,#ff3030) !important;}
+[data-world="20"]{background:linear-gradient(145deg,#101820,#c0c8d8) !important;color:#0a1018 !important;-webkit-text-fill-color:#0a1018 !important;text-shadow:none !important;}
+[data-world="21"]{background:linear-gradient(145deg,#103040,#a0e8ff) !important;color:#042030 !important;-webkit-text-fill-color:#042030 !important;text-shadow:none !important;}
+[data-world="22"]{background:linear-gradient(145deg,#1a1408,#6a5a40) !important;}
+[data-world="23"]{background:linear-gradient(145deg,#180828,#8040ff) !important;}
+[data-world="24"]{background:linear-gradient(145deg,#0a2038,#4080c0) !important;}
+[data-world="25"]{background:linear-gradient(145deg,#0a2818,#2a8a40) !important;}
+[data-world="26"]{background:linear-gradient(145deg,#1a1030,#7060a0) !important;}
+[data-world="27"]{background:linear-gradient(145deg,#08040c,#2a1030) !important;}
+[data-world="28"]{background:linear-gradient(145deg,#041828,#2080a0) !important;}
+[data-world="29"]{background:linear-gradient(145deg,#280808,#a02020) !important;}
+</style>
+
+
+<style id="tech-start-tabs-isolation">
+/* Aislar por completo las 3 pestañas del menú de inicio */
+#startExtras{position:relative}
+#startExtras > .tab-mundo,
+#startExtras > .tab-nave,
+#startExtras > .tab-extra{display:none !important}
+#startExtras[data-tab="mundo"] > .tab-mundo{display:block !important}
+#startExtras[data-tab="nave"] > .tab-nave{display:block !important}
+#startExtras[data-tab="extra"] > .tab-extra{display:block !important}
+/* Evitar que hijos sueltos fuera de las 3 columnas se vean mezclados */
+#startExtras > :not(.tab-mundo):not(.tab-nave):not(.tab-extra){display:none !important}
+</style>
+
 </body>
 
 <style id="tech-stability-v1">
