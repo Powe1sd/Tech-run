@@ -2860,7 +2860,7 @@ html,body{width:100%;min-width:320px}
 <canvas id="gameCanvas"></canvas>
 <div class="game-panel" id="startPanel">
 <h2>⚡ TECH RUN</h2>
-<small>Elige dificultad y nave · Desliza para ver más</small>
+<small>1) Dificultad · 2) Mundo y nave · 3) Iniciar</small>
 <div id="techCoinsBar" aria-label="Puntos juego disponibles">
   <span class="tcb-star">⭐</span>
   <span class="tcb-label">PUNTOS JUEGO</span>
@@ -11554,7 +11554,7 @@ function storyOnWaveComplete(){
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",bindStoryBtn);
   else bindStoryBtn();
   setTimeout(bindStoryBtn,500);
-  setInterval(bindStoryBtn,1500);
+  setInterval(bindStoryBtn,6000);
 })();
 
 /* Parches a funciones existentes */
@@ -13339,8 +13339,8 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
       }catch(e){console.warn('[TECH stats] onMatchSaved',e)}
     };
     function wireStatsBtn(){const btn=document.getElementById('openStatistics');if(btn&&!btn.__techStatsBound){btn.addEventListener('click',openPanel);btn.__techStatsBound=true}}
-    wireStatsBtn();setInterval(wireStatsBtn,1500);
-    wrapGameplay();setInterval(wrapGameplay,1000);startSessionTrack();
+    wireStatsBtn();setInterval(wireStatsBtn,6000);
+    wrapGameplay();setInterval(wrapGameplay,4000);startSessionTrack();
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
@@ -13566,7 +13566,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
   function run(){removeStartLang();pinGearLeft()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);
   else run();
-  setInterval(run,1500);
+  setInterval(run,5000);
   // Al abrir config, idioma solo ahí
   document.addEventListener('click',function(e){
     if(e.target&&(e.target.id==='btnConfig'||(e.target.textContent||'').indexOf('⚙')>=0))
@@ -13931,7 +13931,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
   window.__techOnlineRankReloadList = loadList;
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wire);
   else wire();
-  setInterval(wire, 2000);
+  setInterval(wire, 6000);
 })();
 </script>
 
@@ -14914,7 +14914,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
       document.body.classList.toggle('game-active', playing);
     }catch(e){}
   }
-  setInterval(syncBodyClass, 800);
+  setInterval(syncBodyClass, 2000);
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', syncBodyClass);
   else syncBodyClass();
 })();
@@ -15794,7 +15794,7 @@ function wireUi(){
 
 if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',wireUi);
 else wireUi();
-setInterval(wireUi,3000);
+setInterval(wireUi,8000);
 
 // SQL de referencia embebido
 window.TECH_PVP_SQL = `
@@ -16507,7 +16507,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
       applyPos(b, rect.left, rect.top);
       savePos(parseFloat(b.style.left)||0, parseFloat(b.style.top)||0);
     });
-    setInterval(injectConfigToggles, 8000);
+    setInterval(injectConfigToggles, 15000);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
@@ -16562,7 +16562,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
       }catch(e){}
     }catch(e){}
   }
-  setInterval(forceMobilePerf, 2500);
+  setInterval(forceMobilePerf, 5000);
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', forceMobilePerf);
   else forceMobilePerf();
 })();
@@ -16711,7 +16711,7 @@ button[data-orb-color].is-active,
   function boot(){
     injectColorUI();
     applyColor(getColor());
-    setInterval(injectColorUI, 8000);
+    setInterval(injectColorUI, 15000);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
@@ -16854,7 +16854,7 @@ button[data-orb-color].is-active,
     }
     window.addEventListener('scroll', update, {passive:true});
     document.addEventListener('touchend', function(){ setTimeout(update, 50); }, {passive:true});
-    setInterval(update, 900);
+    setInterval(update, 1500);
     update();
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', bind);
@@ -16918,7 +16918,7 @@ body.tech-playing .game-top {
       }
     }catch(e){}
   }
-  setInterval(syncPlayingClass, 900);
+  setInterval(syncPlayingClass, 1500);
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', syncPlayingClass);
   else syncPlayingClass();
 })();
@@ -17574,7 +17574,7 @@ body.tech-playing .game-top{
       }
     }catch(e){}
   }
-  setInterval(tick, 1200);
+  setInterval(tick, 2000);
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', tick);
   else tick();
 })();
@@ -18516,4 +18516,205 @@ body.tech-playing .game-top{
 })();
 </script>
 </body>
+
+<style id="tech-stability-v1">
+/* =========================================================
+   TECH RUN — capa de estabilidad (gana sobre parches viejos)
+   ========================================================= */
+:root{
+  --ts-bg:#060d1c;
+  --ts-card:#0b1528;
+  --ts-line:rgba(93,229,255,.28);
+  --ts-gold:#FFCD00;
+  --ts-text:#eef5ff;
+  --ts-mute:#93a6bd;
+}
+
+/* Menú inicio: jerarquía clara, menos ruido */
+#startPanel{
+  scrollbar-gutter:stable;
+}
+#startPanel > h2{
+  font-size:clamp(22px,5vw,30px)!important;
+  margin:0 0 6px!important;
+  letter-spacing:2px!important;
+}
+#startPanel > small{
+  display:block!important;
+  color:var(--ts-mute)!important;
+  margin:0 0 14px!important;
+  line-height:1.45!important;
+}
+#startPanel h3,
+#startExtras h3,
+#startExtras .tab-mundo > h3,
+#startExtras .tab-nave > h3,
+#startExtras .tab-extra > h3{
+  margin:18px 0 10px!important;
+  padding:8px 10px!important;
+  border-radius:10px!important;
+  background:rgba(255,255,255,.04)!important;
+  border:1px solid rgba(255,255,255,.08)!important;
+  border-left:3px solid var(--ts-gold)!important;
+  color:#fff!important;
+  font-size:12px!important;
+  letter-spacing:1px!important;
+  text-transform:uppercase!important;
+}
+#startPanel .diff-btns{
+  gap:8px!important;
+  margin:0 0 12px!important;
+}
+#startPanel .diff-btns button{
+  min-height:40px!important;
+  padding:8px 12px!important;
+  font-size:11px!important;
+}
+#startBottomActions,
+#startPanel #startGame{
+  margin-top:8px!important;
+}
+#startGame{
+  min-height:48px!important;
+  font-size:15px!important;
+  letter-spacing:1px!important;
+  box-shadow:0 8px 24px rgba(0,120,255,.28)!important;
+}
+
+/* HUD más legible en partida */
+.tech-game.is-playing .game-top{
+  z-index:40!important;
+}
+.tech-game.is-playing .hud-stat strong{
+  text-shadow:0 1px 2px #000, 0 0 10px rgba(0,0,0,.5)!important;
+}
+.tech-game.is-playing #gameScore{
+  color:#FFCD00!important;
+  -webkit-text-fill-color:#FFCD00!important;
+}
+
+/* Feedback de daño / mensaje de zona */
+.tech-fx-toast{
+  position:absolute;left:50%;top:18%;transform:translateX(-50%);
+  z-index:60;pointer-events:none;
+  font:800 14px Orbitron,sans-serif;letter-spacing:1px;
+  color:#FFCD00;text-shadow:0 0 12px rgba(255,205,0,.5),0 2px 6px #000;
+  opacity:0;transition:opacity .15s ease;
+}
+.tech-fx-toast.show{opacity:1}
+.tech-fx-toast.hurt{color:#ff6b7a;text-shadow:0 0 14px rgba(255,50,70,.55),0 2px 6px #000}
+
+/* Swatches bolita: blindaje extra */
+button[data-orb-color]{
+  background-clip:padding-box!important;
+}
+
+/* Menos pelea visual en paneles */
+.game-panel label{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  margin:8px 0!important;
+  color:#e8f0ff!important;
+  font-size:13px!important;
+}
+</style>
+
+
+<script id="tech-stability-runtime">
+(function(){
+  'use strict';
+  if(window.__techStabilityV1) return;
+  window.__techStabilityV1=true;
+
+  /* Toast de feedback en partida (mensajes cortos, sin spam) */
+  function ensureToast(){
+    var g=document.querySelector('.tech-game');
+    if(!g) return null;
+    var t=document.getElementById('techFxToast');
+    if(t) return t;
+    t=document.createElement('div');
+    t.id='techFxToast';
+    t.className='tech-fx-toast';
+    t.setAttribute('aria-live','polite');
+    g.appendChild(t);
+    return t;
+  }
+  var toastTimer=null;
+  window.techToast=function(msg, kind){
+    try{
+      var t=ensureToast();
+      if(!t||!msg) return;
+      t.textContent=String(msg);
+      t.classList.add('show');
+      t.classList.toggle('hurt', kind==='hurt');
+      clearTimeout(toastTimer);
+      toastTimer=setTimeout(function(){ t.classList.remove('show','hurt'); }, 1100);
+    }catch(e){}
+  };
+
+  /* Enganchar daño / mensajes de escenario sin reescribir el motor */
+  function hookFeedback(){
+    try{
+      if(typeof takeDamage==='function' && !takeDamage.__tsHook){
+        var td=takeDamage;
+        var wrapped=function(){
+          try{ window.techToast('¡IMPACTO!','hurt'); }catch(e){}
+          return td.apply(this, arguments);
+        };
+        wrapped.__tsHook=true;
+        takeDamage=wrapped;
+        try{ window.takeDamage=wrapped; }catch(e){}
+      }
+    }catch(e){}
+    try{
+      /* reflejar scenarioMsg importante en toast si cambia de golpe */
+      if(!window.__tsMsgWatch){
+        window.__tsMsgWatch=true;
+        var last='';
+        setInterval(function(){
+          try{
+            if(typeof gameRunning==='undefined'||!gameRunning) return;
+            if(typeof scenarioMsg==='undefined') return;
+            var m=String(scenarioMsg||'');
+            if(m && m!==last && (typeof scenarioTransition==='number') && scenarioTransition>40){
+              last=m;
+              window.techToast(m, /daño|impacto|hit|muerte|game over/i.test(m)?'hurt':'');
+            }
+            if(!m) last='';
+          }catch(e){}
+        }, 400);
+      }
+    }catch(e){}
+  }
+
+  /* Menú: marcar sección activa de tabs con más claridad */
+  function polishStartMenu(){
+    try{
+      var tabs=document.getElementById('startMobileTabs');
+      if(tabs){
+        tabs.querySelectorAll('button').forEach(function(b){
+          b.style.minHeight='42px';
+        });
+      }
+      var start=document.getElementById('startGame');
+      if(start && !start.dataset.tsHint){
+        start.dataset.tsHint='1';
+        if(!start.title) start.title='Iniciar partida con la configuración actual';
+      }
+    }catch(e){}
+  }
+
+  function boot(){
+    hookFeedback();
+    polishStartMenu();
+    setInterval(hookFeedback, 5000);
+    setInterval(polishStartMenu, 8000);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+  window.addEventListener('load', function(){ setTimeout(boot, 300); });
+})();
+</script>
+
 </html>
