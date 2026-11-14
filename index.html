@@ -2812,7 +2812,7 @@ html,body{width:100%;min-width:320px}
 
 
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/css/flag-icons.min.css" media="print" onload="this.media='all'">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flag-icons@7.5.0/css/flag-icons.min.css" crossorigin="anonymous">
 <style id="tech-country-flag-picker">
 .tech-country-picker{margin:10px 0 14px;padding:11px 12px;border:1px solid rgba(206,17,38,.42);border-radius:12px;background:linear-gradient(135deg,rgba(5,20,42,.94),rgba(15,12,22,.94));box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
 .tech-country-heading{display:flex;flex-direction:column;gap:3px;margin-bottom:8px;color:#dce8f5;font:700 11px Orbitron,sans-serif;letter-spacing:.35px}
@@ -3398,11 +3398,24 @@ window.techAllowPlay=function(){return !!window.techBootReady;};
 // Bandera/país elegido por el jugador. Se conserva entre sesiones.
 const TECH_COUNTRY_CODES="AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW".split(" ");
 const techRegionNames=(typeof Intl!=="undefined"&&Intl.DisplayNames)?new Intl.DisplayNames(["es"],{type:"region"}):null;
-function techFlagEmoji(code){return `<span class="fi fi-${String(code||"").toLowerCase()}" role="img" aria-label="${techCountryName(code)}"></span>`;}
+function techFlagEmoji(code){
+  const c=String(code||"").toLowerCase();
+  if(!c)return "";
+  const name=techCountryName(code);
+  /* Imagen directa (funciona en móvil sin depender de flag-icons CSS) */
+  return `<img class="tech-flag-img" src="https://flagcdn.com/w40/${c}.png" srcset="https://flagcdn.com/w40/${c}.png 1x, https://flagcdn.com/w80/${c}.png 2x" width="30" height="22" alt="${name}" title="${name}" loading="lazy" decoding="async" style="width:30px;height:22px;object-fit:cover;border-radius:3px;display:block;box-shadow:0 0 0 1px rgba(255,255,255,.25)"/>`;
+}
 function techCountryName(code){try{return techRegionNames?techRegionNames.of(code):code}catch(e){return code}}
 // La selección empieza vacía para mostrar "Elige el país". Después se conserva.
-let selectedFlag=(String(lsGet("techCountryFlagV2","")||"").toUpperCase());
-if(!TECH_COUNTRY_CODES.includes(selectedFlag))selectedFlag="";
+let selectedFlag=(function(){
+  let v="";
+  try{v=String(lsGet("techCountryFlagV2","")||"").toUpperCase()}catch(e){}
+  if(!v){try{v=String(localStorage.getItem("techCountryFlagV2")||"").toUpperCase()}catch(e){}}
+  if(!v){try{v=String(sessionStorage.getItem("techCountryFlagV2")||"").toUpperCase()}catch(e){}}
+  return v;
+})();
+if(selectedFlag&&!TECH_COUNTRY_CODES.includes(selectedFlag))selectedFlag="";
+try{if(selectedFlag){lsSet("techCountryFlagV2",selectedFlag);localStorage.setItem("techCountryFlagV2",selectedFlag)}}catch(e){}
 function techSelectedFlagEmoji(){return selectedFlag?techFlagEmoji(selectedFlag):""}
 function techUpdateHudFlag(){const el=document.getElementById("techHudFlag");if(el){el.innerHTML=techSelectedFlagEmoji();el.title=selectedFlag?techCountryName(selectedFlag):"Elige el país";el.setAttribute("aria-label",selectedFlag?("Bandera seleccionada: "+techCountryName(selectedFlag)):"No hay país seleccionado");el.style.display=selectedFlag?"inline-flex":"none";}}
 
@@ -5771,37 +5784,37 @@ if(startPanel&&!document.getElementById("startExtras")){
         ${TECH_COUNTRY_CODES.slice().sort((a,b)=>techCountryName(a).localeCompare(techCountryName(b),"es")).map(code=>`<button type="button" class="tech-country-flag-btn ${selectedFlag===code?"active":""}" data-country-flag="${code}" title="${techCountryName(code)}" aria-label="${techCountryName(code)}" aria-pressed="${selectedFlag===code}">${techFlagEmoji(code)}</button>`).join("")}
       </div>
     </section>
-    <h3><i class="fa-solid fa-globe" style="margin-right:6px;color:#FFCD00"></i>Mundo</h3>
+        <h3><span class="w-ico-inline"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#FFCD00"><path fill="currentColor" d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 2c.6 0 2 2.5 2.5 7h-5C9.9 6.5 11.4 4 12 4zm0 16c-.6 0-2-2.5-2.5-7h5c-.5 4.5-1.9 7-2.5 7zM4 12h4c0 1.2.1 2.3.2 3.3A8 8 0 014 12zm12 0h4a8 8 0 01-4.2 3.3c.1-1 .2-2.1.2-3.3z"/></svg></span> Mundo</h3>
     <div class="diff-btns world-btns">
-      <button type="button" data-world="1" class="${selectedWorld===1?"active":""}"><span class="w-ico" style="color:#7ecbff"><i class="fa-solid fa-rocket" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">1</span><span class="w-name">Espacio</span></span></button>
-      <button type="button" data-world="2" class="${selectedWorld===2?"active":""}"><span class="w-ico" style="color:#b8e4ff"><i class="fa-solid fa-snowflake" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">2</span><span class="w-name">Nieve</span></span></button>
-      <button type="button" data-world="3" class="${selectedWorld===3?"active":""}"><span class="w-ico" style="color:#ff7a45"><i class="fa-solid fa-fire" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">3</span><span class="w-name">Fuego</span></span></button>
-      <button type="button" data-world="4" class="${selectedWorld===4?"active":""}"><span class="w-ico" style="color:#9ad8ff"><i class="fa-solid fa-gem" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">4</span><span class="w-name">Cristal</span></span></button>
-      <button type="button" data-world="5" class="${selectedWorld===5?"active":""}"><span class="w-ico" style="color:#c9a0ff"><i class="fa-solid fa-star" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">5</span><span class="w-name">Nebulosa</span></span></button>
-      <button type="button" data-world="6" class="${selectedWorld===6?"active":""}"><span class="w-ico" style="color:#ff4fd8"><i class="fa-solid fa-bolt" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">6</span><span class="w-name">Neón</span></span></button>
-      <button type="button" data-world="7" class="${selectedWorld===7?"active":""}"><span class="w-ico" style="color:#7CFF4F"><i class="fa-solid fa-biohazard" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">7</span><span class="w-name">Tóxico</span></span></button>
-      <button type="button" data-world="8" class="${selectedWorld===8?"active":""}"><span class="w-ico" style="color:#8899aa"><i class="fa-solid fa-circle" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">8</span><span class="w-name">Vacío</span></span></button>
-      <button type="button" data-world="9" class="${selectedWorld===9?"active":""}"><span class="w-ico" style="color:#3dbbff"><i class="fa-solid fa-water" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">9</span><span class="w-name">Océano</span></span></button>
-      <button type="button" data-world="10" class="${selectedWorld===10?"active":""}"><span class="w-ico" style="color:#ffc14d"><i class="fa-solid fa-sun" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">10</span><span class="w-name">Desierto</span></span></button>
-      <button type="button" data-world="11" class="${selectedWorld===11?"active":""}"><span class="w-ico" style="color:#a0c4ff"><i class="fa-solid fa-cloud-bolt" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">11</span><span class="w-name">Tormenta</span></span></button>
-      <button type="button" data-world="12" class="${selectedWorld===12?"active":""}"><span class="w-ico" style="color:#7dffc0"><i class="fa-solid fa-moon" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">12</span><span class="w-name">Aurora</span></span></button>
-      <button type="button" data-world="13" class="${selectedWorld===13?"active":""}"><span class="w-ico" style="color:#ff6b4a"><i class="fa-solid fa-mountain" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">13</span><span class="w-name">Volcán</span></span></button>
-      <button type="button" data-world="14" class="${selectedWorld===14?"active":""}"><span class="w-ico" style="color:#66ff99"><i class="fa-solid fa-bug" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">14</span><span class="w-name">Glitch</span></span></button>
-      <button type="button" data-world="15" class="${selectedWorld===15?"active":""}"><span class="w-ico" style="color:#ff5a2a"><i class="fa-solid fa-fire-flame-curved" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">15</span><span class="w-name">Ráfagas lava</span></span></button>
-      <button type="button" data-world="16" class="${selectedWorld===16?"active":""}"><span class="w-ico" style="color:#ff3b1f"><i class="fa-solid fa-fire-flame-simple" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">16</span><span class="w-name">Fuego eterno</span></span></button>
-      <button type="button" data-world="17" class="${selectedWorld===17?"active":""}"><span class="w-ico" style="color:#ffd24d"><i class="fa-solid fa-burst" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">17</span><span class="w-name">Pirotecnia</span></span></button>
-      <button type="button" data-world="18" class="${selectedWorld===18?"active":""}"><span class="w-ico" style="color:#ffcc33"><i class="fa-solid fa-solar-panel" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">18</span><span class="w-name">Infierno solar</span></span></button>
-      <button type="button" data-world="19" class="${selectedWorld===19?"active":""}"><span class="w-ico" style="color:#ff8844"><i class="fa-solid fa-circle-radiation" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">19</span><span class="w-name">Núcleo magma</span></span></button>
-      <button type="button" data-world="20" class="${selectedWorld===20?"active":""}"><span class="w-ico" style="color:#d7e6ff"><i class="fa-regular fa-moon" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">20</span><span class="w-name">Luna</span></span></button>
-      <button type="button" data-world="21" class="${selectedWorld===21?"active":""}"><span class="w-ico" style="color:#9fe7ff"><i class="fa-solid fa-icicles" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">21</span><span class="w-name">Hielo</span></span></button>
-      <button type="button" data-world="22" class="${selectedWorld===22?"active":""}"><span class="w-ico" style="color:#c4a484"><i class="fa-solid fa-meteor" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">22</span><span class="w-name">Desolación</span></span></button>
-      <button type="button" data-world="23" class="${selectedWorld===23?"active":""}"><span class="w-ico" style="color:#b388ff"><i class="fa-solid fa-circle-nodes" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">23</span><span class="w-name">Otra dim.</span></span></button>
-      <button type="button" data-world="24" class="${selectedWorld===24?"active":""}"><span class="w-ico" style="color:#6ec1ff"><i class="fa-solid fa-cloud-showers-heavy" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">24</span><span class="w-name">Lluvia</span></span></button>
-      <button type="button" data-world="25" class="${selectedWorld===25?"active":""}"><span class="w-ico" style="color:#5ad46a"><i class="fa-solid fa-earth-americas" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">25</span><span class="w-name">Tierra</span></span></button>
-      <button type="button" data-world="26" class="${selectedWorld===26?"active":""}"><span class="w-ico" style="color:#c9b8ff"><i class="fa-solid fa-globe" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">26</span><span class="w-name">Plutón</span></span></button>
-      <button type="button" data-world="27" class="${selectedWorld===27?"active":""}"><span class="w-ico" style="color:#6a7a99"><i class="fa-solid fa-dungeon" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">27</span><span class="w-name">Abismo</span></span></button>
-      <button type="button" data-world="28" class="${selectedWorld===28?"active":""}"><span class="w-ico" style="color:#8e7cff"><i class="fa-solid fa-infinity" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">28</span><span class="w-name">Dimensión 1</span></span></button>
-      <button type="button" data-world="29" class="${selectedWorld===29?"active":""}"><span class="w-ico" style="color:#ff5a5a"><i class="fa-solid fa-skull" aria-hidden="true"></i></span><span class="w-meta"><span class="w-num">29</span><span class="w-name">Inframundo</span></span></button>
+      <button type="button" data-world="1" class="${selectedWorld===1?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#7ecbff"><path fill="currentColor" d="M12 2c3 4 4 7 4 11 0 2-.5 4-1.5 5.5L12 22l-2.5-3.5C8.5 17 8 15 8 13c0-4 1-7 4-11zm0 9a2 2 0 110 4 2 2 0 010-4z"/></svg></span><span class="w-meta"><span class="w-num">1</span><span class="w-name">Espacio</span></span></button>
+      <button type="button" data-world="2" class="${selectedWorld===2?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#b8e4ff"><path fill="currentColor" d="M11 2h2v4.1l2.5-2.5 1.4 1.4L14.4 7.5H18v2h-3.6l2.5 2.5-1.4 1.4L13 10.9V15h-2v-4.1l-2.5 2.5-1.4-1.4 2.5-2.5H6V7.5h3.6L7.1 5l1.4-1.4L11 6.1V2z"/></svg></span><span class="w-meta"><span class="w-num">2</span><span class="w-name">Nieve</span></span></button>
+      <button type="button" data-world="3" class="${selectedWorld===3?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#ff7a45"><path fill="currentColor" d="M12 2s4 4 4 8a4 4 0 01-8 0c0-2 1-4 2-5-1 3 1 4 1 4s-3 0-3 4a6 6 0 0012 0c0-5-4-9-8-11z"/></svg></span><span class="w-meta"><span class="w-num">3</span><span class="w-name">Fuego</span></span></button>
+      <button type="button" data-world="4" class="${selectedWorld===4?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#9ad8ff"><path fill="currentColor" d="M6 4h12l4 6-10 12L2 10l4-6zm2.2 2L6.5 9h11l-1.7-3H8.2z"/></svg></span><span class="w-meta"><span class="w-num">4</span><span class="w-name">Cristal</span></span></button>
+      <button type="button" data-world="5" class="${selectedWorld===5?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#c9a0ff"><path fill="currentColor" d="M12 2l2.4 6.6H21l-5.2 4 2 6.4L12 15.8 6.2 19l2-6.4L3 8.6h6.6L12 2z"/></svg></span><span class="w-meta"><span class="w-num">5</span><span class="w-name">Nebulosa</span></span></button>
+      <button type="button" data-world="6" class="${selectedWorld===6?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#ff4fd8"><path fill="currentColor" d="M13 2L4 14h6l-1 8 11-14h-6l-1-6z"/></svg></span><span class="w-meta"><span class="w-num">6</span><span class="w-name">Neón</span></span></button>
+      <button type="button" data-world="7" class="${selectedWorld===7?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#7CFF4F"><path fill="currentColor" d="M12 2a5 5 0 015 5v1h1a4 4 0 010 8h-1v1a5 5 0 01-10 0v-1H6a4 4 0 010-8h1V7a5 5 0 015-5zm-3 9a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6 0a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"/></svg></span><span class="w-meta"><span class="w-num">7</span><span class="w-name">Tóxico</span></span></button>
+      <button type="button" data-world="8" class="${selectedWorld===8?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#8899aa"><path fill="currentColor" d="M12 4a8 8 0 100 16 8 8 0 000-16zm0 3a5 5 0 110 10 5 5 0 010-10z"/></svg></span><span class="w-meta"><span class="w-num">8</span><span class="w-name">Vacío</span></span></button>
+      <button type="button" data-world="9" class="${selectedWorld===9?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#3dbbff"><path fill="currentColor" d="M6 14c0 2 2 4 6 4s6-2 6-4-2-4-6-6c-4 2-6 4-6 6z"/></svg></span><span class="w-meta"><span class="w-num">9</span><span class="w-name">Océano</span></span></button>
+      <button type="button" data-world="10" class="${selectedWorld===10?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#ffc14d"><path fill="currentColor" d="M11 1h2v3h-2V1zm0 19h2v3h-2v-3zM1 11h3v2H1v-2zm19 0h3v2h-3v-2zM4.2 4.2L6.3 6.3 4.9 7.7 2.8 5.6l1.4-1.4zm12.1 12.1l2.1 2.1-1.4 1.4-2.1-2.1 1.4-1.4zM19.8 4.2l1.4 1.4-2.1 2.1-1.4-1.4 2.1-2.1zM6.3 17.7l1.4 1.4-2.1 2.1-1.4-1.4 2.1-2.1zM12 7a5 5 0 100 10 5 5 0 000-10z"/></svg></span><span class="w-meta"><span class="w-num">10</span><span class="w-name">Desierto</span></span></button>
+      <button type="button" data-world="11" class="${selectedWorld===11?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#a0c4ff"><path fill="currentColor" d="M7 10a5 5 0 019.6-1.8A4 4 0 0118 16H7a4 4 0 010-6zm5 7l-2 4h2l2-4h-2z"/></svg></span><span class="w-meta"><span class="w-num">11</span><span class="w-name">Tormenta</span></span></button>
+      <button type="button" data-world="12" class="${selectedWorld===12?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#7dffc0"><path fill="currentColor" d="M13 2a9 9 0 108.5 12A7 7 0 0113 2z"/></svg></span><span class="w-meta"><span class="w-num">12</span><span class="w-name">Aurora</span></span></button>
+      <button type="button" data-world="13" class="${selectedWorld===13?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#ff6b4a"><path fill="currentColor" d="M3 20L9 6l3 6 2-3 7 11H3z"/></svg></span><span class="w-meta"><span class="w-num">13</span><span class="w-name">Volcán</span></span></button>
+      <button type="button" data-world="14" class="${selectedWorld===14?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#66ff99"><path fill="currentColor" d="M9 7V5l-2-2 1-1 2 2h4l2-2 1 1-2 2v2h3v2h-2.1c.1.3.1.7.1 1v1h3v2h-3v1c0 .3 0 .7-.1 1H18v2h-3a5 5 0 01-10 0H2v-2h2.1c-.1-.3-.1-.7-.1-1v-1H1v-2h3v-1c0-.3 0-.7.1-1H2V7h3z"/></svg></span><span class="w-meta"><span class="w-num">14</span><span class="w-name">Glitch</span></span></button>
+      <button type="button" data-world="15" class="${selectedWorld===15?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#ff5a2a"><path fill="currentColor" d="M12 2c2 3 5 5 5 9a5 5 0 11-10 0c0-2 1-4 2-5 0 2 1 3 1 3s1-2 2-7z"/></svg></span><span class="w-meta"><span class="w-num">15</span><span class="w-name">Ráfagas lava</span></span></button>
+      <button type="button" data-world="16" class="${selectedWorld===16?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#ff3b1f"><path fill="currentColor" d="M12 2c2 3 5 5 5 9a5 5 0 11-10 0c0-2 1-4 2-5 0 2 1 3 1 3s1-2 2-7z"/></svg></span><span class="w-meta"><span class="w-num">16</span><span class="w-name">Fuego eterno</span></span></button>
+      <button type="button" data-world="17" class="${selectedWorld===17?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#ffd24d"><path fill="currentColor" d="M12 2l1.5 6.5L20 8l-5 4 2 7-5-3.5L7 19l2-7-5-4 6.5-.5L12 2z"/></svg></span><span class="w-meta"><span class="w-num">17</span><span class="w-name">Pirotecnia</span></span></button>
+      <button type="button" data-world="18" class="${selectedWorld===18?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#ffcc33"><path fill="currentColor" d="M4 12h16v8H4v-8zm2 2v4h12v-4H6zM12 2l3 5h-6l3-5z"/></svg></span><span class="w-meta"><span class="w-num">18</span><span class="w-name">Infierno solar</span></span></button>
+      <button type="button" data-world="19" class="${selectedWorld===19?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#ff8844"><path fill="currentColor" d="M12 10a2 2 0 110 4 2 2 0 010-4zm-7.5.5L8 13l-3.5 2.5L2 12l2.5-1.5zm15 0L22 12l-2.5 3.5L16 13l3.5-2.5zM12 2l2.5 3.5L12 8 9.5 5.5 12 2z"/></svg></span><span class="w-meta"><span class="w-num">19</span><span class="w-name">Núcleo magma</span></span></button>
+      <button type="button" data-world="20" class="${selectedWorld===20?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#d7e6ff"><path fill="currentColor" d="M13 2a9 9 0 108.5 12A7 7 0 0113 2z"/></svg></span><span class="w-meta"><span class="w-num">20</span><span class="w-name">Luna</span></span></button>
+      <button type="button" data-world="21" class="${selectedWorld===21?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#9fe7ff"><path fill="currentColor" d="M11 2h2v20h-2V2zm-6.5 4L7 8.5 4.5 11 2 8.5 4.5 6zm15 0L22 8.5 19.5 11 17 8.5 19.5 6zM4.5 13L7 15.5 4.5 18 2 15.5 4.5 13zm15 0L22 15.5 19.5 18 17 15.5 19.5 13z"/></svg></span><span class="w-meta"><span class="w-num">21</span><span class="w-name">Hielo</span></span></button>
+      <button type="button" data-world="22" class="${selectedWorld===22?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#c4a484"><path fill="currentColor" d="M4 4l8 4-2 2 6 6-2 2-6-6-2 2-4-8zm11 9a3 3 0 110 6 3 3 0 010-6z"/></svg></span><span class="w-meta"><span class="w-num">22</span><span class="w-name">Desolación</span></span></button>
+      <button type="button" data-world="23" class="${selectedWorld===23?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#b388ff"><path fill="currentColor" d="M6 6a2 2 0 110 4 2 2 0 010-4zm12 0a2 2 0 110 4 2 2 0 010-4zM6 16a2 2 0 110 4 2 2 0 010-4zm12 0a2 2 0 110 4 2 2 0 010-4zM8 8l8 0M8 18h8M7 9.5l0 7M17 9.5v7"/></svg></span><span class="w-meta"><span class="w-num">23</span><span class="w-name">Otra dim.</span></span></button>
+      <button type="button" data-world="24" class="${selectedWorld===24?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#6ec1ff"><path fill="currentColor" d="M7 10a5 5 0 019.6-1.8A4 4 0 0118 16H7a4 4 0 010-6zm1 8l-1 3h2l1-3H8zm5 0l-1 3h2l1-3h-2z"/></svg></span><span class="w-meta"><span class="w-num">24</span><span class="w-name">Lluvia</span></span></button>
+      <button type="button" data-world="25" class="${selectedWorld===25?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#5ad46a"><path fill="currentColor" d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 2c1.5 0 3.5 3.2 3.9 8H8.1C8.5 7.2 10.5 4 12 4zm-4 10h8c-.4 4.8-2.4 8-4 8s-3.6-3.2-4-8z"/></svg></span><span class="w-meta"><span class="w-num">25</span><span class="w-name">Tierra</span></span></button>
+      <button type="button" data-world="26" class="${selectedWorld===26?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#c9b8ff"><path fill="currentColor" d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 2c.6 0 2 2.5 2.5 7h-5C9.9 6.5 11.4 4 12 4zm0 16c-.6 0-2-2.5-2.5-7h5c-.5 4.5-1.9 7-2.5 7zM4 12h4c0 1.2.1 2.3.2 3.3A8 8 0 014 12zm12 0h4a8 8 0 01-4.2 3.3c.1-1 .2-2.1.2-3.3z"/></svg></span><span class="w-meta"><span class="w-num">26</span><span class="w-name">Plutón</span></span></button>
+      <button type="button" data-world="27" class="${selectedWorld===27?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#6a7a99"><path fill="currentColor" d="M4 4h16v4H4V4zm2 6h12v10H6V10zm3 2v6h2v-6H9zm4 0v6h2v-6h-2z"/></svg></span><span class="w-meta"><span class="w-num">27</span><span class="w-name">Abismo</span></span></button>
+      <button type="button" data-world="28" class="${selectedWorld===28?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#8e7cff"><path fill="currentColor" d="M6 12c0-2 1.5-4 4-4 3 0 4.5 4 7 4 1.5 0 3-1 3-2.5S18.5 7 17 7c-1 0-1.7.4-2.3 1l-1.2-1.5C14.5 5.5 15.7 5 17 5c3 0 5 2 5 4.5S20 14 17 14c-3 0-4.5-4-7-4-1.5 0-3 1-3 2.5S8.5 17 10 17c1 0 1.7-.4 2.3-1l1.2 1.5c-.9 1-2.1 1.5-3.5 1.5-3 0-5-2-5-4.5z"/></svg></span><span class="w-meta"><span class="w-num">28</span><span class="w-name">Dimensión 1</span></span></button>
+      <button type="button" data-world="29" class="${selectedWorld===29?"active":""}"><span class="w-ico"><svg class="w-svg" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" style="color:#ff5a5a"><path fill="currentColor" d="M12 2a8 8 0 00-8 8c0 3 1.5 5 3 6v4h10v-4c1.5-1 3-3 3-6a8 8 0 00-8-8zM9 11a1.5 1.5 0 110 3 1.5 1.5 0 010-3zm6 0a1.5 1.5 0 110 3 1.5 1.5 0 010-3z"/></svg></span><span class="w-meta"><span class="w-num">29</span><span class="w-name">Inframundo</span></span></button>
     </div>
         <h3>🚀 Seleccionar nave</h3>
     <div id="shipCarousel" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 4px;user-select:none;-webkit-user-select:none">
@@ -5995,7 +6008,10 @@ if(startPanel&&!document.getElementById("startExtras")){
     const chooseCountryFlag=(rawCode)=>{
       const code=String(rawCode||"").toUpperCase();
       if(!TECH_COUNTRY_CODES.includes(code))return;
-      selectedFlag=code;lsSet("techCountryFlagV2",selectedFlag);
+      selectedFlag=code;
+      try{lsSet("techCountryFlagV2",selectedFlag)}catch(e){}
+      try{localStorage.setItem("techCountryFlagV2",selectedFlag)}catch(e){}
+      try{sessionStorage.setItem("techCountryFlagV2",selectedFlag)}catch(e){}
       if(countrySelect)countrySelect.value=code;
       const preview=box.querySelector("#techCountryPreview");if(preview)preview.innerHTML=techSelectedFlagEmoji()||"🌐";
       box.querySelectorAll("[data-country-flag]").forEach(btn=>{const active=btn.getAttribute("data-country-flag")===code;btn.classList.toggle("active",active);btn.setAttribute("aria-pressed",active?"true":"false");});
@@ -18704,6 +18720,23 @@ body.tech-playing .game-top{
   setTimeout(hideSplash, 5000);
 })();
 </script>
+
+<script id="tech-flag-persist">
+(function(){
+  function saveFlag(){
+    try{
+      var f=(typeof selectedFlag!=='undefined'&&selectedFlag)?String(selectedFlag).toUpperCase():'';
+      if(!f) return;
+      try{localStorage.setItem('techCountryFlagV2',f)}catch(e){}
+      try{sessionStorage.setItem('techCountryFlagV2',f)}catch(e){}
+    }catch(e){}
+  }
+  document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden') saveFlag(); });
+  window.addEventListener('pagehide', saveFlag);
+  window.addEventListener('beforeunload', saveFlag);
+})();
+</script>
+
 </body>
 
 <style id="tech-stability-v1">
@@ -19094,6 +19127,26 @@ button[data-orb-color]{
 }
 @media(min-width:860px){
   .world-btns{grid-template-columns:repeat(5,minmax(0,1fr))!important}
+}
+</style>
+
+
+<style id="tech-world-flag-fix">
+.world-btns .w-ico{
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  width:36px!important;height:36px!important;border-radius:10px!important;
+  background:rgba(255,255,255,.07)!important;
+}
+.world-btns .w-svg{display:block!important;width:22px!important;height:22px!important}
+.w-ico-inline .w-svg{width:18px;height:18px;vertical-align:-3px;margin-right:4px}
+.tech-flag-img,.tech-country-flag-btn .tech-flag-img,.tech-country-current .tech-flag-img,.tech-hud-flag .tech-flag-img{
+  width:30px!important;height:22px!important;object-fit:cover!important;border-radius:3px!important;
+  display:block!important;box-shadow:0 0 0 1px rgba(255,255,255,.25);
+}
+.tech-hud-flag .tech-flag-img{width:26px!important;height:18px!important}
+@media(max-width:400px){
+  .world-btns .w-ico{width:32px!important;height:32px!important}
+  .world-btns .w-svg{width:18px!important;height:18px!important}
 }
 </style>
 
