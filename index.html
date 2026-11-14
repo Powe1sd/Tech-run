@@ -4320,15 +4320,25 @@ function addScoreCombo(pts){
   if(feverMode>0)gained=Math.floor(gained*1.5);
   addScore(gained);
   lastKillPts=gained;
-  /* Feedback arcade: sfx + flash + número flotante */
-  try{playSfx("explode")}catch(e){try{playSfx("hit")}catch(_){}}
-  killFlash=Math.max(killFlash,8);
+  /* Feedback arcade suave (sin blanquear la pantalla) */
+  try{
+    if(gained>=8) playSfx("explode");
+    else if(Math.random()<0.35) playSfx("hit");
+  }catch(e){}
+  /* Solo destello leve en kills grandes; las cuchillas no llenan de blanco */
+  if(gained>=10) killFlash=Math.max(killFlash,4);
+  else if(gained>=5) killFlash=Math.max(killFlash,2);
   try{
     const px=(typeof player!=="undefined"&&player)?player.x:(canvas.width/2);
     const py=(typeof player!=="undefined"&&player)?player.y-30:(canvas.height/2);
-    spawnFloatText(px+(Math.random()*30-15), py+(Math.random()*16-8), "+"+gained, "#FFCD00");
-    if(combo>=3){
-      spawnFloatText(px, py-28, "x"+combo, combo>=10?"#FF4466":(combo>=5?"#FF8800":"#88FFAA"));
+    if(gained>=2){
+      spawnFloatText(px+(Math.random()*24-12), py+(Math.random()*12-6), "+"+gained, "#FFCD00");
+    }
+    if(combo>=3 && combo%1===0){
+      /* un solo texto de combo, no en cada diente de sierra */
+      if(combo===3||combo===5||combo===10||combo%5===0){
+        spawnFloatText(px, py-26, "x"+combo, combo>=10?"#FF4466":(combo>=5?"#FF8800":"#88FFAA"));
+      }
     }
   }catch(e){}
   try{if(typeof updateComboHud==="function")updateComboHud()}catch(e){}
@@ -4387,9 +4397,7 @@ function updateComboHud(){
     el.parentElement&&el.parentElement.classList.remove("is-hot");
   }
 }
-function triggerHitPause(frames){
-  hitPauseFrames=Math.max(hitPauseFrames|0, frames|0);
-}
+function triggerHitPause(frames){ hitPauseFrames=0; }
 function makeScoreCard(){
   /* Imagen tipo pantallazo con la puntuación */
   const W=720,H=900;
@@ -7236,12 +7244,13 @@ function updateHitSparks(){
   }
 }
 function createExplosion(x,y,size,color){
-  if(size>=8)playSfx("explode"); /* SONIDO EXPLOSIÓN METEORO/ENEMIGO */
-  if(size>=10)triggerShake(Math.min(14,4+size*0.15));
-  if(size>=12)addHitSpark(x,y,color||"255,180,40");
-  if(explosions.length>(isMobile()?1:8))explosions.splice(0,explosions.length-1);
-  const n=isMobile()?1:Math.min(2,1+Math.floor(size/12));
-  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=1+Math.random()*2.5;explosions.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,size:2+Math.random()*2.5,opacity:1,color:color||(Math.random()>.5?"255,80,40":"255,200,50")})}
+  size=Math.min(Number(size)||8, isMobile()?18:28);
+  if(size>=12)playSfx("explode");
+  if(size>=16)try{triggerShake(Math.min(8,3+size*0.08))}catch(e){}
+  if(size>=14)try{addHitSpark(x,y,color||"255,180,40")}catch(e){}
+  if(explosions.length>(isMobile()?2:5))explosions.splice(0,explosions.length-(isMobile()?2:5));
+  const n=isMobile()?1:Math.min(2,1+Math.floor(size/16));
+  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=1+Math.random()*2;explosions.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,size:1.5+Math.random()*2,opacity:1,color:color||(Math.random()>.5?"255,80,40":"255,200,50")})}
 }
 
 /* Suelta un poder al azar (máx. pocos en pantalla) */
@@ -7490,9 +7499,24 @@ function destroyEnemy(o,i){
   if(!o||o.__techDestroyed)return;
   o.__techDestroyed=true;
   const cx=o.x+o.size/2,cy=o.y+o.size/2;
-  if(o.type==="space_mine"){
-    createExplosion(cx,cy,o.size*2.2,"255,60,30");
-    try{playSfx("explode")}catch(e){}
+  if(o.type==="space_mine"||o.type==="patrol_drone"){
+    /* Cuchillas: salida rápida SIN addScoreCombo/explosiones pesadas */
+    try{obstacles.splice(i,1)}catch(e){}
+    killFlash=0;hitPauseFrames=0;
+    if(Array.isArray(explosions)&&explosions.length<4){
+      explosions.push({x:cx,y:cy,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,size:2.5,opacity:.8,color:"255,140,60"});
+    }
+    try{
+      const g=o.type==="space_mine"?2:1;
+      score=(Number(score)||0)+g;
+      if(typeof scoreElement!=="undefined"&&scoreElement)scoreElement.textContent=score;
+      meteorsDestroyed=(meteorsDestroyed||0)+1;
+      coins=Math.max(0,(Number(coins)||0)+1);
+      try{lsSet("techCoinsV2",coins)}catch(e){}
+      if(comboTimer>0){combo++;comboTimer=90}else{combo=1;comboTimer=90}
+      try{if(typeof updateComboHud==="function")updateComboHud()}catch(e){}
+    }catch(e){}
+    return;
   } else if(o.type==="explosive"){
     createExplosion(cx,cy,o.size*1.3,"255,100,30");
     /* Ráfaga de balas enemigas al explotar */
@@ -7550,7 +7574,7 @@ function destroyEnemy(o,i){
   if(isAlien)progressDaily("alien",1);
   if(String(o.type).startsWith("boss")){
     progressDaily("boss",1);
-    try{triggerHitPause(3)}catch(e){hitPauseFrames=3}
+    try{triggerHitPause(3)}catch(e){hitPauseFrames=0}
     try{killFlash=Math.max(killFlash,14)}catch(e){}
     try{if(typeof spawnFloatText==="function")spawnFloatText(o.x+o.size/2,o.y, "BOSS +","#FFD700")}catch(e){}
   }
@@ -8462,18 +8486,22 @@ function hitPlayer(x,y,opts){
   if(invisible>0||dashInvuln>0)return;
   /* Escudo rebote: no recibe daño (las balas se devuelven en updateEnemyBullets) */
   if(bounceShield>0){createExplosion(x,y,12,"200,255,255");playSfx("reflect");if(!SFX.reflect)playSfx("shield");return}
-  if(opts.soft||opts.laser){
-    /* Láser/trampa: no mata de un golpe — se puede esquivar */
+  if(opts.soft||opts.laser||opts.blade){
+    /* Láser/trampa/cuchilla: no mata de un golpe — se puede esquivar */
     if(laserGrace>0)return;
-    laserGrace=50;
-    playSfx("hit");damageFlash=18;try{triggerShake(11);addHitSpark(player.x,player.y,"255,50,30")}catch(e){};triggerShake(12);addHitSpark(player.x,player.y,"255,60,40");
-    if(shield>0){shield=Math.max(0,shield-35);createExplosion(x,y,8,"0,200,255");return}
-    /* sin escudo: solo avisa + escudo temporal corto */
-    shield=Math.max(shield,70);
-    createExplosion(player.x,player.y,16,"255,180,50");
+    laserGrace=opts.blade?35:50;
+    try{playSfx("hit")}catch(e){}
+    damageFlash=opts.blade?10:14;
+    killFlash=0;
+    hitPauseFrames=0;
+    try{triggerShake(opts.blade?5:9);addHitSpark(player.x,player.y,"255,80,40")}catch(e){}
+    if(shield>0){shield=Math.max(0,shield-(opts.blade?20:35));createExplosion(x,y,6,"0,200,255");return}
+    /* sin escudo: aviso + escudo temporal corto */
+    shield=Math.max(shield,opts.blade?50:70);
+    createExplosion(player.x,player.y,opts.blade?8:12,"255,160,50");
     return;
   }
-  playSfx("hit");damageFlash=25;combo=0;comboMult=1;comboTimer=0;try{triggerHitPause(2)}catch(e){hitPauseFrames=2}try{killFlash=Math.max(killFlash,6)}catch(e){}try{if(typeof updateComboHud==="function")updateComboHud()}catch(e){}try{if(typeof spawnFloatText==="function"&&player)spawnFloatText(player.x,player.y-24,"HIT","#FF4466")}catch(e){}
+  playSfx("hit");damageFlash=16;combo=0;comboMult=1;comboTimer=0;try{triggerHitPause(1)}catch(e){hitPauseFrames=0}killFlash=0;try{if(typeof updateComboHud==="function")updateComboHud()}catch(e){}try{if(typeof spawnFloatText==="function"&&player)spawnFloatText(player.x,player.y-24,"HIT","#FF4466")}catch(e){}
   if(shield>0){createExplosion(x,y,10,"0,200,255");shield=Math.max(0,shield-70);return}
   if(lives>1){lives--;updateLivesUI();shield=120;createExplosion(player.x,player.y,30,"255,100,0");return}
   endGame();
@@ -9118,63 +9146,33 @@ function drawObstacle(o){
       o.rotation=(o.rotation||0)+(o.rotationSpeed||.05);
       ctx.shadowBlur=0;
     } else {
-      /* Sierra circular giratoria */
+      /* Sierra circular — dibujo ligero (sin gradientes ni 14 dientes por frame) */
       ctx.rotate(o.rotation||0);
       const armed=!!(o.armed);
-      ctx.shadowColor=o.type==="space_mine"||armed?"#CE1126":"#999";
-      ctx.shadowBlur=isMobile()?0:(armed?12:7);
-      const teeth=o.type==="space_mine"?14:12;
-      const outer=s*0.55, inner=s*0.2;
-      const disc=ctx.createRadialGradient(-s*.1,-s*.1,1,0,0,outer*0.7);
-      disc.addColorStop(0,"#666");disc.addColorStop(.5,"#222");disc.addColorStop(1,"#0a0a0a");
-      ctx.beginPath();ctx.arc(0,0,outer*0.7,0,Math.PI*2);ctx.fillStyle=disc;ctx.fill();
-      ctx.beginPath();
-      for(let k=0;k<teeth;k++){
-        const a0=(k/teeth)*Math.PI*2;
-        const a1=((k+0.32)/teeth)*Math.PI*2;
-        const a2=((k+0.52)/teeth)*Math.PI*2;
-        const a3=((k+1)/teeth)*Math.PI*2;
-        const rT=outer, rB=outer*0.7;
-        if(k===0)ctx.moveTo(Math.cos(a0)*rB,Math.sin(a0)*rB);
-        else ctx.lineTo(Math.cos(a0)*rB,Math.sin(a0)*rB);
-        ctx.lineTo(Math.cos(a1)*rT,Math.sin(a1)*rT);
-        ctx.lineTo(Math.cos(a2)*rT,Math.sin(a2)*rT);
-        ctx.lineTo(Math.cos(a3)*rB,Math.sin(a3)*rB);
-      }
-      ctx.closePath();
-      const tg=ctx.createRadialGradient(0,0,inner,0,0,outer);
-      tg.addColorStop(0,"#3a3a3a");tg.addColorStop(.55,"#151515");tg.addColorStop(1,o.type==="space_mine"?"#3a0505":"#1a1a1a");
-      ctx.fillStyle=tg;ctx.fill();
-      ctx.strokeStyle=o.type==="space_mine"?"rgba(206,17,38,.9)":"rgba(220,220,220,.5)";
-      ctx.lineWidth=1.15;ctx.stroke();
-      if(o.type==="space_mine"||armed){
-        ctx.strokeStyle="rgba(255,50,50,.8)";ctx.lineWidth=1.1;
+      const outer=s*0.52, inner=s*0.18;
+      ctx.beginPath();ctx.arc(0,0,outer,0,Math.PI*2);
+      ctx.fillStyle=o.type==="space_mine"?(armed?"#4a1010":"#2a2a2a"):"#333";
+      ctx.fill();
+      ctx.strokeStyle=o.type==="space_mine"?"#CE1126":"#bbb";
+      ctx.lineWidth=1.5;ctx.stroke();
+      /* 6 dientes simples */
+      ctx.strokeStyle=armed?"#ff5555":"#888";
+      ctx.lineWidth=2;
+      for(let k=0;k<6;k++){
+        const a=(k/6)*Math.PI*2;
         ctx.beginPath();
-        for(let k=0;k<teeth;k++){
-          const a1=((k+0.32)/teeth)*Math.PI*2, a2=((k+0.52)/teeth)*Math.PI*2;
-          ctx.moveTo(Math.cos(a1)*outer,Math.sin(a1)*outer);
-          ctx.lineTo(Math.cos(a2)*outer,Math.sin(a2)*outer);
-        }
+        ctx.moveTo(Math.cos(a)*inner,Math.sin(a)*inner);
+        ctx.lineTo(Math.cos(a)*outer,Math.sin(a)*outer);
         ctx.stroke();
       }
-      ctx.beginPath();ctx.arc(0,0,inner,0,Math.PI*2);ctx.fillStyle="#0d0d0d";ctx.fill();
-      ctx.strokeStyle="#CE1126";ctx.lineWidth=2;ctx.stroke();
-      ctx.beginPath();ctx.arc(0,0,inner*0.4,0,Math.PI*2);ctx.fillStyle="#CE1126";ctx.fill();
-      if(o.type==="space_mine"&&(o.proximity||o.armed)){
+      ctx.beginPath();ctx.arc(0,0,inner,0,Math.PI*2);
+      ctx.fillStyle="#111";ctx.fill();
+      ctx.strokeStyle="#CE1126";ctx.lineWidth=1.5;ctx.stroke();
+      if(o.type==="space_mine"&&armed){
         ctx.rotate(-(o.rotation||0));
-        const R=(o.armRadius||70);
-        const pulse=0.2+0.15*Math.sin(performance.now()/130);
-        ctx.beginPath();ctx.arc(0,0,R,0,Math.PI*2);
-        ctx.strokeStyle=o.armed?`rgba(255,40,40,${0.4+pulse})`:`rgba(206,17,38,${0.18+pulse})`;
-        ctx.lineWidth=1.4;ctx.setLineDash([5,4]);ctx.stroke();ctx.setLineDash([]);
-        if(o.armed){ctx.fillStyle=`rgba(206,17,38,${0.06+pulse*0.08})`;ctx.beginPath();ctx.arc(0,0,R,0,Math.PI*2);ctx.fill()}
+        ctx.beginPath();ctx.arc(0,0,(o.armRadius||50)*0.55,0,Math.PI*2);
+        ctx.strokeStyle="rgba(255,60,60,0.28)";ctx.lineWidth=1;ctx.stroke();
       }
-      if(o.type==="patrol_drone"&&(o.maxHp||o.hp||1)>1){
-        ctx.rotate(-(o.rotation||0));
-        const barW=s*1.1;ctx.shadowBlur=0;ctx.fillStyle="rgba(0,0,0,.5)";ctx.fillRect(-barW/2,-s-10,barW,3);
-        ctx.fillStyle=o.hp>1?"#66FF88":"#FF3333";ctx.fillRect(-barW/2,-s-10,barW*(o.hp/Math.max(1,o.maxHp||2)),3);
-      }
-      ctx.shadowBlur=0;
     }
   } else if(String(o.type).startsWith("boss")){
     const s=o.size;
@@ -9578,9 +9576,15 @@ function updateExtraTraps(){
       ctx.fillStyle="#FFAA00";ctx.beginPath();ctx.arc(0,0,t.size*.35,0,Math.PI*2);ctx.fill();
       ctx.restore();
       /* Hitbox amplia: llega abajo y hace daño al contacto */
-      if(invisible<=0&&Math.hypot(player.x-t.x,player.y-t.y)<player.size*1.15+t.size*1.15){
-        playSfx("trap"); /* SFX: audios/trampa-sierra.mp3 */ if(SFX.trapBlade)playSfx("trapBlade");
-        hitPlayer(t.x,t.y);traps.splice(i,1);if(!gameRunning)return;
+      if(invisible<=0&&Math.hypot(player.x-t.x,player.y-t.y)<player.size*1.05+t.size*0.95){
+        try{playSfx("trap")}catch(e){}
+        try{if(SFX.trapBlade)playSfx("trapBlade")}catch(e){}
+        /* Impacto de cuchilla: feedback suave, sin pantallazo blanco */
+        damageFlash=Math.min(12, (damageFlash||0)+8);
+        killFlash=0;
+        hitPauseFrames=0;
+        hitPlayer(t.x,t.y,{soft:true,blade:true});
+        traps.splice(i,1);if(!gameRunning)return;
       }
       if(t.y>canvas.height+40)traps.splice(i,1);
     } else if(t.type==="net"){
@@ -10706,22 +10710,9 @@ let _techLastFrameTs=0;
 function gameLoopCore(ts){
 if(!gameRunning||gamePaused)return;
 /* Hit-pause arcade: 1–3 frames congelados */
-if(hitPauseFrames>0){
-  hitPauseFrames--;
-  try{
-    ctx.save();
-    drawSpaceBG();
-    if(typeof drawPlayer==="function")drawPlayer();
-    if(typeof drawFloatTexts==="function")drawFloatTexts();
-    if(killFlash>0){
-      ctx.fillStyle="rgba(255,255,255,"+(0.08+killFlash*0.02)+")";
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      killFlash--;
-    }
-    ctx.restore();
-  }catch(e){}
-  return;
-}
+/* hit-pause desactivado: no congelar el frame (causaba lag al chocar cuchillas) */
+hitPauseFrames=0;
+
 _lastLoopTs=performance.now();
 updateAdaptiveQuality(ts);
 const _isMobLoop=(typeof isMobile==='function'&&isMobile());
@@ -10744,8 +10735,8 @@ ctx.save();
 drawSpaceBG();
 /* mob-no-shadow: las GPUs móviles odian shadowBlur */
 if((typeof lowPower!=="undefined"&&lowPower) || ((window.techGfxQuality||'high')==='low')){try{ctx.shadowBlur=0;ctx.shadowColor="transparent"}catch(e){}}
-if(damageFlash>0){ctx.fillStyle=`rgba(180,0,0,${0.12+damageFlash*0.01})`;ctx.fillRect(0,0,canvas.width,canvas.height)}
-if(killFlash>0){ctx.fillStyle=`rgba(255,240,180,${Math.min(0.22,killFlash*0.025)})`;ctx.fillRect(0,0,canvas.width,canvas.height);killFlash--}
+if(damageFlash>0){ctx.fillStyle=`rgba(180,0,0,${Math.min(0.18,0.06+damageFlash*0.006)})`;ctx.fillRect(0,0,canvas.width,canvas.height)}
+if(killFlash>0){ctx.fillStyle=`rgba(255,180,60,${Math.min(0.08,killFlash*0.012)})`;ctx.fillRect(0,0,canvas.width,canvas.height);killFlash=Math.max(0,killFlash-2)}
 
 /* fiebre: sin barras laterales (evita mareo) */
 if(introTimer>0){
@@ -10927,13 +10918,34 @@ for(let i=obstacles.length-1;i>=0;i--){
   }
   drawObstacle(o);
   if(checkCollision(o)){
-    if(invisible>0||dashInvuln>0){
-      /* Invulnerable: destroza enemigos al contacto (jefes solo reciben daño) */
-      createExplosion(o.x+o.size/2,o.y+o.size/2,o.type==="space_mine"?o.size*1.8:o.size,o.type==="space_mine"?"255,80,40":"255,215,0");
+    const isSaw=(o.type==="space_mine"||o.type==="patrol_drone");
+    if(isSaw){
+      /* Contacto cuchilla: sin createExplosion grande ni hitPlayer pesado */
+      killFlash=0;hitPauseFrames=0;damageFlash=Math.min(6,(damageFlash||0)+4);
+      if(invisible>0||dashInvuln>0){
+        try{destroyEnemy(o,i)}catch(e){try{obstacles.splice(i,1)}catch(_e){}}
+      } else if(shield>0){
+        shield=Math.max(0,shield-20);
+        try{destroyEnemy(o,i)}catch(e){try{obstacles.splice(i,1)}catch(_e){}}
+      } else if(lives>1){
+        lives--;try{updateLivesUI()}catch(e){};shield=70;
+        try{destroyEnemy(o,i)}catch(e){try{obstacles.splice(i,1)}catch(_e){}}
+        try{playSfx("hit")}catch(e){}
+      } else {
+        try{destroyEnemy(o,i)}catch(e){try{obstacles.splice(i,1)}catch(_e){}}
+        endGame();return;
+      }
+    } else if(invisible>0||dashInvuln>0){
+      createExplosion(o.x+o.size/2,o.y+o.size/2,Math.min(14,o.size||12),"255,215,0");
       if(String(o.type||"").startsWith("boss")){o.hp=(o.hp||10)-3;if(o.hp<=0){try{destroyEnemy(o,i)}catch(e){obstacles.splice(i,1)}}}
       else{try{destroyEnemy(o,i)}catch(e){obstacles.splice(i,1)}}
     }
-    else if(shield>0||lives>1){createExplosion(o.x+o.size/2,o.y+o.size/2,o.size,"0,200,255");if(!String(o.type).startsWith("boss"))obstacles.splice(i,1);else o.hp-=2;hitPlayer(o.x,o.y);if(!gameRunning)return}
+    else if(shield>0||lives>1){
+      createExplosion(o.x+o.size/2,o.y+o.size/2,Math.min(12,o.size||10),"0,200,255");
+      if(!String(o.type).startsWith("boss"))obstacles.splice(i,1);else o.hp-=2;
+      hitPlayer(o.x,o.y,{soft:true});
+      if(!gameRunning)return;
+    }
     else{endGame();return}
   }
   if((o.type==="patrol_drone"||o.type==="space_mine"||o.type==="meteor"||o.type==="explosive"||o.type==="magnetic"||o.type==="hard"||o.type==="fireball")&&o.y>canvas.height+40)obstacles.splice(i,1);
