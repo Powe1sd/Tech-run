@@ -13290,21 +13290,15 @@ function downloadCSV(rows,name){const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+Stri
         set('—', '');
         return;
       }
-      const bestByUser=new Map();
-      rows.forEach(function(r){
-        const raw=r['nombre-nave']!=null?r['nombre-nave']:(r.nombre_nave!=null?r.nombre_nave:'');
-        const user=String(raw||'').split(' · ')[0].trim();
-        if(!user) return;
-        const sc=Math.max(0, Number(r.record)||0);
-        const key=user.toLocaleLowerCase();
-        const prev=bestByUser.get(key);
-        if(!prev || sc>prev.score) bestByUser.set(key, {name:user, score:sc, raw:String(raw||user)});
-      });
-      const ranking=Array.from(bestByUser.values()).sort(function(a,b){ return b.score-a.score; });
-      const myKey=nick.toLocaleLowerCase();
+      const ranking=window.techBuildOnlinePlayers(rows);
+      function rankKey(v){
+        return String(v||'').split(' · ')[0].trim().normalize('NFD')
+          .replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase();
+      }
+      const myKey=rankKey(nick);
       let myIdx=-1, my=null;
       for(let i=0;i<ranking.length;i++){
-        if(ranking[i].name.toLocaleLowerCase()===myKey){ myIdx=i; my=ranking[i]; break; }
+        if(rankKey(ranking[i].name)===myKey){ myIdx=i; my=ranking[i]; break; }
       }
       if(myIdx<0){
         // Registrado pero sin puntuación online: sin texto de "sin puesto"
@@ -14036,7 +14030,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
        Pagina hasta traer todos (o el límite pedido). Cache-bust evita datos viejos. */
     const requestedLimit = (limit == null || limit === '') ? Infinity : Math.max(1, Math.floor(Number(limit) || 1));
     if(!hasKey()) throw new Error('Falta publishable key válida');
-    const pageSize = 1000;
+    const pageSize = 100;
     const allRows = [];
     let offset = 0;
     while(allRows.length < requestedLimit){
@@ -14064,7 +14058,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
       allRows.push(...data);
       if(data.length < take) break;
       offset += data.length;
-      if(offset > 50000) break;
+      /* Sin tope artificial: continúa hasta recuperar todas las páginas disponibles. */
     }
     allRows.sort(function(a,b){
       const diff = (Number(b.record)||0) - (Number(a.record)||0);
@@ -14074,6 +14068,40 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
       return tb - ta;
     });
     return requestedLimit === Infinity ? allRows : allRows.slice(0, requestedLimit);
+  };
+
+
+  /* Regla única del ranking: un puesto por cuenta, usando su mejor récord.
+     El sufijo " · nave" no crea otro jugador. */
+  window.techBuildOnlinePlayers = function(rows){
+    var best = new Map();
+    function cleanName(raw){
+      return String(raw == null ? '' : raw).split(' · ')[0].trim();
+    }
+    function keyName(name){
+      return cleanName(name).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase();
+    }
+    (Array.isArray(rows) ? rows : []).forEach(function(r){
+      var raw = r && (r['nombre-nave'] != null ? r['nombre-nave'] : r.nombre_nave);
+      var name = cleanName(raw);
+      if(!name) return;
+      var score = Math.max(0, Number(r.record) || 0);
+      var key = keyName(name);
+      var date = Date.parse(r.created_at || '') || 0;
+      var old = best.get(key);
+      if(!old || score > old.score || (score === old.score && date > old.date)){
+        best.set(key, {
+          name:name, score:score, date:date,
+          created_at:r.created_at || null, id:r.id == null ? null : r.id,
+          raw:String(raw || name)
+        });
+      }
+    });
+    return Array.from(best.values()).sort(function(a,b){
+      if(b.score !== a.score) return b.score-a.score;
+      if(b.date !== a.date) return b.date-a.date;
+      return a.name.localeCompare(b.name, 'es', {sensitivity:'base'});
+    });
   };
 
   window.techInvalidateOnlineRankCache = function(){
@@ -14126,12 +14154,9 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     box.innerHTML = '<p style="color:#8cf">Cargando récords…</p>';
     try{
       const fetchedRows = await window.techFetchOnlineTop();
-      /* TODOS los registros de Supabase, sin agrupar por usuario */
-      const rows = (fetchedRows||[]).slice().filter(function(r){
-        const raw = r['nombre-nave'] != null ? r['nombre-nave'] : (r.nombre_nave != null ? r.nombre_nave : '');
-        return String(raw||'').trim() !== '' || r.id != null;
-      });
-      rows.sort(function(a,b){ return (Number(b.record)||0) - (Number(a.record)||0); });
+      /* Mismo criterio que el puesto mostrado al iniciar sesión: un jugador,
+         una posición y únicamente su mejor récord publicado. */
+      const rows = window.techBuildOnlinePlayers(fetchedRows);
       if(!rows.length){
         box.innerHTML = '<p style="color:#fa8"><b>0 filas visibles con la API pública.</b></p>'
           + '<p style="color:#9ab;font-size:11px;margin-top:8px">En Table Editor sí hay datos, pero <b>RLS</b> los oculta.<br>'
@@ -14146,16 +14171,22 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
           + '</pre>';
         return;
       }
-      box.innerHTML = '<p style="color:#9ab;font-size:11px;margin:0 0 8px;text-align:center">Ranking</p>'
+      function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c];});}
+      function fecha(v){if(!v)return '—';var d=new Date(v);return isNaN(d.getTime())?esc(v):d.toLocaleString('es-ES',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});}
+      box.innerHTML = '<p style="color:#9ab;font-size:11px;margin:0 0 8px;text-align:center">Ranking por mejor récord · '+rows.length+' jugadores</p>'
+        + '<div style="overflow-x:auto;width:100%"><table style="width:100%;border-collapse:collapse;font-size:11px;min-width:500px">'
+        + '<thead><tr style="color:#5de5ff;text-align:left"><th style="padding:7px 5px">#</th><th style="padding:7px 5px">ID</th><th style="padding:7px 5px">Fecha</th><th style="padding:7px 5px">Nave</th><th style="padding:7px 5px;text-align:right">Puntos</th></tr></thead><tbody>'
         + rows.map(function(r, i){
-        const sc = Number(r.record != null ? r.record : 0) || 0;
-        const rawNave = r['nombre-nave'] != null ? r['nombre-nave'] : (r.nombre_nave != null ? r.nombre_nave : null);
-        const nave = (rawNave != null && String(rawNave).trim() !== '') ? String(rawNave) : ('Nave #' + (r.id != null ? r.id : (i+1)));
-        const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':((i+1)+'.');
-        return '<div style="display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">'
-          + '<span><b style="color:#5de5ff">'+medal+'</b> '+nave.replace(/</g,'&lt;')+'</span>'
-          + '<b style="color:#FFCD00;white-space:nowrap">'+sc.toLocaleString('es-CO')+' pts</b></div>';
-      }).join('');
+        const sc = Number(r.score != null ? r.score : 0) || 0;
+        const nave = r.name || ('Jugador #' + (i+1));
+        const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':String(i+1);
+        return '<tr style="border-top:1px solid rgba(255,255,255,.09)">'
+          + '<td style="padding:8px 5px;color:#5de5ff">'+medal+'</td>'
+          + '<td style="padding:8px 5px;color:#9ab">'+esc(r.id==null?'—':r.id)+'</td>'
+          + '<td style="padding:8px 5px;color:#b9c7d8;white-space:nowrap">'+fecha(r.created_at)+'</td>'
+          + '<td style="padding:8px 5px;color:#fff">'+esc(nave)+'</td>'
+          + '<td style="padding:8px 5px;color:#FFCD00;text-align:right;white-space:nowrap;font-weight:700">'+sc.toLocaleString('es-CO')+'</td></tr>';
+      }).join('') + '</tbody></table></div>';
     }catch(err){
       const m = String(err.message || err);
       box.innerHTML = '<p style="color:#f88">Error: '+m.replace(/</g,'&lt;')+'</p>'
@@ -14222,20 +14253,11 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     if(typeof window.techFetchOnlineTop!=='function') return;
     fetching = true;
     try{
-      /* TODOS los registros del ranking (sin límite ni agrupar por usuario) */
+      /* Igual que el ranking de cuenta: una posición por jugador (mejor récord). */
       var rows = await window.techFetchOnlineTop();
-      cache = [];
-      (rows||[]).forEach(function(r,i){
-        var sc = Number(r.record!=null?r.record:0)||0;
-        var raw = r['nombre-nave']!=null?r['nombre-nave']:(r.nombre_nave!=null?r.nombre_nave:null);
-        if(raw==null || String(raw).trim()===''){
-          if(r.id==null) return;
-          raw = 'Nave #'+r.id;
-        }
-        var name = String(raw);
-        cache.push({name:name, score:sc, id:r.id});
+      cache = (window.techBuildOnlinePlayers(rows)||[]).map(function(r){
+        return {name:r.name, score:r.score, id:r.id};
       });
-      cache.sort(function(a,b){ return b.score - a.score; });
       lastError = '';
       lastFetch = Date.now();
     }catch(err){
@@ -14274,7 +14296,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
       }
     }
     list.sort(function(a,b){return b.score-a.score});
-    /* Mostrar TODOS los registros en el ranking del juego */
+    /* Mostrar jugadores únicos, igual que el ranking online de cuenta. */
     return {rows:list, myRank: list.findIndex(function(x){return x.__self})+1, total:list.length};
   }
 
