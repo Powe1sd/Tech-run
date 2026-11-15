@@ -14154,9 +14154,16 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     box.innerHTML = '<p style="color:#8cf">Cargando récords…</p>';
     try{
       const fetchedRows = await window.techFetchOnlineTop();
-      /* Mismo criterio que el puesto mostrado al iniciar sesión: un jugador,
-         una posición y únicamente su mejor récord publicado. */
-      const rows = window.techBuildOnlinePlayers(fetchedRows);
+      /* Mostrar todas las filas históricas de Supabase, sin agrupar jugadores.
+         El puesto personal al iniciar sesión sigue calculándose por mejor récord. */
+      const rows = (Array.isArray(fetchedRows) ? fetchedRows : []).map(function(r){
+        return {
+          id:r.id,
+          created_at:r.created_at,
+          name:r['nombre-nave'] != null ? r['nombre-nave'] : (r.nombre_nave || 'Jugador'),
+          score:Math.max(0, Number(r.record) || 0)
+        };
+      });
       if(!rows.length){
         box.innerHTML = '<p style="color:#fa8"><b>0 filas visibles con la API pública.</b></p>'
           + '<p style="color:#9ab;font-size:11px;margin-top:8px">En Table Editor sí hay datos, pero <b>RLS</b> los oculta.<br>'
@@ -14255,8 +14262,13 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
     try{
       /* Igual que el ranking de cuenta: una posición por jugador (mejor récord). */
       var rows = await window.techFetchOnlineTop();
-      cache = (window.techBuildOnlinePlayers(rows)||[]).map(function(r){
-        return {name:r.name, score:r.score, id:r.id};
+      /* El tablero durante la partida enseña cada registro individual. */
+      cache = (Array.isArray(rows) ? rows : []).map(function(r){
+        return {
+          name:String(r && (r['nombre-nave'] != null ? r['nombre-nave'] : r.nombre_nave) || 'Jugador'),
+          score:Math.max(0, Number(r && r.record) || 0),
+          id:r && r.id
+        };
       });
       lastError = '';
       lastFetch = Date.now();
@@ -14296,7 +14308,7 @@ let panel=document.getElementById('techStatisticsPanel');if(!panel){panel=docume
       }
     }
     list.sort(function(a,b){return b.score-a.score});
-    /* Mostrar jugadores únicos, igual que el ranking online de cuenta. */
+    /* Mostrar todos los registros individuales, sin agrupar cuentas. */
     return {rows:list, myRank: list.findIndex(function(x){return x.__self})+1, total:list.length};
   }
 
