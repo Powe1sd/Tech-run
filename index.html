@@ -2665,7 +2665,12 @@ html,body{width:100%;min-width:320px}
   padding:4px 12px!important;border-radius:999px!important;margin-top:6px!important;
   text-shadow:0 1px 2px #000!important;letter-spacing:1px!important;
 }
-#shipPreview{display:block!important;opacity:1!important;visibility:visible!important}
+#shipPreview{
+  display:block!important;opacity:1!important;visibility:visible!important;
+  width:min(240px,88vw)!important;height:auto!important;aspect-ratio:240/260;
+  max-width:240px!important;margin:0 auto!important;
+  object-fit:contain;
+}
 </style>
 
 
@@ -4668,10 +4673,46 @@ function applyGokuFormPower(form){
 function setGokuForm(form){
   if(!["normal","ssj","ssj1","ssj2","ssj3","ssj4","bru","golden","ultra","superdios","ssblue","black","rose"].includes(form))return;
   gokuForm=form;
+  try{window.gokuForm=form;}catch(e){}
   lsSet("techGokuForm",form);
   updateGokuFormsUI();
   applyGokuFormPower(form);
+  /* Actualizar icono del menú si está visible */
+  try{
+    if(typeof gameRunning==="undefined"||!gameRunning){
+      if(typeof refreshShipUI==="function") refreshShipUI();
+      if(typeof drawShipPreview==="function") drawShipPreview();
+    }
+  }catch(e){}
 }
+/* Clic en fases del submenú: siempre cambia el icono del carrusel */
+(function(){
+  if(window.__techGformDelegate) return;
+  window.__techGformDelegate=true;
+  document.addEventListener("click", function(ev){
+    try{
+      var t=ev.target;
+      if(!t || !t.closest) return;
+      var btn=t.closest("[data-gform]");
+      if(!btn) return;
+      /* Solo menú de inicio (no controles en partida) */
+      if(!btn.closest("#startPanel") && !btn.closest("#startExtras") && !btn.closest("#gokuFormMenu")) return;
+      var f=btn.getAttribute("data-gform");
+      if(!f) return;
+      shipModel="goku";
+      try{ lsSet("techShipModelV2","goku"); }catch(e){}
+      gokuForm=f;
+      try{ window.gokuForm=f; }catch(e){}
+      try{ lsSet("techGokuForm",f); }catch(e){}
+      try{ if(typeof updateGokuFormsUI==="function") updateGokuFormsUI(); }catch(e){}
+      try{ if(typeof refreshShipUI==="function") refreshShipUI(); }catch(e){}
+      try{ if(typeof drawShipPreview==="function") drawShipPreview(); }catch(e){}
+      setTimeout(function(){
+        try{ if(typeof drawShipPreview==="function") drawShipPreview(); }catch(e){}
+      }, 30);
+    }catch(e){}
+  }, true);
+})();
 
 function fireKamehameha(){
   if(!gameRunning||gamePaused)return;
@@ -5839,7 +5880,7 @@ if(startPanel&&!document.getElementById("startExtras")){
     <div id="shipCarousel" style="display:flex;align-items:center;justify-content:center;gap:8px;margin:8px 0 4px;user-select:none;-webkit-user-select:none">
       <button type="button" id="shipPrev" aria-label="Anterior" style="flex:0 0 44px;height:44px;border-radius:12px;border:1px solid rgba(255,205,0,.5);background:rgba(0,20,50,.9);color:#FFCD00;font-size:22px;font-weight:800;cursor:pointer;line-height:1">◀</button>
       <div style="flex:1;min-width:0;text-align:center">
-        <canvas id="shipPreview" width="240" height="150" style="width:100%;max-width:240px;height:150px;display:block;margin:0 auto;border-radius:16px;border:1px solid rgba(255,205,0,.5);background:#02060f;box-shadow:0 0 24px rgba(255,205,0,.2),inset 0 0 40px rgba(0,80,160,.15)"></canvas>
+        <canvas id="shipPreview" width="240" height="260" style="width:100%;max-width:240px;height:260px;display:block;margin:0 auto;border-radius:16px;border:1px solid rgba(255,205,0,.5);background:#02060f;box-shadow:0 0 24px rgba(255,205,0,.2),inset 0 0 40px rgba(0,80,160,.15)"></canvas>
       </div>
       <button type="button" id="shipNext" aria-label="Siguiente" style="flex:0 0 44px;height:44px;border-radius:12px;border:1px solid rgba(255,205,0,.5);background:rgba(0,20,50,.9);color:#FFCD00;font-size:22px;font-weight:800;cursor:pointer;line-height:1">▶</button>
     </div>
@@ -5982,12 +6023,16 @@ if(startPanel&&!document.getElementById("startExtras")){
       try{refreshShipUI()}catch(e){renderStart()}
     });
     box.querySelectorAll("[data-gform]").forEach(b=>b.onclick=()=>{
-      gokuForm=b.getAttribute("data-gform");lsSet("techGokuForm",gokuForm);
+      const f=b.getAttribute("data-gform");
       shipModel="goku";lsSet("techShipModelV2","goku");
+      gokuForm=f; try{window.gokuForm=f;}catch(e){} lsSet("techGokuForm",f);
       try{
         if(SFX.gokuFase&&SFX.gokuFase.src){try{SFX.gokuFase.currentTime=0}catch(_){}playSfx("gokuFase")}
       }catch(e){}
-      try{refreshShipUI()}catch(e){renderStart()}
+      try{updateGokuFormsUI();}catch(e){}
+      try{refreshShipUI();}catch(e){}
+      try{if(typeof drawShipPreview==="function")drawShipPreview();}catch(e){}
+      setTimeout(function(){try{if(typeof drawShipPreview==="function")drawShipPreview();if(typeof refreshShipUI==="function")refreshShipUI();}catch(e){}},40);
     });
     const goPrev=()=>{shiftShipGallery(-1);try{refreshShipUI()}catch(e){renderStart()}};
     const goNext=()=>{shiftShipGallery(1);try{refreshShipUI()}catch(e){renderStart()}};
@@ -6365,6 +6410,13 @@ function resizeCanvas(force){
   }catch(e){}
   const baseShip=12.1*((typeof getViewMult==="function")?getViewMult():1);
   player.size=Math.max(9,Math.min(22,baseShip*Math.min(1.15,(canvas.clientWidth||400)/400*((canvas.clientWidth>0)?(canvas.width/canvas.clientWidth):1))));
+  /* Goku: un poco más grande en PC; en móvil menos para no verse demasiado alto */
+  try{
+    if(typeof shipModel!=="undefined" && shipModel==="goku"){
+      var _mobG=(typeof isMobile==="function"&&isMobile())||window.innerWidth<=900;
+      player.size=Math.min(_mobG?20:26, player.size*(_mobG?1.08:1.18));
+    }
+  }catch(e){}
   if(!gameRunning){player.x=canvas.width/2;player.y=canvas.height/2;mouse.x=player.x;mouse.y=player.y}
   else { try{ clampPlayerToArena(); }catch(e){} }
   if(!mobile || !gameRunning) initStars();
@@ -8728,6 +8780,14 @@ function drawShipModel(g,s,model,skin,label){
     g.beginPath();
   }else if(model==="goku"){
     /* ===== GOKU por fases: normal|ssj1-4|bru|golden|ultra|superdios ===== */
+    /* Altura: en móvil un poco menos (≈ -1.3 cm visual), en PC un poco más */
+    g.save();
+    var _gokuTall = 1.42;
+    try{
+      if((typeof isMobile==="function"&&isMobile()) || window.innerWidth<=900 || ("ontouchstart" in window))
+        _gokuTall = 1.26;
+    }catch(e){}
+    g.scale(1.08, _gokuTall);
     const form = (typeof gokuForm!=="undefined" && gokuForm) ? gokuForm : "normal";
     // Colores de aura / cabello según fase
     let auraCol, hairCol, hairStroke, auraAlpha, eyeCol;
@@ -8951,10 +9011,10 @@ function drawShipModel(g,s,model,skin,label){
     }
 
     // === CARA mejorada ===
-    const skinCol = form==="ssj4" ? "#C45A3A" : form==="black" ? "#E8D4C8" : form==="rose" ? "#F0D0C0" : (form==="ultra" ? "#E8D0B8" : (form==="superdios"||form==="golden") ? "#FFE8C8" : (form==="ssblue" ? "#F0D0B0" : "#F5C9A0"));
+    const skinCol = form==="ssj4" ? "#FFF5E6" : form==="black" ? "#E8D4C8" : form==="rose" ? "#F0D0C0" : (form==="ultra" ? "#E8D0B8" : (form==="superdios"||form==="golden") ? "#FFE8C8" : (form==="ssblue" ? "#F0D0B0" : "#F5C9A0"));
     g.fillStyle=skinCol;
     g.beginPath();g.ellipse(0,-s*.05,s*.34,s*.38,0,0,Math.PI*2);g.fill();
-    g.strokeStyle=form==="ssj4"?"#8B3A20":"#C48A5A";g.lineWidth=Math.max(0.8,s*.04);g.stroke();
+    g.strokeStyle=form==="ssj4"?"#D4A574":"#C48A5A";g.lineWidth=Math.max(0.8,s*.04);g.stroke();
 
     // Ojos negros (mejorados)
     g.fillStyle="#0a0a0a";
@@ -8985,7 +9045,7 @@ function drawShipModel(g,s,model,skin,label){
     let shirtCol="#CE1126", shirtStroke="#8B0000", undershirt="#FFCD00", beltCol="#1A1A1A", pantsCol="#8B0000";
     if(form==="ssj4"){
       /* SSJ4: camisa roja + pantalones cafés */
-      shirtCol="#CE1126"; shirtStroke="#8B0000"; undershirt="#FFCD00"; beltCol="#1A1A1A"; pantsCol="#6B4423";
+      shirtCol="#CE1126"; shirtStroke="#8B0000"; undershirt="#FFCD00"; beltCol="#1A1A1A"; pantsCol="#8B5A2B";
     } else if(form==="black"){
       shirtCol="#1a1a1a"; shirtStroke="#000"; undershirt="#4a2060"; beltCol="#111"; pantsCol="#111";
     } else if(form==="rose"){
@@ -9085,6 +9145,7 @@ function drawShipModel(g,s,model,skin,label){
       g.strokeText(txt,0,s*1.18);
       g.fillText(txt,0,s*1.18);
     }
+    g.restore(); /* fin escala altura muñequito */
   }else{
     /* fighter default */
     g.moveTo(0,-s-5);g.lineTo(s*.22,-s*.35);g.lineTo(s*.5,s*.15);g.lineTo(s*.32,s*.72);g.lineTo(0,s*.5);
@@ -9125,6 +9186,20 @@ function drawShipModel(g,s,model,skin,label){
 function drawShipPreview(){
   const pv=document.getElementById("shipPreview");
   if(!pv)return;
+  /* Tamaño fijo del buffer (icono más alto para muñequito) */
+  if(pv.width!==240) pv.width=240;
+  if(pv.height!==260) pv.height=260;
+  /* Sincronizar fase Goku desde variable o localStorage (el submenú debe cambiar el icono) */
+  try{
+    if(shipModel==="goku"){
+      let f=(typeof gokuForm!=="undefined" && gokuForm) ? gokuForm : null;
+      if(!f){
+        try{ f=localStorage.getItem("techGokuForm")||"normal"; }catch(e){ f="normal"; }
+      }
+      gokuForm=f;
+      try{ window.gokuForm=f; }catch(e){}
+    }
+  }catch(e){}
   const g=pv.getContext("2d");
   const W=pv.width,H=pv.height;
   g.clearRect(0,0,W,H);
@@ -9183,16 +9258,28 @@ function drawShipPreview(){
   ring.addColorStop(0,"rgba(255,205,0,.20)");ring.addColorStop(.5,"rgba(0,160,255,.08)");ring.addColorStop(1,"rgba(0,0,0,0)");
   g.fillStyle=ring;g.beginPath();g.ellipse(0,10,46,12,0,0,Math.PI*2);g.fill();
   g.restore();
-  /* nave */
-  const shipScale = shipModel==="goku" ? 15 : 18;
-  const yOff = shipModel==="goku" ? 12 : 6;
-  g.save();g.translate(W/2,H/2+yOff);
-  drawShipModel(g,shipScale,shipModel,shipSkin,shipName);
+  /* nave — Goku en el icono del menú (en móvil un poco más bajo) */
+  const isGokuPreview = shipModel==="goku";
+  var _prevMob=false;
+  try{ _prevMob=(typeof isMobile==="function"&&isMobile())||window.innerWidth<=900; }catch(e){}
+  const shipScale = isGokuPreview ? (_prevMob?20:26) : 18;
+  const yOff = isGokuPreview ? (_prevMob?10:14) : 6;
+  g.save();
+  g.translate(W/2, H/2 + yOff);
+  /* asegurar forma actual al dibujar (SSJ4 cara blanca, etc.) */
+  try{
+    if(isGokuPreview && typeof gokuForm==="undefined"){ window.gokuForm = "normal"; }
+  }catch(e){}
+  drawShipModel(g, shipScale, shipModel, shipSkin, shipName);
   g.restore();
-  /* etiqueta */
+  /* etiqueta: en Goku mostrar la FASE actual (para que el submenú se note en el icono) */
   g.fillStyle="rgba(255,205,0,.95)";g.font="bold 12px Orbitron";g.textAlign="center";
-  const names={classic:"Clásica",fighter:"Cazadora",interceptor:"Interceptor",heavy:"Pesada",stealth:"Sigilo",wing:"Ala X",needle:"Aguja",delta:"Delta",r13:"R13",c67:"C67",rr1:"RR1",s1000:"S1000",f50:"F50",t200:"T200",s179:"S179",goku:"Goku "+({normal:"Normal",ssj:"SSJ",ssj1:"SSJ1",ssj2:"SSJ2",ssj3:"SSJ3",ssj4:"SSJ4",bru:"Bru",golden:"Golden",ultra:"Ultra",superdios:"S.Dios",ssblue:"SS Blue"}[gokuForm]||"")};
-  g.fillText((window.techTranslateShipName?window.techTranslateShipName(shipModel,names[shipModel]||shipModel):((names[shipModel]||shipModel)))+" · "+shipSkin,W/2,H-12);
+  const formNames={normal:"Normal",ssj:"SSJ",ssj1:"SSJ1",ssj2:"SSJ2",ssj3:"SSJ3",ssj4:"SSJ4",bru:"Bru",golden:"Golden",ultra:"Ultra",superdios:"S.Dios",ssblue:"SS Blue",black:"Black",rose:"Rose"};
+  const names={classic:"Clásica",fighter:"Cazadora",interceptor:"Interceptor",heavy:"Pesada",stealth:"Sigilo",wing:"Ala X",needle:"Aguja",delta:"Delta",r13:"R13",c67:"C67",rr1:"RR1",s1000:"S1000",f50:"F50",t200:"T200",s179:"S179",goku:"Goku "+(formNames[gokuForm]||"")};
+  const labelTxt = shipModel==="goku"
+    ? ("Goku · "+(formNames[gokuForm]||gokuForm||"Normal"))
+    : ((window.techTranslateShipName?window.techTranslateShipName(shipModel,names[shipModel]||shipModel):((names[shipModel]||shipModel)))+" · "+shipSkin);
+  g.fillText(labelTxt,W/2,H-12);
 }
 
 
