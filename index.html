@@ -16223,7 +16223,7 @@ create policy "pvp_results_all" on public.pvp_results for all to authenticated u
     modal.setAttribute('role','dialog');
     modal.setAttribute('aria-modal','true');
     modal.setAttribute('aria-label','Perfil del programador de software');
-    modal.innerHTML='<div class="programmer-profile-card"><button type="button" class="programmer-profile-close" aria-label="Cerrar">×</button><img loading="lazy" decoding="async" class="programmer-profile-photo" src="yo.jpeg" alt="Brahyan, programador de software"><h2 class="programmer-profile-title">PROGRAMADOR DE SOFTWARE</h2></div>';
+    modal.innerHTML='<div class="programmer-profile-card"><button type="button" class="programmer-profile-close" aria-label="Cerrar">×</button><img loading="lazy" decoding="async" class="programmer-profile-photo" src="yo.jpeg" alt="Brahyan, Desarrollador"><h2 class="programmer-profile-title">PROGRAMADOR DE SOFTWARE</h2></div>';
     document.body.appendChild(modal);
     modal.addEventListener('click',function(event){if(event.target===modal)closeProgrammerModal();});
     modal.querySelector('.programmer-profile-close').addEventListener('click',closeProgrammerModal);
