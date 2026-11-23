@@ -9770,7 +9770,11 @@ function updateExtraTraps(){
   for(let i=traps.length-1;i>=0;i--){
     const t=traps[i];
     if(t.type==="blade"){
-      t.y+=Math.max(t.vy||5.2, 5.6)*((typeof getSpeedScale==="function")?getSpeedScale():1);
+      /* En móvil las cuchillas caen notablemente más rápido, sin cambiar el resto de trampas. */
+      const bladeBaseSpeed=Math.max(t.vy||5.2, 5.6);
+      const bladeGameScale=(typeof getSpeedScale==="function")?getSpeedScale():1;
+      const bladeMobileBoost=(typeof isMobile==="function"&&isMobile())?1.7:1;
+      t.y+=bladeBaseSpeed*bladeGameScale*bladeMobileBoost;
       t.spin=(t.spin||0)+0.62;
       ctx.save();ctx.translate(t.x,t.y);ctx.rotate(t.spin);
       ctx.fillStyle="#FFD700";ctx.fillRect(-t.size, -3, t.size*2, 6);
