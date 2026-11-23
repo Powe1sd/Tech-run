@@ -3154,6 +3154,10 @@ function getViewMult(){
 let gyroOn=lsGet("techGyro","0")==="1";
 let oneHand=lsGet("techOneHand","0")==="1";
 let shipSkin=lsGet("techShipSkin","white");
+let shipPattern=lsGet("techShipPattern","none");
+let shipEffect=lsGet("techShipEffect","pulse");
+let shipEngine=lsGet("techShipEngine","ion");
+let shipCustomColor=lsGet("techShipCustomColor","#55dfff");
 
 /* Galería de naves + fases Goku (carrusel con flechas) */
 const SHIP_GALLERY=[
@@ -3238,6 +3242,9 @@ function refreshShipUI(){
     box.querySelectorAll("[data-skin]").forEach(function(b){
       b.classList.toggle("active", b.getAttribute("data-skin")===shipSkin);
     });
+    box.querySelectorAll("[data-pattern]").forEach(b=>b.classList.toggle("active",b.getAttribute("data-pattern")===shipPattern));
+    box.querySelectorAll("[data-effect]").forEach(b=>b.classList.toggle("active",b.getAttribute("data-effect")===shipEffect));
+    box.querySelectorAll("[data-engine]").forEach(b=>b.classList.toggle("active",b.getAttribute("data-engine")===shipEngine));
     /* Carrusel: nombre e índice (siempre visibles) */
     const idx=getShipGalleryIndex();
     const entry=SHIP_GALLERY[idx]||{};
@@ -5948,6 +5955,32 @@ if(startPanel&&!document.getElementById("startExtras")){
       <button type="button" data-skin="steel" class="${shipSkin==="steel"?"active":""}">Acero</button>
       <button type="button" data-skin="orange" class="${shipSkin==="orange"?"active":""}">Naranja</button>
     </div>
+    <h3>🧩 Diseños de casco</h3>
+    <div class="diff-btns">
+      <button type="button" data-pattern="none" class="${shipPattern==="none"?"active":""}">Liso</button>
+      <button type="button" data-pattern="stripes" class="${shipPattern==="stripes"?"active":""}">Líneas</button>
+      <button type="button" data-pattern="circuit" class="${shipPattern==="circuit"?"active":""}">Circuito</button>
+      <button type="button" data-pattern="armor" class="${shipPattern==="armor"?"active":""}">Blindaje</button>
+    </div>
+    <h3>✨ Efectos visuales</h3>
+    <div class="diff-btns">
+      <button type="button" data-effect="none" class="${shipEffect==="none"?"active":""}">Ninguno</button>
+      <button type="button" data-effect="pulse" class="${shipEffect==="pulse"?"active":""}">Pulso</button>
+      <button type="button" data-effect="electric" class="${shipEffect==="electric"?"active":""}">Eléctrico</button>
+      <button type="button" data-effect="orbit" class="${shipEffect==="orbit"?"active":""}">Órbita</button>
+    </div>
+    <h3>🔥 Motores</h3>
+    <div class="diff-btns">
+      <button type="button" data-engine="ion" class="${shipEngine==="ion"?"active":""}">Iónicos</button>
+      <button type="button" data-engine="plasma" class="${shipEngine==="plasma"?"active":""}">Plasma</button>
+      <button type="button" data-engine="dual" class="${shipEngine==="dual"?"active":""}">Dobles</button>
+      <button type="button" data-engine="energy" class="${shipEngine==="energy"?"active":""}">Energía</button>
+    </div>
+    <h3>🎨 Color personalizado</h3>
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 2px">
+      <input id="shipCustomColor" type="color" value="${shipCustomColor}" aria-label="Color personalizado" style="width:52px;height:38px;padding:2px;background:#101b2b;border:1px solid #5b7893;border-radius:8px">
+      <span style="font-size:10px;color:#a9c8d8">Elige un color para la estela y los detalles de energía</span>
+    </div>
     <div id="techCoinsBar" style="margin:12px auto">
   <span class="tcb-star">⭐</span>
   <span class="tcb-label">PUNTOS JUEGO</span>
@@ -6012,6 +6045,20 @@ if(startPanel&&!document.getElementById("startExtras")){
       shipSkin=b.getAttribute("data-skin");lsSet("techShipSkin",shipSkin);
       try{refreshShipUI()}catch(e){renderStart()}
     });
+    ["pattern","effect","engine"].forEach(kind=>{
+      box.querySelectorAll("[data-"+kind+"]").forEach(b=>b.onclick=()=>{
+        const value=b.getAttribute("data-"+kind);
+        if(kind==="pattern"){shipPattern=value;lsSet("techShipPattern",value)}
+        if(kind==="effect"){shipEffect=value;lsSet("techShipEffect",value)}
+        if(kind==="engine"){shipEngine=value;lsSet("techShipEngine",value)}
+        renderStart();
+      });
+    });
+    const customColorInput=box.querySelector("#shipCustomColor");
+    if(customColorInput)customColorInput.oninput=()=>{
+      shipCustomColor=customColorInput.value;
+      lsSet("techShipCustomColor",shipCustomColor);
+    };
     box.querySelectorAll("[data-model]").forEach(b=>b.onclick=()=>{
       const m=b.getAttribute("data-model");
       shipModel=m;lsSet("techShipModelV2",shipModel);
@@ -8606,6 +8653,7 @@ function doDash(){
     if(sk==="black")return "180,180,200";
     if(sk==="orange")return "255,140,30";
     if(sk==="steel")return "160,190,210";
+    try{const h=String(shipCustomColor||"#55dfff").replace("#","");if(/^[0-9a-f]{6}$/i.test(h))return parseInt(h.slice(0,2),16)+","+parseInt(h.slice(2,4),16)+","+parseInt(h.slice(4,6),16)}catch(e){}
     return "120,220,255";
   })();
   for(let i=0;i<6;i++){
@@ -9283,6 +9331,46 @@ function drawShipPreview(){
 }
 
 
+function drawShipWorkshopEffects(g,s){
+  try{
+    const col=shipCustomColor||"#55dfff";
+    const now=performance.now();
+    // Motores: llama detrás del casco
+    if(shipEngine!=="none"){
+      const flame=0.55+0.35*Math.sin(now/(shipEngine==="energy"?48:70));
+      const count=shipEngine==="dual"?2:1;
+      for(let i=0;i<count;i++){
+        const x=count===2?(i===0?-s*.34:s*.34):0;
+        const w=shipEngine==="plasma"?s*.19:shipEngine==="energy"?s*.25:s*.14;
+        const len=(shipEngine==="plasma"?1.05:shipEngine==="energy"?1.3:.78)*s*flame;
+        g.save();g.globalAlpha=.78;
+        const grad=g.createLinearGradient(x,s*.48,x,s*.48+len);
+        grad.addColorStop(0,col);grad.addColorStop(.55,shipEngine==="plasma"?"#b46bff":"#8cecff");grad.addColorStop(1,"rgba(80,180,255,0)");
+        g.fillStyle=grad;g.beginPath();g.moveTo(x-w,s*.48);g.lineTo(x,s*.48+len);g.lineTo(x+w,s*.48);g.closePath();g.fill();g.restore();
+      }
+    }
+    // Efectos alrededor de la nave
+    if(shipEffect==="pulse"){
+      g.save();g.strokeStyle=col;g.globalAlpha=.25+.18*Math.sin(now/180);g.lineWidth=1.5;
+      g.beginPath();g.ellipse(0,0,s*(1.12+.05*Math.sin(now/180)),s*1.18,0,0,Math.PI*2);g.stroke();g.restore();
+    }else if(shipEffect==="electric"){
+      g.save();g.strokeStyle=col;g.globalAlpha=.72;g.lineWidth=1.4;g.beginPath();
+      for(let i=0;i<8;i++){const a=now/260+i*Math.PI/4,r=s*(1.15+(i%2)*.12);const x=Math.cos(a)*r,y=Math.sin(a)*r;g.moveTo(x,y);g.lineTo(x+Math.sin(a*3)*s*.12,y+Math.cos(a*2)*s*.12)}
+      g.stroke();g.restore();
+    }else if(shipEffect==="orbit"){
+      g.save();g.strokeStyle=col;g.globalAlpha=.55;g.lineWidth=1.2;g.beginPath();g.ellipse(0,0,s*1.35,s*.55,now/900,0,Math.PI*2);g.stroke();g.fillStyle=col;
+      for(let i=0;i<3;i++){const a=now/650+i*Math.PI*2/3;g.beginPath();g.arc(Math.cos(a)*s*1.35,Math.sin(a)*s*.55,Math.max(1.5,s*.07),0,Math.PI*2);g.fill()}g.restore();
+    }
+    // Acabado del casco
+    if(shipPattern!=="none"){
+      g.save();g.strokeStyle=col;g.globalAlpha=.62;g.lineWidth=Math.max(1,s*.055);g.beginPath();
+      if(shipPattern==="stripes"){g.moveTo(-s*.55,-s*.05);g.lineTo(s*.55,s*.28);g.moveTo(-s*.48,s*.18);g.lineTo(s*.42,s*.48)}
+      else if(shipPattern==="circuit"){g.moveTo(-s*.48,-s*.1);g.lineTo(-s*.18,-s*.1);g.lineTo(-s*.18,s*.25);g.lineTo(0,s*.25);g.moveTo(s*.48,-s*.1);g.lineTo(s*.18,-s*.1);g.lineTo(s*.18,s*.25);g.lineTo(0,s*.25)}
+      else {g.moveTo(-s*.5,-s*.35);g.lineTo(0,-s*.05);g.lineTo(s*.5,-s*.35);g.moveTo(-s*.42,s*.35);g.lineTo(0,s*.58);g.lineTo(s*.42,s*.35)}
+      g.stroke();g.restore();
+    }
+  }catch(e){}
+}
 function drawPlayer(){
   /* Posición dibujada estable (evita temblor del triángulo/nave por subpíxeles) */
   let _dx=Math.round(player.x), _dy=Math.round(player.y);
@@ -9327,7 +9415,16 @@ function drawPlayer(){
   ctx.fillStyle="rgba(0,0,0,.3)";ctx.beginPath();ctx.ellipse(0,player.size*.9,player.size*.55,player.size*.12,0,0,Math.PI*2);ctx.fill();
   const s=player.size;
   ctx.shadowColor=isMobile()?"transparent":"rgba(255,255,255,.4)";ctx.shadowBlur=isMobile()?0:10;
+  drawShipWorkshopEffects(ctx,s);
   drawShipModel(ctx,s,shipModel,shipSkin,shipName);
+  // Los detalles de acabado se dibujan por encima del casco
+  if(shipPattern!=="none"){
+    ctx.save();ctx.strokeStyle=shipCustomColor||"#55dfff";ctx.globalAlpha=.68;ctx.lineWidth=Math.max(1,s*.055);ctx.beginPath();
+    if(shipPattern==="stripes"){ctx.moveTo(-s*.48,-s*.05);ctx.lineTo(s*.48,s*.25);ctx.moveTo(-s*.4,s*.18);ctx.lineTo(s*.38,s*.43)}
+    else if(shipPattern==="circuit"){ctx.moveTo(-s*.42,-s*.08);ctx.lineTo(-s*.15,-s*.08);ctx.lineTo(-s*.15,s*.22);ctx.lineTo(0,s*.22);ctx.moveTo(s*.42,-s*.08);ctx.lineTo(s*.15,-s*.08);ctx.lineTo(s*.15,s*.22);ctx.lineTo(0,s*.22)}
+    else {ctx.moveTo(-s*.4,-s*.3);ctx.lineTo(0,-s*.02);ctx.lineTo(s*.4,-s*.3);ctx.moveTo(-s*.35,s*.3);ctx.lineTo(0,s*.52);ctx.lineTo(s*.35,s*.3)}
+    ctx.stroke();ctx.restore();
+  }
   ctx.shadowBlur=0;ctx.globalAlpha=1;
   ctx.restore();
   createParticle();
@@ -19465,3 +19562,9 @@ button[data-orb-color]{
 </style>
 
 </html>
+
+<style id="tech-ship-workshop">
+#startExtras [data-pattern],#startExtras [data-effect],#startExtras [data-engine]{min-width:calc(50% - 8px)}
+#startExtras [data-pattern].active,#startExtras [data-effect].active,#startExtras [data-engine].active{border-color:#e6c66d!important;box-shadow:0 0 10px rgba(230,198,109,.2)!important}
+#shipCustomColor{cursor:pointer;max-width:64px}
+</style>
