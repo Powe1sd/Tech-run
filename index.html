@@ -6051,7 +6051,11 @@ if(startPanel&&!document.getElementById("startExtras")){
         if(kind==="pattern"){shipPattern=value;lsSet("techShipPattern",value)}
         if(kind==="effect"){shipEffect=value;lsSet("techShipEffect",value)}
         if(kind==="engine"){shipEngine=value;lsSet("techShipEngine",value)}
-        renderStart();
+        // Actualizar solo el estado activo: no reconstruir el menú ni cambiar de pestaña
+        box.querySelectorAll("[data-"+kind+"]").forEach(btn=>{
+          btn.classList.toggle("active", btn.getAttribute("data-"+kind)===value);
+        });
+        try{ if(typeof refreshShipUI==="function") refreshShipUI(); }catch(e){}
       });
     });
     const customColorInput=box.querySelector("#shipCustomColor");
@@ -17966,17 +17970,17 @@ body.tech-playing .game-top{
       var id=node.id||'';
       if(tag==='H3'){
         if(/\bmundo\b|\bmundos\b/.test(text)) section='mundo';
-        else if(/nave|skin|color|goku|fase|modelo|seleccionar nave|todas las naves/.test(text)) section='nave';
+        else if(/nave|skin|color|goku|fase|modelo|seleccionar nave|todas las naves|diseñ|casco|efecto|motor/.test(text)) section='nave';
         else section='extra';
       }
       // Contenedores / controles de mundos siempre en Mundo
       if(node.matches && (node.matches('[data-world]') || node.querySelector('[data-world]'))) section='mundo';
       // Carrusel y nombre de nave siempre en Nave
       if(id==='shipCarousel' || id==='shipNameWrap' || id==='shipNameInput' || id==='gokuFormMenu' || (node.querySelector && (node.querySelector('#shipCarousel') || node.querySelector('#shipNameInput') || node.querySelector('#shipNameWrap') || node.querySelector('#gokuFormMenu')))) section='nave';
-      // Color de nave
-      if(tag==='H3' && /color|skin/.test(text)) section='nave';
-      if(node.matches && node.matches('[data-skin], [data-model], [data-gform]')) section='nave';
-      if(node.querySelector && (node.querySelector('[data-skin]') || node.querySelector('[data-model]') || node.querySelector('[data-gform]'))) section='nave';
+      // Color de nave + diseños / efectos / motores (personalización visual)
+      if(tag==='H3' && /color|skin|diseñ|casco|efecto|motor/.test(text)) section='nave';
+      if(node.matches && node.matches('[data-skin], [data-model], [data-gform], [data-pattern], [data-effect], [data-engine]')) section='nave';
+      if(node.querySelector && (node.querySelector('[data-skin]') || node.querySelector('[data-model]') || node.querySelector('[data-gform]') || node.querySelector('[data-pattern]') || node.querySelector('[data-effect]') || node.querySelector('[data-engine]'))) section='nave';
       // Extra: acciones, misiones, equipo, historial
       if(id==='startInGameActions' || id==='btnLoadSave' || id==='btnDailyMissions' || id==='btnWeaponShop' || id==='guestDataNotice' || id==='techCoinsBar') section='extra';
       if(tag==='H3' && /puntos juego|bonos|misi|equip|historial|manual|cr[eé]dito|ajustes|extra/.test(text)) section='extra';
