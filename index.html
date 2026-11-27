@@ -2836,6 +2836,40 @@ html,body{width:100%;min-width:320px}
 .tech-hud-flag{display:inline-flex;align-items:center;justify-content:center;margin:0 4px;padding:1px 4px;border:1px solid rgba(255,205,0,.34);border-radius:5px;background:rgba(0,0,0,.28);font-family:Arial,sans-serif;font-size:16px;line-height:1.2;vertical-align:middle}
 @media(max-width:600px){.tech-country-picker{padding:9px}.tech-country-heading{font-size:10px}#techCountrySelect{font-size:11px}.tech-country-flags{grid-template-columns:repeat(auto-fill,minmax(42px,1fr));max-height:165px;gap:6px}.tech-country-flag-btn{height:36px;padding:4px}.tech-country-flag-btn .fi{width:27px;height:20px}}
 </style>
+<style id="tech-creator-top-credit">
+/* Crédito del creador — arriba del menú, amarillo */
+#techCreatorCredit,
+#startPanel > #techCreatorCredit{
+  display:block !important;
+  order: -20 !important;
+  position:relative !important;
+  z-index: 5 !important;
+  text-align:center !important;
+  margin: 4px 0 10px !important;
+  padding: 8px 12px !important;
+  font-family:'Orbitron',system-ui,sans-serif !important;
+  font-weight:800 !important;
+  font-size:clamp(13px,3.4vw,17px) !important;
+  letter-spacing:1.5px !important;
+  color:#FFCD00 !important;
+  -webkit-text-fill-color:#FFCD00 !important;
+  text-shadow:0 0 16px rgba(255,205,0,.6), 0 1px 3px #000 !important;
+  text-transform:uppercase !important;
+  line-height:1.35 !important;
+  background:rgba(0,0,0,.25) !important;
+  border:1px solid rgba(255,205,0,.35) !important;
+  border-radius:12px !important;
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+@media (max-width:600px){
+  #techCreatorCredit{
+    font-size:12px !important;
+    margin:2px 0 8px !important;
+    padding:6px 8px !important;
+  }
+}
+</style>
 </head>
 <body class="tech-booting">
 <div id="techBootSplash" aria-live="polite" aria-busy="true" role="presentation">
@@ -2864,6 +2898,8 @@ html,body{width:100%;min-width:320px}
 </div>
 <canvas id="gameCanvas"></canvas>
 <div class="game-panel" id="startPanel">
+<div id="techCreatorCredit" aria-label="Creador del videojuego">Creador de videojuego · Brayhan Rubio</div>
+
 <h2>⚡ TECH RUN</h2>
 <button class="game-btn" id="openTechAccount" style="margin:6px 0 8px;background:linear-gradient(135deg,#35205e,#6b39a8);border-color:#c9a4ff;color:#fff;width:100%">Crear cuenta / Iniciar sesión</button>
 <small>1) Dificultad · 2) Mundo y nave · 3) Iniciar</small>
@@ -3446,7 +3482,7 @@ if(!["left","right","stacked"].includes(touchLayout)) touchLayout="left";
 const I18N={
 es:{
   config:"⚙ Config",save:"✓ Guardar",manual:"📖 MANUAL",
-  sensMouse:"Sensibilidad ratón / touch en canvas",
+  sensMouse:"Sensibilidad ratón",
   sensKeys:"Sensibilidad teclado (flechas)",
   sensPad:"Sensibilidad touch pad / mando",
   audio:"🔊 AUDIO",music:"Música de fondo",sfx:"Efectos (disparo, explosión, poderes)",
@@ -19117,6 +19153,14 @@ body.tech-playing .game-top{
 
 
 <style id="tech-account-btn-top">
+#startPanel{
+  display:flex !important;
+  flex-direction:column !important;
+}
+#startPanel > #techCreatorCredit{
+  order: -20 !important;
+  margin: 2px 0 8px !important;
+}
 #startPanel > #openTechAccount{
   order: -5 !important;
   margin-top: 4px !important;
@@ -19132,6 +19176,9 @@ body.tech-playing .game-top{
 #startPanel > #startExtras{ order: 1 !important; }
 @media (min-width:701px){
   #startPanel > #openTechAccount{
+    grid-column: 1 / -1 !important;
+  }
+  #startPanel > #techCreatorCredit{
     grid-column: 1 / -1 !important;
   }
 }
